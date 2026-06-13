@@ -134,11 +134,6 @@ input[type=file]::file-selector-button{
 .modes button{flex:1;background:var(--h3-bg);color:var(--text-main)}
 .modes button:hover{background:var(--h3-bg-hover)}
 
-.review-info{
-  text-align:center;margin:14px 0;color:var(--muted);font-size:14px;
-}
-.review-info b{color:#e17055;font-size:18px}
-
 .progress-wrap{margin:14px 0}
 .progress-label{text-align:center;color:var(--muted);font-size:14px;margin-bottom:6px}
 .progress-label b{color:var(--text-title)}
@@ -207,16 +202,14 @@ li button:hover{background:var(--h3-bg-hover)}
 <button onclick="event.stopPropagation();speakWord()" id="cardSpeakBtn">🔊 발음 듣기</button>
 <button onclick="event.stopPropagation();toggleFav(currentIndex);showCardActions()" id="cardFavBtn">⭐ 즐겨찾기</button>
 <button onclick="event.stopPropagation();toggleWrongFlag(currentIndex);showCardActions()" id="cardWrongBtn">❌ 오답노트</button>
+<button onclick="event.stopPropagation();nextCard()" id="cardNextBtn">➡️ 다음 (학습 완료)</button>
 </div>
 
 <div class="modes">
 <button onclick="randomMode('all')">🎲 랜덤 단어</button>
 <button onclick="randomMode('fav')">⭐ 즐겨찾기</button>
 <button onclick="randomMode('wrong')">❌ 오답</button>
-<button onclick="randomMode('review')">🔁 오늘 복습</button>
 </div>
-
-<div class="review-info">오늘 복습 대상: <b id="reviewCount">0</b> 개</div>
 
 <div class="progress-wrap">
 <div class="progress-label">학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</div>
@@ -238,11 +231,18 @@ li button:hover{background:var(--h3-bg-hover)}
 <h3 onclick="toggle('wrongs',this)">❌ 오답노트</h3>
 <div id="wrongs" class="section-content"></div>
 
+<h3 onclick="toggle('mastered',this)">✅ 학습 완료</h3>
+<div id="mastered" class="section-content">
+<div class="row" style="margin-top:10px">
+<button class="danger small" onclick="clearMastered()">↩️ 전체 학습취소</button>
+</div>
+<div id="masteredList"></div>
+</div>
+
 </div>
 
 <script>
 let words=JSON.parse(localStorage.getItem('words')||'[]');
-const intervals=[0,1,3,7,14,30];
 
 function toggleDark(){
 document.body.classList.toggle('dark');
@@ -261,7 +261,7 @@ function addWord(){
 let eng=document.getElementById('eng').value.trim();
 let kor=document.getElementById('kor').value.trim();
 if(!eng||!kor||duplicate(eng)) return;
-words.push({eng,kor,favorite:false,wrong:false,mastered:false,level:0,nextReview:Date.now(),reviewCount:0});
+words.push({eng,kor,favorite:false,wrong:false,mastered:false});
 document.getElementById('eng').value='';
 document.getElementById('kor').value='';
 save();
@@ -273,7 +273,7 @@ let p=l.split(',');
 if(p.length>=2&&!duplicate(p[0].trim())){
 let eng=p[0].trim();
 let kor=p.slice(1).map(s=>s.trim()).filter(s=>s).join(', ');
-words.push({eng,kor,favorite:false,wrong:false,mastered:false,level:0,nextReview:Date.now(),reviewCount:0});
+words.push({eng,kor,favorite:false,wrong:false,mastered:false});
 }
 });
 document.getElementById('bulk').value='';
@@ -287,7 +287,7 @@ let p=l.split(',');
 if(p.length>=2 && p[0].trim()!="영어" && p[0].trim()!="" && !duplicate(p[0].trim())){
 let eng=p[0].trim();
 let kor=p.slice(1).map(s=>s.trim()).filter(s=>s).join(', ');
-words.push({eng,kor,favorite:false,wrong:false,mastered:false,level:0,nextReview:Date.now(),reviewCount:0});
+words.push({eng,kor,favorite:false,wrong:false,mastered:false});
 added++;
 }
 });
@@ -361,30 +361,49 @@ document.getElementById('cardFavBtn').innerText=w.favorite?'⭐ 즐겨찾기 해
 document.getElementById('cardWrongBtn').innerText=w.wrong?'❌ 오답노트 해제':'❌ 오답노트';
 }
 
-function randomMode(mode){
-lastMode=mode;
+function getDeck(mode){
 let arr=words.map((w,i)=>({w,i}));
 arr=arr.filter(x=>!x.w.mastered);
 if(mode==='fav') arr=arr.filter(x=>x.w.favorite);
 if(mode==='wrong') arr=arr.filter(x=>x.w.wrong);
-if(mode==='review') arr=arr.filter(x=>x.w.nextReview<=Date.now());
+return arr;
+}
+
+function randomMode(mode){
+lastMode=mode;
+let arr=getDeck(mode);
 if(!arr.length) return alert('단어 없음');
 let pick=arr[Math.floor(Math.random()*arr.length)];
 showWord(pick.w,pick.i);
 }
 
+function nextCard(){
+// 현재 보고 있던 카드를 자동으로 '학습 완료'로 표시 (진도율 상승)
+if(currentIndex>=0 && words[currentIndex] && !words[currentIndex].mastered){
+words[currentIndex].mastered=true;
+save();
+}
+// 같은 모드에서 아직 학습하지 않은 단어 중 다음 카드 선택
+let arr=getDeck(lastMode);
+if(!arr.length){
+currentIndex=-1;
+document.getElementById('front').innerText='🎉 모두 학습했어요!';
+document.getElementById('back').innerText='';
+document.getElementById('card').classList.remove('revealed');
+showCardActions();
+return;
+}
+let pick=arr[Math.floor(Math.random()*arr.length)];
+showWord(pick.w,pick.i);
+}
+
 function markCorrect(i){
-let w=words[i];
-w.level=Math.min(w.level+1,5);
-w.reviewCount++;
-w.nextReview=Date.now()+intervals[w.level]*86400000;
-w.lastResult='correct';
+words[i].lastResult='correct';
 save();
 }
 function markWrong(i){
-let w=words[i];
-w.level=0; w.wrong=true; w.nextReview=Date.now();
-w.lastResult='wrong';
+words[i].wrong=true;
+words[i].lastResult='wrong';
 save();
 }
 
@@ -393,6 +412,12 @@ words=[];
 document.getElementById('csv').value='';
 document.getElementById('csvName').innerText='선택된 파일 없음';
 showWord({eng:'단어를 선택하세요',kor:'뜻'});
+save();
+}
+function clearMastered(){
+if(!words.some(w=>w.mastered)) return alert('학습 완료된 단어가 없습니다');
+if(!confirm('학습 완료된 단어를 모두 다시 학습하도록 되돌릴까요?')) return;
+words.forEach(w=>{if(w.mastered) w.mastered=false;});
 save();
 }
 function del(i){words.splice(i,1);save();}
@@ -416,7 +441,7 @@ all.innerHTML='<ul>'+list.map(({w,i})=>`<li class="${w.lastResult==='correct'?'r
 
 document.getElementById('favorites').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.favorite).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 document.getElementById('wrongs').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
-document.getElementById('reviewCount').innerText=words.filter(w=>w.nextReview<=Date.now()).length;
+document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="toggleMaster(${x.i})">↩️ 학습취소</button><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let total=words.length;
 let mastered=words.filter(w=>w.mastered).length;
 let pct=total?Math.round(mastered/total*100):0;
@@ -437,7 +462,7 @@ card.addEventListener('touchend',e=>{
 let dx=e.changedTouches[0].clientX-sx;
 let dy=e.changedTouches[0].clientY-sy;
 if(Math.abs(dx)>40 && Math.abs(dx)>Math.abs(dy)){
-randomMode(lastMode);
+nextCard();
 }
 });
 })();
