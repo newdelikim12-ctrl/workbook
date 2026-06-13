@@ -131,8 +131,10 @@ input[type=file]::file-selector-button{
 .hint{font-size:12px;opacity:.8;margin-top:8px}
 
 .modes{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.modes button{flex:1;background:var(--h3-bg);color:var(--text-main)}
+.modes button{flex:1;background:var(--h3-bg);color:var(--text-main);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:12px 8px;line-height:1.1}
 .modes button:hover{background:var(--h3-bg-hover)}
+.modes .ico{font-size:24px}
+.modes .lbl{font-size:14px;font-weight:600}
 
 .progress-wrap{margin:14px 0}
 .progress-label{text-align:center;color:var(--muted);font-size:14px;margin-bottom:6px}
@@ -193,19 +195,14 @@ li input{flex:1;min-width:90px;font-size:14px}
 <input id="eng" placeholder="English">
 <input id="kor" placeholder="뜻">
 <button onclick="addWord()">➕ 추가</button>
-</div>
-
-<textarea id="bulk" placeholder="여러 단어를 한 줄에 하나씩 붙여넣으세요&#10;apple,사과&#10;banana,바나나"></textarea>
-<div class="row">
 <button onclick="bulkAdd()">📋 일괄 추가</button>
 </div>
+
+<textarea id="bulk" placeholder="여러 단어를 한 줄에 하나씩 붙여넣고 [일괄 추가]를 누르세요&#10;apple,사과&#10;banana,바나나"></textarea>
 
 <div class="row">
 <input type="text" id="sheetUrl" placeholder="구글 시트 공유 링크를 붙여넣으세요">
 <button onclick="importGoogleSheet()">📥 구글시트 불러오기</button>
-</div>
-
-<div class="row" style="justify-content:flex-end">
 <button class="danger" onclick="clearAll()">🗑 전체 초기화</button>
 </div>
 
@@ -222,9 +219,9 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 
 <div class="modes">
-<button onclick="randomMode('all')">🎲 랜덤 단어</button>
-<button onclick="randomMode('fav')">⭐ 즐겨찾기</button>
-<button onclick="randomMode('wrong')">❌ 오답</button>
+<button onclick="randomMode('all')"><span class="ico">🎲</span><span class="lbl">랜덤 단어</span></button>
+<button onclick="randomMode('fav')"><span class="ico">⭐</span><span class="lbl">즐겨찾기</span></button>
+<button onclick="randomMode('wrong')"><span class="ico">❌</span><span class="lbl">오답노트</span></button>
 </div>
 
 <div class="progress-wrap">
