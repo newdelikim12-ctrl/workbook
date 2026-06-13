@@ -135,6 +135,11 @@ li button:hover{background:#cfd8dc}
 <button class="danger" onclick="clearAll()">🗑 전체 초기화</button>
 </div>
 
+<div class="row">
+<input type="text" id="sheetUrl" placeholder="구글 시트 공유 링크를 붙여넣으세요">
+<button onclick="importGoogleSheet()">📥 구글시트 불러오기</button>
+</div>
+
 <div class="flashcard" id="card" onclick="this.classList.toggle('revealed')">
 <div id="front">단어를 선택하세요</div>
 <div id="back">뜻</div>
@@ -195,20 +200,48 @@ document.getElementById('bulk').value='';
 save();
 }
 
+function addFromCsvText(text){
+let added=0;
+text.split('\n').forEach(l=>{
+let p=l.split(',');
+if(p.length>=2 && p[0].trim()!="영어" && p[0].trim()!="" && !duplicate(p[0].trim())){
+let eng=p[0].trim();
+let kor=p.slice(1).map(s=>s.trim()).filter(s=>s).join(', ');
+words.push({eng,kor,favorite:false,wrong:false,mastered:false,level:0,nextReview:Date.now(),reviewCount:0});
+added++;
+}
+});
+save();
+return added;
+}
+
+function importGoogleSheet(){
+let url=document.getElementById('sheetUrl').value.trim();
+if(!url) return alert('구글 시트 링크를 입력해주세요');
+let m=url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+if(!m) return alert('올바른 구글 시트 링크가 아닙니다');
+let id=m[1];
+let gid='0';
+let gm=url.match(/gid=([0-9]+)/);
+if(gm) gid=gm[1];
+let csvUrl=`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+fetch(csvUrl).then(r=>{
+if(!r.ok) throw new Error('fetch failed');
+return r.text();
+}).then(text=>{
+let added=addFromCsvText(text);
+alert(added+'개의 단어를 불러왔습니다');
+}).catch(()=>{
+alert('불러오기 실패! 구글 시트의 공유 설정을 "링크가 있는 모든 사용자(보기 가능)"로 변경한 후 다시 시도해주세요.');
+});
+}
+
 document.getElementById('csv').addEventListener('change',e=>{
 let f=e.target.files[0]; if(!f) return;
 document.getElementById('csvName').innerText=f.name;
 let r=new FileReader();
 r.onload=x=>{
-x.target.result.split('\n').forEach(l=>{
-let p=l.split(',');
-if(p.length>=2 && p[0]!="영어" && !duplicate(p[0].trim())){
-let eng=p[0].trim();
-let kor=p.slice(1).map(s=>s.trim()).filter(s=>s).join(', ');
-words.push({eng,kor,favorite:false,wrong:false,mastered:false,level:0,nextReview:Date.now(),reviewCount:0});
-}
-});
-save();
+addFromCsvText(x.target.result);
 };
 r.readAsText(f);
 });
