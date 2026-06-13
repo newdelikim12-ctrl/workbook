@@ -202,8 +202,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 
 <div class="row">
 <input type="text" id="sheetUrl" placeholder="구글 시트 공유 링크를 붙여넣으세요">
-<button onclick="importGoogleSheet()">📥 구글시트 불러오기</button>
-<button class="danger" onclick="clearAll()">🗑 전체 초기화</button>
+</div>
+<div class="row" style="flex-wrap:nowrap">
+<button style="flex:1;min-width:0;white-space:nowrap;padding:10px 8px" onclick="importGoogleSheet()">📥 구글시트 불러오기</button>
+<button class="danger" style="flex:1;min-width:0;white-space:nowrap;padding:10px 8px" onclick="clearAll()">🗑 전체 초기화</button>
 </div>
 
 <div class="flashcard" id="card" onclick="this.classList.toggle('revealed')">
