@@ -222,7 +222,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <div class="row" style="justify-content:flex-end;margin-bottom:14px">
 <button class="small" onclick="toggleDark()" id="darkBtn">🌙 다크모드</button>
 </div>
-<h2>📚 민복이와 도형이의 영어 단어 연습장</h2>
+<h2>민복이와 도형이의 영어 단어 연습장</h2>
 
 <div class="row">
 <input id="eng" placeholder="English">
@@ -233,7 +233,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button onclick="addWord()">➕ 추가</button>
 </div>
 
-<div id="bulkRows" style="max-height:260px;overflow-y:auto;margin-top:14px;padding:4px;border:2px dashed var(--accent-soft);border-radius:16px"></div>
+<div id="bulkRows" style="max-height:260px;overflow-y:auto;overflow-x:hidden;margin-top:14px;padding:4px;border:2px dashed var(--accent-soft);border-radius:16px"></div>
 <div class="row" style="justify-content:center;margin-top:10px">
 <button class="small" onclick="addBulkRow()">➕ 행 추가</button>
 <button onclick="bulkAdd()">📋 일괄 추가</button>
@@ -403,8 +403,8 @@ let div=document.createElement('div');
 div.className='row';
 div.style.margin='6px 0';
 div.style.flexWrap='nowrap';
-div.innerHTML=`<input type="text" class="bulkEng" placeholder="English" value="${eng.replace(/"/g,'&quot;')}">`+
-`<input type="text" class="bulkKor" placeholder="뜻" value="${kor.replace(/"/g,'&quot;')}">`+
+div.innerHTML=`<input type="text" class="bulkEng" placeholder="English" value="${eng.replace(/"/g,'&quot;')}" style="min-width:0">`+
+`<input type="text" class="bulkKor" placeholder="뜻" value="${kor.replace(/"/g,'&quot;')}" style="min-width:0">`+
 `<button class="small" onclick="this.parentElement.remove()" style="flex:0 0 auto">🗑</button>`;
 box.appendChild(div);
 }
