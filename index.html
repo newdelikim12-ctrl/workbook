@@ -229,10 +229,13 @@ li input{flex:1;min-width:90px;font-size:14px}
 <input id="kor" placeholder="뜻">
 </div>
 
-<textarea id="bulk" placeholder="여러 단어를 한 줄에 하나씩 붙여넣고 [일괄 추가]를 누르세요&#10;apple,사과&#10;banana,바나나"></textarea>
-
-<div class="row" style="justify-content:center;margin-top:12px">
+<div class="row" style="justify-content:center;margin-top:4px">
 <button onclick="addWord()">➕ 추가</button>
+</div>
+
+<div id="bulkRows" style="max-height:260px;overflow-y:auto;margin-top:14px;padding:4px;border:2px dashed var(--accent-soft);border-radius:16px"></div>
+<div class="row" style="justify-content:center;margin-top:10px">
+<button class="small" onclick="addBulkRow()">➕ 행 추가</button>
 <button onclick="bulkAdd()">📋 일괄 추가</button>
 </div>
 
@@ -394,20 +397,41 @@ document.getElementById('kor').value='';
 save();
 }
 
+function addBulkRow(eng='',kor=''){
+let box=document.getElementById('bulkRows');
+let div=document.createElement('div');
+div.className='row';
+div.style.margin='6px 0';
+div.style.flexWrap='nowrap';
+div.innerHTML=`<input type="text" class="bulkEng" placeholder="English" value="${eng.replace(/"/g,'&quot;')}">`+
+`<input type="text" class="bulkKor" placeholder="뜻" value="${kor.replace(/"/g,'&quot;')}">`+
+`<button class="small" onclick="this.parentElement.remove()" style="flex:0 0 auto">🗑</button>`;
+box.appendChild(div);
+}
+function ensureBulkRows(){
+let box=document.getElementById('bulkRows');
+if(!box.children.length){for(let i=0;i<3;i++) addBulkRow();}
+}
+
 function bulkAdd(){
+let rows=document.querySelectorAll('#bulkRows .row');
 let added=0;
-document.getElementById('bulk').value.split('\n').forEach(l=>{
-let p=l.split(/[,\t]/);
-if(p.length>=2 && p[0].trim() && !duplicate(p[0].trim())){
-let eng=p[0].trim();
-let kor=p.slice(1).map(s=>s.trim()).filter(s=>s).join(', ');
-if(kor){words.push({eng,kor,favorite:false,wrong:false,mastered:false});added++;}
+rows.forEach(r=>{
+let eng=r.querySelector('.bulkEng').value.trim();
+let kor=r.querySelector('.bulkKor').value.trim();
+if(eng&&kor&&!duplicate(eng)){
+words.push({eng,kor,favorite:false,wrong:false,mastered:false});
+added++;
 }
 });
-document.getElementById('bulk').value='';
+if(added){
+document.getElementById('bulkRows').innerHTML='';
+for(let i=0;i<3;i++) addBulkRow();
 save();
-if(added) showToast(added+'개 단어를 추가했어요! 📋');
-else alert('추가할 단어가 없습니다. (형식: 영어,뜻 — 한 줄에 하나씩)');
+showToast(added+'개 단어를 추가했어요! 📋');
+}else{
+alert('추가할 단어가 없습니다. (영어와 뜻을 모두 입력했는지, 중복은 아닌지 확인해 주세요)');
+}
 }
 
 function addFromCsvText(text){
@@ -653,6 +677,7 @@ document.getElementById('cntMastered').innerText='('+mastered+')';
 updateStats();
 }
 render();
+ensureBulkRows();
 updateDarkBtn();
 
 (function(){
