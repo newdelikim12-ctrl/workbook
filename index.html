@@ -555,11 +555,19 @@ bulkDelete(words.map((w,i)=>({w,i})).filter(x=>matchQ(x.w,q)));
 }
 function clearFavorites(){
 let q=searchVal('favSearch');
-bulkDelete(words.map((w,i)=>({w,i})).filter(x=>x.w.favorite&&matchQ(x.w,q)));
+let items=words.filter(w=>w.favorite&&matchQ(w,q));
+if(!items.length) return alert('즐겨찾기한 단어가 없습니다');
+if(!confirm(items.length+'개의 단어를 즐겨찾기에서 해제할까요? (전체 단어 목록에는 그대로 남아요)')) return;
+items.forEach(w=>w.favorite=false);
+save();
 }
 function clearWrongs(){
 let q=searchVal('wrongSearch');
-bulkDelete(words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,q)));
+let items=words.filter(w=>w.wrong&&matchQ(w,q));
+if(!items.length) return alert('오답노트에 단어가 없습니다');
+if(!confirm(items.length+'개의 단어를 오답노트에서 해제할까요? (전체 단어 목록에는 그대로 남아요)')) return;
+items.forEach(w=>w.wrong=false);
+save();
 }
 function del(i){if(editIndex===i)editIndex=-1;words.splice(i,1);save();}
 function toggleFav(i){words[i].favorite=!words[i].favorite;save();}
@@ -627,9 +635,9 @@ return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='w
 }).join('')+'</ul>';
 
 let fq=searchVal('favSearch');
-document.getElementById('favoritesList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.favorite&&matchQ(x.w,fq)).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+document.getElementById('favoritesList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.favorite&&matchQ(x.w,fq)).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="toggleFav(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let wq=searchVal('wrongSearch');
-document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="toggleWrongFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let mq=searchVal('masteredSearch');
 document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq)).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="toggleMaster(${x.i})">↩️ 학습취소</button><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let total=words.length;
