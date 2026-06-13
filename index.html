@@ -161,6 +161,25 @@ li span:first-child{flex:1}
 li .btns{display:flex;gap:4px;flex-shrink:0}
 li button{padding:5px 8px;font-size:13px;border-radius:8px;background:var(--h3-bg);color:var(--text-main)}
 li button:hover{background:var(--h3-bg-hover)}
+
+.stats-line{text-align:center;color:var(--muted);font-size:14px;margin-top:8px}
+.stats-line b{color:#e17055;font-size:16px}
+.cnt{font-size:13px;color:#95a5a6;font-weight:400}
+li input{flex:1;min-width:90px;font-size:14px}
+#backupBox{height:90px;font-size:12px}
+
+.toast{
+  position:fixed;left:50%;bottom:28px;
+  transform:translateX(-50%) translateY(20px);
+  background:#2d3436;color:#fff;padding:11px 20px;border-radius:22px;
+  font-family:'Jua',sans-serif;font-size:15px;letter-spacing:.5px;
+  opacity:0;pointer-events:none;z-index:9999;
+  transition:opacity .25s ease,transform .25s ease;
+  box-shadow:0 8px 22px rgba(0,0,0,.28);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.confetti{position:fixed;top:-30px;pointer-events:none;z-index:9998;will-change:transform}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.15}}
 </style>
 </head>
 <body>
@@ -176,21 +195,18 @@ li button:hover{background:var(--h3-bg-hover)}
 <button onclick="addWord()">➕ 추가</button>
 </div>
 
-<textarea id="bulk" placeholder="apple,사과&#10;banana,바나나"></textarea>
+<textarea id="bulk" placeholder="여러 단어를 한 줄에 하나씩 붙여넣으세요&#10;apple,사과&#10;banana,바나나"></textarea>
 <div class="row">
-<button onclick="bulkAdd()">📋 일괄추가</button>
-</div>
-
-<div class="row">
-<input type="file" id="csv" accept=".csv">
-<span id="csvName" style="font-size:13px;color:#636e72;align-self:center">선택된 파일 없음</span>
-<button onclick="exportCSV()">⬇️ CSV 내보내기</button>
-<button class="danger" onclick="clearAll()">🗑 전체 초기화</button>
+<button onclick="bulkAdd()">📋 일괄 추가</button>
 </div>
 
 <div class="row">
 <input type="text" id="sheetUrl" placeholder="구글 시트 공유 링크를 붙여넣으세요">
 <button onclick="importGoogleSheet()">📥 구글시트 불러오기</button>
+</div>
+
+<div class="row" style="justify-content:flex-end">
+<button class="danger" onclick="clearAll()">🗑 전체 초기화</button>
 </div>
 
 <div class="flashcard" id="card" onclick="this.classList.toggle('revealed')">
@@ -214,35 +230,111 @@ li button:hover{background:var(--h3-bg-hover)}
 <div class="progress-wrap">
 <div class="progress-label">학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</div>
 <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="stats-line">🔥 연속 <b id="streakDays">0</b>일 · 오늘 학습 <b id="todayLearned">0</b>개</div>
 </div>
 
 
-<h3 onclick="toggle('allWords',this)">📖 전체 단어</h3>
+<h3 onclick="toggle('allWords',this)"><span>📖 전체 단어 <b id="cntAll" class="cnt"></b></span></h3>
 <div id="allWords" class="section-content">
 <div class="row" style="margin-top:10px">
 <input type="text" id="searchBox" placeholder="🔍 단어 또는 뜻 검색" oninput="render()">
+<button class="danger small" onclick="clearAllWords()">🗑 전체 삭제</button>
 </div>
 <div id="allWordsList"></div>
 </div>
 
-<h3 onclick="toggle('favorites',this)">⭐ 즐겨찾기</h3>
-<div id="favorites" class="section-content"></div>
+<h3 onclick="toggle('favorites',this)"><span>⭐ 즐겨찾기 <b id="cntFav" class="cnt"></b></span></h3>
+<div id="favorites" class="section-content">
+<div class="row" style="margin-top:10px">
+<input type="text" id="favSearch" placeholder="🔍 즐겨찾기 검색" oninput="render()">
+<button class="danger small" onclick="clearFavorites()">🗑 전체 삭제</button>
+</div>
+<div id="favoritesList"></div>
+</div>
 
-<h3 onclick="toggle('wrongs',this)">❌ 오답노트</h3>
-<div id="wrongs" class="section-content"></div>
+<h3 onclick="toggle('wrongs',this)"><span>❌ 오답노트 <b id="cntWrong" class="cnt"></b></span></h3>
+<div id="wrongs" class="section-content">
+<div class="row" style="margin-top:10px">
+<input type="text" id="wrongSearch" placeholder="🔍 오답노트 검색" oninput="render()">
+<button class="danger small" onclick="clearWrongs()">🗑 전체 삭제</button>
+</div>
+<div id="wrongsList"></div>
+</div>
 
-<h3 onclick="toggle('mastered',this)">✅ 학습 완료</h3>
+<h3 onclick="toggle('mastered',this)"><span>✅ 학습 완료 <b id="cntMastered" class="cnt"></b></span></h3>
 <div id="mastered" class="section-content">
 <div class="row" style="margin-top:10px">
+<input type="text" id="masteredSearch" placeholder="🔍 학습 완료 검색" oninput="render()">
 <button class="danger small" onclick="clearMastered()">↩️ 전체 학습취소</button>
 </div>
 <div id="masteredList"></div>
 </div>
 
+<h3 onclick="toggle('backup',this)"><span>💾 데이터 백업</span></h3>
+<div id="backup" class="section-content">
+<p style="color:var(--muted);font-size:13px;margin:10px 0 6px">단어는 이 브라우저에만 저장됩니다. 기록을 지우거나 기기를 바꾸기 전에 백업하세요.</p>
+<div class="row">
+<button onclick="exportBackup()">💾 백업 내보내기</button>
+<button onclick="restoreBackup()">♻️ 백업 복원</button>
 </div>
+<textarea id="backupBox" placeholder="[백업 내보내기]를 누르면 백업 데이터가 여기에 표시되고 파일로도 저장됩니다. 복원하려면 이전에 백업한 데이터를 여기에 붙여넣고 [백업 복원]을 누르세요."></textarea>
+</div>
+
+</div>
+
+<div id="toast" class="toast"></div>
 
 <script>
 let words=JSON.parse(localStorage.getItem('words')||'[]');
+let stats=JSON.parse(localStorage.getItem('stats')||'{}');
+let editIndex=-1;
+
+function saveStats(){localStorage.setItem('stats',JSON.stringify(stats));}
+function dstr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function todayStr(){return dstr(new Date());}
+function yesterdayStr(){let d=new Date();d.setDate(d.getDate()-1);return dstr(d);}
+
+function registerActivity(){
+let t=todayStr();
+if(stats.lastDate!==t){
+stats.streak=(stats.lastDate===yesterdayStr())?((stats.streak||0)+1):1;
+stats.lastDate=t;
+stats.todayDate=t;
+stats.todayCount=0;
+}
+stats.todayCount=(stats.todayCount||0)+1;
+saveStats();
+}
+function updateStats(){
+let t=todayStr(),y=yesterdayStr();
+let streak=(stats.lastDate===t||stats.lastDate===y)?(stats.streak||0):0;
+let today=(stats.todayDate===t)?(stats.todayCount||0):0;
+document.getElementById('streakDays').innerText=streak;
+document.getElementById('todayLearned').innerText=today;
+}
+
+const praises=['잘했어요! 🎉','최고예요! ⭐','멋져요! 💪','완벽해요! ✨','대단해요! 🌟'];
+let toastTimer;
+function showToast(msg){
+let t=document.getElementById('toast');
+t.textContent=msg;
+t.classList.add('show');
+clearTimeout(toastTimer);
+toastTimer=setTimeout(()=>t.classList.remove('show'),1500);
+}
+function confetti(){
+let emojis=['🎉','⭐','✨','🌟','🎈','💫','🏆'];
+for(let i=0;i<16;i++){
+let s=document.createElement('span');
+s.className='confetti';
+s.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+s.style.left=Math.random()*100+'vw';
+s.style.fontSize=(16+Math.random()*18)+'px';
+s.style.animation='fall '+(1.6+Math.random()*1.6)+'s linear forwards';
+document.body.appendChild(s);
+setTimeout(()=>s.remove(),3400);
+}
+}
 
 function toggleDark(){
 document.body.classList.toggle('dark');
@@ -268,16 +360,19 @@ save();
 }
 
 function bulkAdd(){
+let added=0;
 document.getElementById('bulk').value.split('\n').forEach(l=>{
-let p=l.split(',');
-if(p.length>=2&&!duplicate(p[0].trim())){
+let p=l.split(/[,\t]/);
+if(p.length>=2 && p[0].trim() && !duplicate(p[0].trim())){
 let eng=p[0].trim();
 let kor=p.slice(1).map(s=>s.trim()).filter(s=>s).join(', ');
-words.push({eng,kor,favorite:false,wrong:false,mastered:false});
+if(kor){words.push({eng,kor,favorite:false,wrong:false,mastered:false});added++;}
 }
 });
 document.getElementById('bulk').value='';
 save();
+if(added) showToast(added+'개 단어를 추가했어요! 📋');
+else alert('추가할 단어가 없습니다. (형식: 영어,뜻 — 한 줄에 하나씩)');
 }
 
 function addFromCsvText(text){
@@ -314,23 +409,6 @@ alert(added+'개의 단어를 불러왔습니다');
 }).catch(()=>{
 alert('불러오기 실패! 구글 시트의 공유 설정을 "링크가 있는 모든 사용자(보기 가능)"로 변경한 후 다시 시도해주세요.');
 });
-}
-
-document.getElementById('csv').addEventListener('change',e=>{
-let f=e.target.files[0]; if(!f) return;
-document.getElementById('csvName').innerText=f.name;
-let r=new FileReader();
-r.onload=x=>{
-addFromCsvText(x.target.result);
-};
-r.readAsText(f);
-});
-
-function exportCSV(){
-let csv="영어,뜻\n"+words.map(w=>`${w.eng},${w.kor}`).join("\n");
-let a=document.createElement('a');
-a.href=URL.createObjectURL(new Blob([csv]));
-a.download='wordbook.csv'; a.click();
 }
 
 let currentIndex=-1;
@@ -381,7 +459,9 @@ function nextCard(){
 // 현재 보고 있던 카드를 자동으로 '학습 완료'로 표시 (진도율 상승)
 if(currentIndex>=0 && words[currentIndex] && !words[currentIndex].mastered){
 words[currentIndex].mastered=true;
+registerActivity();
 save();
+showToast(praises[Math.floor(Math.random()*praises.length)]+' (오늘 '+(stats.todayCount||0)+'개)');
 }
 // 같은 모드에서 아직 학습하지 않은 단어 중 다음 카드 선택
 let arr=getDeck(lastMode);
@@ -391,6 +471,8 @@ document.getElementById('front').innerText='🎉 모두 학습했어요!';
 document.getElementById('back').innerText='';
 document.getElementById('card').classList.remove('revealed');
 showCardActions();
+confetti();
+showToast('모두 학습했어요! 정말 대단해요! 🏆');
 return;
 }
 let pick=arr[Math.floor(Math.random()*arr.length)];
@@ -408,9 +490,10 @@ save();
 }
 
 function clearAll(){
+if(!words.length) return alert('단어가 없습니다');
+if(!confirm('모든 단어를 삭제하고 초기화할까요?')) return;
 words=[];
-document.getElementById('csv').value='';
-document.getElementById('csvName').innerText='선택된 파일 없음';
+currentIndex=-1;
 showWord({eng:'단어를 선택하세요',kor:'뜻'});
 save();
 }
@@ -420,34 +503,111 @@ if(!confirm('학습 완료된 단어를 모두 다시 학습하도록 되돌릴�
 words.forEach(w=>{if(w.mastered) w.mastered=false;});
 save();
 }
-function del(i){words.splice(i,1);save();}
+
+function bulkDelete(items){
+if(!items.length) return alert('삭제할 단어가 없습니다');
+if(!confirm(items.length+'개의 단어를 삭제할까요?')) return;
+let set=new Set(items.map(x=>x.w));
+let curWord=currentIndex>=0?words[currentIndex]:null;
+words=words.filter(w=>!set.has(w));
+currentIndex=curWord&&!set.has(curWord)?words.indexOf(curWord):-1;
+editIndex=-1;
+save();
+}
+function clearAllWords(){
+let q=searchVal('searchBox');
+bulkDelete(words.map((w,i)=>({w,i})).filter(x=>matchQ(x.w,q)));
+}
+function clearFavorites(){
+let q=searchVal('favSearch');
+bulkDelete(words.map((w,i)=>({w,i})).filter(x=>x.w.favorite&&matchQ(x.w,q)));
+}
+function clearWrongs(){
+let q=searchVal('wrongSearch');
+bulkDelete(words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,q)));
+}
+function del(i){if(editIndex===i)editIndex=-1;words.splice(i,1);save();}
 function toggleFav(i){words[i].favorite=!words[i].favorite;save();}
 function toggleWrongFlag(i){words[i].wrong=!words[i].wrong;save();}
-function toggleMaster(i){words[i].mastered=!words[i].mastered;save();}
+function toggleMaster(i){words[i].mastered=!words[i].mastered;if(words[i].mastered)registerActivity();save();}
 function toggle(id,el){document.getElementById(id).classList.toggle('open');if(el)el.classList.toggle('open-arrow');}
+
+function startEdit(i){editIndex=i;render();}
+function cancelEdit(){editIndex=-1;render();}
+function saveEdit(i){
+let e=document.getElementById('editEng').value.trim();
+let k=document.getElementById('editKor').value.trim();
+if(!e||!k) return alert('영어와 뜻을 모두 입력하세요');
+if(words.some((w,j)=>j!==i && w.eng.toLowerCase()===e.toLowerCase())) return alert('이미 있는 단어예요');
+words[i].eng=e;words[i].kor=k;
+editIndex=-1;
+save();
+}
+
+function exportBackup(){
+let data={words:words,stats:stats,version:1,exportedAt:new Date().toISOString()};
+let json=JSON.stringify(data);
+document.getElementById('backupBox').value=json;
+try{
+let a=document.createElement('a');
+a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+a.download='wordbook-backup.json';
+a.click();
+}catch(e){}
+showToast('백업을 내보냈어요! 💾');
+}
+function restoreBackup(){
+let raw=document.getElementById('backupBox').value.trim();
+if(!raw) return alert('복원할 백업 데이터를 붙여넣어 주세요');
+let data;
+try{data=JSON.parse(raw);}catch(e){return alert('백업 데이터 형식이 올바르지 않습니다');}
+if(!data||!Array.isArray(data.words)) return alert('백업 데이터에 단어가 없습니다');
+if(!confirm('현재 단어를 백업 데이터로 덮어쓸까요? (지금 단어는 사라집니다)')) return;
+words=data.words.map(w=>({eng:w.eng||'',kor:w.kor||'',favorite:!!w.favorite,wrong:!!w.wrong,mastered:!!w.mastered,lastResult:w.lastResult}));
+if(data.stats&&typeof data.stats==='object'){stats=data.stats;saveStats();}
+editIndex=-1;currentIndex=-1;
+save();
+showToast('백업을 복원했어요! ♻️');
+}
+
+function matchQ(w,q){return !q||w.eng.toLowerCase().includes(q)||w.kor.toLowerCase().includes(q);}
+function searchVal(id){return (document.getElementById(id)?.value||'').trim().toLowerCase();}
 
 function render(){
 let all=document.getElementById('allWordsList');
-let q=(document.getElementById('searchBox')?.value||'').trim().toLowerCase();
-let list=words.map((w,i)=>({w,i}));
-if(q) list=list.filter(x=>x.w.eng.toLowerCase().includes(q)||x.w.kor.toLowerCase().includes(q));
-all.innerHTML='<ul>'+list.map(({w,i})=>`<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':''}"><span>${w.eng} - ${w.kor}</span><span class="btns">
+let q=searchVal('searchBox');
+let list=words.map((w,i)=>({w,i})).filter(x=>matchQ(x.w,q));
+all.innerHTML='<ul>'+list.map(({w,i})=>{
+if(i===editIndex){
+return `<li><input id="editEng" value="${w.eng.replace(/"/g,'&quot;')}"><input id="editKor" value="${w.kor.replace(/"/g,'&quot;')}"><span class="btns"><button onclick="saveEdit(${i})">💾</button><button onclick="cancelEdit()">↩️</button></span></li>`;
+}
+return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':''}"><span>${w.eng} - ${w.kor}</span><span class="btns">
 <button onclick="toggleFav(${i})">${w.favorite?'⭐':'☆'}</button>
 <button onclick="toggleWrongFlag(${i})">${w.wrong?'❌':'⭕'}</button>
 <button onclick="toggleMaster(${i})">${w.mastered?'✅':'⬜'}</button>
+<button onclick="startEdit(${i})">✏️</button>
 <button onclick="markCorrect(${i})">정답</button>
 <button onclick="markWrong(${i})">오답</button>
-<button onclick="del(${i})">🗑</button></span></li>`).join('')+'</ul>';
+<button onclick="del(${i})">🗑</button></span></li>`;
+}).join('')+'</ul>';
 
-document.getElementById('favorites').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.favorite).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
-document.getElementById('wrongs').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
-document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="toggleMaster(${x.i})">↩️ 학습취소</button><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+let fq=searchVal('favSearch');
+document.getElementById('favoritesList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.favorite&&matchQ(x.w,fq)).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+let wq=searchVal('wrongSearch');
+document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+let mq=searchVal('masteredSearch');
+document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq)).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="toggleMaster(${x.i})">↩️ 학습취소</button><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let total=words.length;
 let mastered=words.filter(w=>w.mastered).length;
 let pct=total?Math.round(mastered/total*100):0;
 document.getElementById('progressText').innerText=mastered+' / '+total;
 document.getElementById('progressPct').innerText=pct+'%';
 document.getElementById('progressFill').style.width=pct+'%';
+document.getElementById('cntAll').innerText='('+total+')';
+document.getElementById('cntFav').innerText='('+words.filter(w=>w.favorite).length+')';
+document.getElementById('cntWrong').innerText='('+words.filter(w=>w.wrong).length+')';
+document.getElementById('cntMastered').innerText='('+mastered+')';
+updateStats();
 }
 render();
 updateDarkBtn();
