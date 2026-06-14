@@ -249,20 +249,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 <input type="text" id="sheetUrl" placeholder="구글 시트 공유 링크를 붙여넣으세요">
 </div>
 <div class="row" style="flex-wrap:nowrap">
-<button style="flex:1;min-width:0;padding:11px 6px;font-size:13px;white-space:nowrap;letter-spacing:-.3px" onclick="loadSheetTabs()">🔎 시트(탭) 목록 보기</button>
+<button style="flex:1;min-width:0;padding:11px 6px;font-size:13px;white-space:nowrap;letter-spacing:-.3px" onclick="importGoogleSheet()">📥 구글시트 불러오기</button>
 <button class="danger" style="flex:1;min-width:0;padding:11px 6px;font-size:13px;white-space:nowrap;letter-spacing:-.3px" onclick="clearAll()">🗑 전체 초기화</button>
 </div>
-<div id="sheetTabs" style="display:none;margin-top:10px;padding:14px;border:2px dashed var(--accent-soft);border-radius:16px">
-<p style="color:var(--muted);font-size:13px;margin:0 0 10px">불러올 시트(탭)를 선택하세요.</p>
-<div id="sheetTabList" class="row" style="gap:8px"></div>
-<div class="row" style="margin-top:10px;align-items:center">
-<input type="text" id="sheetTabName" placeholder="또는 탭 이름 직접 입력 (예: Sheet1)" style="flex:1">
-<button class="small" onclick="importByTabName()">📥 이 탭 불러오기</button>
-</div>
-</div>
-<div class="row" style="justify-content:center;margin-top:6px">
-<button class="small" onclick="importGoogleSheet()" style="background:var(--h3-bg);color:var(--text-main);box-shadow:none">📥 첫 번째 시트 바로 불러오기</button>
-</div>
+<div id="sheetHistory" style="margin-top:6px"></div>
 
 <div class="flashcard" id="card" onclick="this.classList.toggle('revealed')">
 <div id="front">단어를 선택하세요</div>
@@ -483,156 +473,98 @@ save();
 return added;
 }
 
-function getSheetId(){
+// ===== 구글 시트 주소 기록 =====
+let sheetUrls=JSON.parse(localStorage.getItem('sheetUrls')||'[]');
+function saveSheetUrls(){localStorage.setItem('sheetUrls',JSON.stringify(sheetUrls));}
+function addSheetUrl(url){
+url=url.trim();
+if(!url) return;
+sheetUrls=sheetUrls.filter(u=>u!==url); // 중복 제거
+sheetUrls.unshift(url);                 // 최근 것을 맨 위로
+if(sheetUrls.length>10) sheetUrls=sheetUrls.slice(0,10);
+saveSheetUrls();
+renderSheetHistory();
+}
+function removeSheetUrl(i){
+sheetUrls.splice(i,1);
+saveSheetUrls();
+renderSheetHistory();
+}
+function clearSheetUrls(){
+if(!sheetUrls.length) return;
+if(!confirm('저장된 구글 시트 주소 기록을 모두 지울까요?')) return;
+sheetUrls=[];
+saveSheetUrls();
+renderSheetHistory();
+}
+function useSheetUrl(i){
+document.getElementById('sheetUrl').value=sheetUrls[i];
+importGoogleSheet();
+}
+function shortUrl(u){
+let m=u.match(/\/d\/([a-zA-Z0-9-_]+)/);
+let id=m?m[1]:u;
+return (id.length>16?id.slice(0,16)+'…':id);
+}
+function renderSheetHistory(){
+let box=document.getElementById('sheetHistory');
+if(!box) return;
+if(!sheetUrls.length){box.innerHTML='';return;}
+box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 2px 4px">'
++'<span style="color:var(--muted);font-size:13px">📌 저장된 시트 주소</span>'
++'<button class="small danger" onclick="clearSheetUrls()" style="padding:5px 9px;font-size:12px">기록 전체 삭제</button></div>'
++'<ul>'+sheetUrls.map((u,i)=>
+'<li style="font-size:13px"><span style="font-size:13px" title="'+u.replace(/"/g,'&quot;')+'">📄 '+shortUrl(u)+'</span>'
++'<span class="btns"><button onclick="useSheetUrl('+i+')">📥 불러오기</button>'
++'<button onclick="removeSheetUrl('+i+')">🗑</button></span></li>').join('')+'</ul>';
+}
+
+function importGoogleSheet(){
 let url=document.getElementById('sheetUrl').value.trim();
-if(!url){alert('구글 시트 링크를 입력해주세요');return null;}
+if(!url) return alert('구글 시트 링크를 입력해주세요');
 let m=url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-if(!m){alert('올바른 구글 시트 링크가 아닙니다');return null;}
-return {id:m[1],url};
-}
+if(!m) return alert('올바른 구글 시트 링크가 아닙니다');
+let id=m[1];
+let gid='0';
+let gm=url.match(/[#&?]gid=([0-9]+)/);
+if(gm) gid=gm[1];
+// 구글 직접 엔드포인트들
+let directUrls=[
+`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=0&gid=${gid}`,
+`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`,
+`https://docs.google.com/spreadsheets/d/${id}/pub?gid=${gid}&single=true&output=csv`
+];
+// 모바일(특히 삼성 인터넷/크롬)에서 CORS로 직접 fetch가 막히는 경우를 위한 프록시 우회 경로
+let proxied=[];
+directUrls.forEach(u=>{
+proxied.push('https://corsproxy.io/?url='+encodeURIComponent(u));
+proxied.push('https://api.allorigins.win/raw?url='+encodeURIComponent(u));
+});
+let urls=directUrls.concat(proxied);
 
-// CSV 텍스트를 받아 단어로 추가하고 결과를 알림
-function handleCsvResult(text){
-let added=addFromCsvText(text);
-if(added>0){
-showToast(added+'개 단어를 불러왔어요! 📥');
-alert(added+'개의 단어를 불러왔습니다');
-}else{
-alert('새로 추가된 단어가 없습니다. (이미 있는 단어이거나, 시트의 형식이 "영어, 뜻" 두 열인지 확인해 주세요)');
-}
-}
-
-// gid 또는 탭 이름으로 CSV를 가져오기 (여러 엔드포인트 순차 시도)
-async function fetchSheetCsv(id,{gid,sheetName}={}){
-let urls=[];
-if(sheetName!=null){
-let s=encodeURIComponent(sheetName);
-urls.push(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=0&sheet=${s}`);
-}
-if(gid!=null){
-urls.push(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=0&gid=${gid}`);
-urls.push(`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`);
-urls.push(`https://docs.google.com/spreadsheets/d/${id}/pub?gid=${gid}&single=true&output=csv`);
-}
-if(gid==null&&sheetName==null){
-urls.push(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=0&gid=0`);
-urls.push(`https://docs.google.com/spreadsheets/d/${id}/export?format=csv`);
-}
+showToast('구글 시트를 불러오는 중... ⏳');
+(async()=>{
 let lastErr=null;
 for(let u of urls){
 try{
 let r=await fetch(u);
 if(!r.ok) throw new Error('status '+r.status);
 let text=await r.text();
+// 로그인/오류 페이지(HTML)가 돌아온 경우 거르기
 if(/^\s*</.test(text) || /<!DOCTYPE|<html/i.test(text.slice(0,200))) throw new Error('html returned');
-return text;
+if(!text.trim()) throw new Error('empty');
+let added=addFromCsvText(text);
+addSheetUrl(url); // 성공한 주소를 기록에 저장
+if(added>0){
+showToast(added+'개 단어를 불러왔어요! 📥');
+alert(added+'개의 단어를 불러왔습니다');
+}else{
+alert('새로 추가된 단어가 없습니다. (이미 있는 단어이거나, 시트의 형식이 "영어, 뜻" 두 열인지 확인해 주세요)');
+}
+return;
 }catch(e){lastErr=e;}
 }
-throw lastErr||new Error('failed');
-}
-
-// 문서 안의 모든 탭(이름+gid) 목록 가져오기
-async function fetchSheetTabs(id){
-// gviz의 JSON 응답에는 탭 목록이 없으므로, 게시 HTML/메타에서 탭 정보를 얻기 어렵다.
-// 가장 안정적인 방법: gviz tq?tqx=out:json 호출 시 반환되는 페이지에는 단일 시트 정보만 있음.
-// 따라서 공개 시트의 탭 목록은 'export?format=xlsx'가 아닌, 페이지 메타에서 추출 시도.
-// 실무적으로 가장 잘 동작하는 방법은 아래 htmlview에서 탭 이름을 긁는 것.
-let url=`https://docs.google.com/spreadsheets/d/${id}/htmlview`;
-let r=await fetch(url);
-if(!r.ok) throw new Error('status '+r.status);
-let html=await r.text();
-if(/accounts\.google\.com|로그인|Sign in/i.test(html.slice(0,500))) throw new Error('private');
-let tabs=[];
-// htmlview의 탭 영역에서 sheet-button-{gid} 와 탭 이름을 추출
-let re=/id="sheet-button-(\d+)"[^>]*>(?:<[^>]+>)*([^<]+)</g;
-let mm;
-while((mm=re.exec(html))!==null){
-let gid=mm[1];
-let name=mm[2].trim();
-if(name) tabs.push({gid,name});
-}
-// 보조 패턴: {name: "...", gid: ...} 형태
-if(!tabs.length){
-let re2=/\{"name":"([^"]+)"[^}]*?"gid":(\d+)/g;
-while((mm=re2.exec(html))!==null){
-tabs.push({gid:mm[2],name:mm[1].replace(/\\u[\dA-Fa-f]{4}/g,s=>String.fromCharCode(parseInt(s.slice(2),16)))});
-}
-}
-return tabs;
-}
-
-// [시트(탭) 목록 보기] 버튼
-function loadSheetTabs(){
-let s=getSheetId(); if(!s) return;
-showToast('시트 목록을 불러오는 중... ⏳');
-(async()=>{
-let box=document.getElementById('sheetTabs');
-let list=document.getElementById('sheetTabList');
-try{
-let tabs=await fetchSheetTabs(s.id);
-if(tabs.length){
-list.innerHTML=tabs.map(t=>
-`<button class="small" style="background:var(--h3-bg);color:var(--text-main);box-shadow:none" onclick="importByGid('${t.gid}', this)">📄 ${t.name.replace(/"/g,'&quot;')}</button>`
-).join('');
-showToast(tabs.length+'개의 시트를 찾았어요! 📑');
-}else{
-list.innerHTML='<p style="color:var(--muted);font-size:13px;margin:0">탭 목록을 자동으로 가져오지 못했어요. 아래에 탭 이름을 직접 입력해 주세요.</p>';
-}
-box.style.display='block';
-}catch(e){
-// 자동 목록 실패 → 직접 입력 안내
-list.innerHTML='<p style="color:var(--muted);font-size:13px;margin:0">탭 목록을 자동으로 가져오지 못했어요. 아래에 탭 이름을 직접 입력하거나, "첫 번째 시트 바로 불러오기"를 사용하세요.</p>';
-box.style.display='block';
-showToast('탭 목록 자동 조회 실패 — 직접 입력해 주세요');
-}
-})();
-}
-
-// 특정 gid의 탭 불러오기
-function importByGid(gid,btn){
-let s=getSheetId(); if(!s) return;
-if(btn) btn.disabled=true;
-showToast('시트를 불러오는 중... ⏳');
-(async()=>{
-try{
-let text=await fetchSheetCsv(s.id,{gid});
-handleCsvResult(text);
-}catch(e){
-alert('불러오기 실패! 시트 공유 설정이 "링크가 있는 모든 사용자(뷰어)"인지 확인해 주세요.');
-}finally{ if(btn) btn.disabled=false; }
-})();
-}
-
-// 입력한 탭 이름으로 불러오기
-function importByTabName(){
-let s=getSheetId(); if(!s) return;
-let name=document.getElementById('sheetTabName').value.trim();
-if(!name) return alert('불러올 탭 이름을 입력해 주세요');
-showToast('시트를 불러오는 중... ⏳');
-(async()=>{
-try{
-let text=await fetchSheetCsv(s.id,{sheetName:name});
-handleCsvResult(text);
-}catch(e){
-alert('불러오기 실패!\n\n① 탭 이름이 정확한지 (대소문자/띄어쓰기 포함)\n② 시트 공유 설정이 "링크가 있는 모든 사용자(뷰어)"인지\n확인해 주세요.');
-}
-})();
-}
-
-// 첫 번째 시트(또는 링크의 gid) 바로 불러오기 — 기존 동작 유지
-function importGoogleSheet(){
-let s=getSheetId(); if(!s) return;
-let gid='0';
-let gm=s.url.match(/[#&?]gid=([0-9]+)/);
-if(gm) gid=gm[1];
-showToast('구글 시트를 불러오는 중... ⏳');
-(async()=>{
-try{
-let text=await fetchSheetCsv(s.id,{gid});
-handleCsvResult(text);
-}catch(e){
 alert('불러오기 실패! 다음을 확인해 주세요.\n\n① 시트 공유 설정이 "링크가 있는 모든 사용자(뷰어)"인지\n② 첫 번째 열은 영어, 두 번째 열은 뜻인지\n\n그래도 안 되면 [파일 → 공유 → 웹에 게시]로 게시한 링크를 사용해 보세요.');
-}
 })();
 }
 
@@ -874,6 +806,7 @@ updateStats();
 render();
 ensureBulkRows();
 updateDarkBtn();
+renderSheetHistory();
 
 // 영어/뜻 입력칸에서 Enter 키로 바로 추가
 ['eng','kor'].forEach(id=>{
