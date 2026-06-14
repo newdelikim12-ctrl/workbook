@@ -249,9 +249,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 <input type="text" id="sheetUrl" placeholder="구글 시트 공유 링크를 붙여넣으세요">
 </div>
 <div class="row" style="flex-wrap:nowrap">
-<button style="flex:1;min-width:0;padding:11px 6px;font-size:13px;white-space:nowrap;letter-spacing:-.3px" onclick="importGoogleSheet()">📥 구글시트 불러오기</button>
+<button style="flex:1;min-width:0;padding:11px 6px;font-size:13px;white-space:nowrap;letter-spacing:-.3px" onclick="loadSheetTabs()">📑 시트 목록 불러오기</button>
 <button class="danger" style="flex:1;min-width:0;padding:11px 6px;font-size:13px;white-space:nowrap;letter-spacing:-.3px" onclick="clearAll()">🗑 전체 초기화</button>
 </div>
+<div id="sheetTabs" style="margin-top:8px"></div>
 <div id="sheetHistory" style="margin-top:6px"></div>
 
 <div class="flashcard" id="card" onclick="this.classList.toggle('revealed')">
@@ -519,30 +520,141 @@ box.innerHTML='<div style="display:flex;justify-content:space-between;align-item
 +'<button onclick="removeSheetUrl('+i+')">🗑</button></span></li>').join('')+'</ul>';
 }
 
-function importGoogleSheet(){
+// ===== 시트(탭) 선택해서 불러오기 =====
+function parseSheetId(url){let m=url.match(/\/d\/([a-zA-Z0-9-_]+)/);return m?m[1]:null;}
+function parseSheetGid(url){let m=url.match(/[#&?]gid=([0-9]+)/);return m?m[1]:null;}
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// 직접 URL + (모바일 CORS 우회용) 프록시 URL 후보 만들기
+function withProxies(urls){
+let out=[];
+urls.forEach(u=>out.push(u));
+urls.forEach(u=>{
+out.push('https://corsproxy.io/?url='+encodeURIComponent(u));
+out.push('https://api.allorigins.win/raw?url='+encodeURIComponent(u));
+});
+return out;
+}
+// 후보 URL들을 순서대로 시도해 처음 성공한 본문 반환
+async function fetchFirstOk(urls,validate){
+let lastErr=null;
+for(let u of urls){
+try{
+let r=await fetch(u);
+if(!r.ok) throw new Error('status '+r.status);
+let text=await r.text();
+if(validate) validate(text);
+return text;
+}catch(e){lastErr=e;}
+}
+throw lastErr||new Error('all failed');
+}
+
+// 시트 안에 들어있는 탭(세부 시트) 목록 불러오기
+let detectedTabs=[];
+async function loadSheetTabs(){
+let url=document.getElementById('sheetUrl').value.trim();
+if(!url) return alert('구글 시트 링크를 입력해주세요');
+let id=parseSheetId(url);
+if(!id) return alert('올바른 구글 시트 링크가 아닙니다');
+let box=document.getElementById('sheetTabs');
+box.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px">📑 시트 목록을 불러오는 중... ⏳</div>';
+showToast('시트 목록을 불러오는 중... ⏳');
+// 탭 정보(gid+이름)가 들어있는 HTML 페이지들
+let htmlEndpoints=[
+'https://docs.google.com/spreadsheets/d/'+id+'/htmlview',
+'https://docs.google.com/spreadsheets/d/'+id+'/pubhtml'
+];
+let tabs=[];
+try{
+let html=await fetchFirstOk(withProxies(htmlEndpoints),function(text){
+if(!/sheet-button-/.test(text)) throw new Error('no tabs');
+});
+tabs=parseSheetTabs(html);
+}catch(e){tabs=[];}
+renderSheetTabs(tabs);
+}
+
+// HTML에서 시트 탭(gid, 이름) 추출
+function parseSheetTabs(html){
+let tabs=[],seen={};
+try{
+let doc=new DOMParser().parseFromString(html,'text/html');
+doc.querySelectorAll('[id^="sheet-button-"]').forEach(function(li){
+let gid=li.id.replace('sheet-button-','');
+if(!/^\d+$/.test(gid)) return;
+let name=(li.textContent||'').trim();
+if(name&&!seen[gid]){seen[gid]=1;tabs.push({gid:gid,name:name});}
+});
+}catch(e){}
+if(!tabs.length){
+let re=/sheet-button-(\d+)[^>]*>\s*(?:<[^>]*>\s*)*([^<]+)/g,m;
+while((m=re.exec(html))){
+let gid=m[1];
+let tmp=document.createElement('textarea');tmp.innerHTML=m[2];
+let name=tmp.value.trim();
+if(name&&!seen[gid]){seen[gid]=1;tabs.push({gid:gid,name:name});}
+}
+}
+return tabs;
+}
+
+// 탭 목록 버튼 + 직접 입력 UI 그리기
+function renderSheetTabs(tabs){
+detectedTabs=tabs||[];
+let box=document.getElementById('sheetTabs');
+let urlGid=parseSheetGid(document.getElementById('sheetUrl').value.trim());
+let html='<div style="border:2px solid var(--accent-soft);border-radius:16px;padding:12px;margin-top:4px">';
+if(detectedTabs.length){
+html+='<div style="color:var(--text-title);font-family:Jua,sans-serif;font-size:14px;margin-bottom:8px">📑 가져올 시트(탭)를 선택하세요</div>';
+html+='<div style="display:flex;flex-wrap:wrap;gap:8px">';
+html+=detectedTabs.map(function(t,i){
+let active=urlGid&&urlGid===t.gid;
+return '<button class="small" onclick="importSheetTab('+i+')" style="'+(active?'background:linear-gradient(135deg,#7c9cff,#9b8cff);color:#fff;':'')+'">📄 '+escapeHtml(t.name)+'</button>';
+}).join('');
+html+='</div>';
+}else{
+html+='<div style="color:var(--text-title);font-family:Jua,sans-serif;font-size:14px;margin-bottom:6px">📑 시트 목록을 자동으로 불러오지 못했어요</div>';
+html+='<div style="color:var(--muted);font-size:12px">아래에 시트 탭 이름을 직접 입력하거나, 첫 번째 시트를 바로 불러올 수 있어요.</div>';
+}
+html+='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--input-border)">';
+html+='<div style="color:var(--muted);font-size:12px;margin-bottom:6px">시트 탭 이름을 직접 입력해서 불러오기</div>';
+html+='<div class="row" style="flex-wrap:nowrap;margin:0">';
+html+='<input type="text" id="manualSheetName" placeholder="예: 1과, Unit1, Sheet2" style="min-width:0">';
+html+='<button class="small" style="flex:0 0 auto" onclick="importManualSheet()">📥 불러오기</button>';
+html+='</div>';
+html+='<button class="small" onclick="importGoogleSheet()" style="width:100%;margin-top:8px;background:var(--h3-bg);color:var(--text-main);box-shadow:none">📄 첫 번째 시트 그대로 불러오기</button>';
+html+='</div>';
+html+='</div>';
+box.innerHTML=html;
+}
+
+function importSheetTab(i){let t=detectedTabs[i];if(!t) return;importGoogleSheet({gid:t.gid,sheet:t.name});}
+function importManualSheet(){let name=(document.getElementById('manualSheetName')?.value||'').trim();if(!name) return alert('시트 탭 이름을 입력해 주세요');importGoogleSheet({sheet:name});}
+
+function importGoogleSheet(opts){
+opts=opts||{};
 let url=document.getElementById('sheetUrl').value.trim();
 if(!url) return alert('구글 시트 링크를 입력해주세요');
 let m=url.match(/\/d\/([a-zA-Z0-9-_]+)/);
 if(!m) return alert('올바른 구글 시트 링크가 아닙니다');
 let id=m[1];
-let gid='0';
 let gm=url.match(/[#&?]gid=([0-9]+)/);
-if(gm) gid=gm[1];
-// 구글 직접 엔드포인트들
-let directUrls=[
-`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=0&gid=${gid}`,
-`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`,
-`https://docs.google.com/spreadsheets/d/${id}/pub?gid=${gid}&single=true&output=csv`
-];
+// gid 우선순위: 선택한 탭 > URL의 gid > 0(첫 시트)
+let gid=opts.gid||(gm?gm[1]:null)||'0';
+let sheetName=opts.sheet||null;
+// 구글 직접 엔드포인트들 (시트 이름이 있으면 이름 기반을 먼저 시도)
+let directUrls=[];
+if(sheetName){
+directUrls.push(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=0&sheet=${encodeURIComponent(sheetName)}`);
+}
+directUrls.push(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=0&gid=${gid}`);
+directUrls.push(`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`);
+directUrls.push(`https://docs.google.com/spreadsheets/d/${id}/pub?gid=${gid}&single=true&output=csv`);
 // 모바일(특히 삼성 인터넷/크롬)에서 CORS로 직접 fetch가 막히는 경우를 위한 프록시 우회 경로
-let proxied=[];
-directUrls.forEach(u=>{
-proxied.push('https://corsproxy.io/?url='+encodeURIComponent(u));
-proxied.push('https://api.allorigins.win/raw?url='+encodeURIComponent(u));
-});
-let urls=directUrls.concat(proxied);
+let urls=withProxies(directUrls);
 
-showToast('구글 시트를 불러오는 중... ⏳');
+let label=sheetName?('"'+sheetName+'" 시트를'):'구글 시트를';
+showToast(label+' 불러오는 중... ⏳');
 (async()=>{
 let lastErr=null;
 for(let u of urls){
@@ -557,7 +669,7 @@ let added=addFromCsvText(text);
 addSheetUrl(url); // 성공한 주소를 기록에 저장
 if(added>0){
 showToast(added+'개 단어를 불러왔어요! 📥');
-alert(added+'개의 단어를 불러왔습니다');
+alert((sheetName?('"'+sheetName+'" 시트에서 '):'')+added+'개의 단어를 불러왔습니다');
 }else{
 alert('새로 추가된 단어가 없습니다. (이미 있는 단어이거나, 시트의 형식이 "영어, 뜻" 두 열인지 확인해 주세요)');
 }
@@ -626,13 +738,11 @@ if(lastMode==='wrong'){
 words[currentIndex].wrongResult='correct';
 registerActivity();
 save();
-showToast(praises[Math.floor(Math.random()*praises.length)]+' (오답노트에서 외웠어요!)');
 }else if(!words[currentIndex].mastered){
 // 일반 학습: 학습 완료로 표시 (진도율 상승)
 words[currentIndex].mastered=true;
 registerActivity();
 save();
-showToast(praises[Math.floor(Math.random()*praises.length)]+' (오늘 '+(stats.todayCount||0)+'개)');
 }
 }
 // 같은 모드에서 다음 카드 선택
