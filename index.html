@@ -139,7 +139,7 @@ input[type=file]::file-selector-button{
   background:rgba(255,255,255,.12);
 }
 .flashcard:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 18px 40px rgba(124,124,255,.5)}
-#front{font-size:30px;font-weight:700;font-family:'Jua',sans-serif;white-space:nowrap;width:100%;text-align:center;position:relative}
+#front{font-size:30px;font-weight:700;font-family:'Jua',sans-serif;white-space:normal;overflow-wrap:break-word;word-break:break-word;width:100%;text-align:center;position:relative;line-height:1.25}
 @media (max-width:480px){
 #front{font-size:clamp(18px,7.5vw,30px)}
 }
@@ -150,6 +150,11 @@ input[type=file]::file-selector-button{
   display:none;
   font-weight:600;
   position:relative;
+  text-align:center;
+  width:100%;
+  overflow-wrap:break-word;
+  word-break:break-word;
+  line-height:1.3;
 }
 .flashcard.revealed #back{display:block;animation:fadeIn .3s ease}
 .hint{font-size:13px;opacity:.85;margin-top:10px;position:relative}
@@ -176,9 +181,10 @@ input[type=file]::file-selector-button{
 ul{list-style:none;margin:10px 0;padding:0}
 li{
   margin:8px 0;background:var(--li-bg);padding:12px 14px;border-radius:14px;
-  display:flex;justify-content:space-between;align-items:center;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
   font-size:15px;transition:.15s;
 }
+li>span:first-child{overflow-wrap:break-word;word-break:break-word;min-width:0;flex:1}
 li:hover{background:var(--li-bg-hover);transform:translateX(2px)}
 li.result-correct{background:#e9f0ff;border-left:4px solid var(--accent)}
 li.result-correct:hover{background:#dde8ff}
@@ -254,14 +260,12 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 <div class="row" id="cardActions" style="display:none;justify-content:center">
 <button onclick="event.stopPropagation();speakWord()" id="cardSpeakBtn">🔊 발음 듣기</button>
-<button onclick="event.stopPropagation();toggleFav(currentIndex);showCardActions()" id="cardFavBtn">⭐ 즐겨찾기</button>
 <button onclick="event.stopPropagation();toggleWrongFlag(currentIndex);showCardActions()" id="cardWrongBtn">❌ 오답노트</button>
 <button onclick="event.stopPropagation();nextCard()" id="cardNextBtn">➡️ 다음 (학습 완료)</button>
 </div>
 
 <div class="modes">
 <button onclick="randomMode('all')"><span class="ico">🎲</span><span class="lbl">랜덤 단어</span></button>
-<button onclick="randomMode('fav')"><span class="ico">⭐</span><span class="lbl">즐겨찾기</span></button>
 <button onclick="randomMode('wrong')"><span class="ico">❌</span><span class="lbl">오답노트</span></button>
 </div>
 
@@ -279,15 +283,6 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearAllWords()">🗑 전체 삭제</button>
 </div>
 <div id="allWordsList"></div>
-</div>
-
-<h3 onclick="toggle('favorites',this)"><span>⭐ 즐겨찾기 <b id="cntFav" class="cnt"></b></span></h3>
-<div id="favorites" class="section-content">
-<div class="row" style="margin-top:10px">
-<input type="text" id="favSearch" placeholder="🔍 즐겨찾기 검색" oninput="render()">
-<button class="danger small" onclick="clearFavorites()">🗑 전체 삭제</button>
-</div>
-<div id="favoritesList"></div>
 </div>
 
 <h3 onclick="toggle('wrongs',this)"><span>❌ 오답노트 <b id="cntWrong" class="cnt"></b></span></h3>
@@ -390,11 +385,13 @@ function duplicate(e){return words.some(w=>w.eng.toLowerCase()==e.toLowerCase())
 function addWord(){
 let eng=document.getElementById('eng').value.trim();
 let kor=document.getElementById('kor').value.trim();
-if(!eng||!kor||duplicate(eng)) return;
-words.push({eng,kor,favorite:false,wrong:false,mastered:false});
+if(!eng||!kor) return alert('영어와 뜻을 모두 입력해 주세요');
+if(duplicate(eng)) return alert('이미 있는 단어예요: '+eng);
+words.push({eng,kor,wrong:false,mastered:false,wrongResult:null});
 document.getElementById('eng').value='';
 document.getElementById('kor').value='';
 save();
+showToast('단어를 추가했어요! ➕');
 }
 
 function addBulkRow(eng='',kor=''){
@@ -420,7 +417,7 @@ rows.forEach(r=>{
 let eng=r.querySelector('.bulkEng').value.trim();
 let kor=r.querySelector('.bulkKor').value.trim();
 if(eng&&kor&&!duplicate(eng)){
-words.push({eng,kor,favorite:false,wrong:false,mastered:false});
+words.push({eng,kor,wrong:false,mastered:false,wrongResult:null});
 added++;
 }
 });
@@ -454,16 +451,22 @@ return out;
 }
 function addFromCsvText(text){
 let added=0;
-text.replace(/\r/g,'').split('\n').forEach(l=>{
+let lines=text.replace(/\r/g,'').split('\n');
+lines.forEach((l,idx)=>{
 if(!l.trim()) return;
 let p=parseCsvLine(l);
-if(p.length>=2 && p[0].trim()!="영어" && p[0].trim()!="" && !duplicate(p[0].trim())){
+if(p.length<2) return;
 let eng=p[0].trim();
 let kor=p.slice(1).map(s=>s.trim()).filter(s=>s).join(', ');
-if(!kor) return;
-words.push({eng,kor,favorite:false,wrong:false,mastered:false});
-added++;
+// 첫 번째 줄이 명백한 헤더(예: 영어/단어/뜻/한글/meaning 등)면 건너뜀
+if(idx===0){
+let h1=eng.toLowerCase(), h2=(p[1]||'').trim().toLowerCase();
+let headerWords=['영어','단어','english','word','뜻','한글','의미','meaning','korean'];
+if(headerWords.includes(h1) || headerWords.includes(h2)) return;
 }
+if(eng==='' || !kor || duplicate(eng)) return;
+words.push({eng,kor,wrong:false,mastered:false,wrongResult:null});
+added++;
 });
 save();
 return added;
@@ -480,7 +483,7 @@ let gm=url.match(/[#&?]gid=([0-9]+)/);
 if(gm) gid=gm[1];
 // 여러 엔드포인트를 순서대로 시도 (gviz가 CORS에 가장 안정적)
 let urls=[
-`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`,
+`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=0&gid=${gid}`,
 `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`,
 `https://docs.google.com/spreadsheets/d/${id}/pub?gid=${gid}&single=true&output=csv`
 ];
@@ -532,44 +535,59 @@ let box=document.getElementById('cardActions');
 if(currentIndex<0){box.style.display='none';return;}
 box.style.display='flex';
 let w=words[currentIndex];
-document.getElementById('cardFavBtn').innerText=w.favorite?'⭐ 즐겨찾기 해제':'⭐ 즐겨찾기';
 document.getElementById('cardWrongBtn').innerText=w.wrong?'❌ 오답노트 해제':'❌ 오답노트';
+let nb=document.getElementById('cardNextBtn');
+if(nb) nb.innerText=lastMode==='wrong'?'➡️ 다음 (외웠어요)':'➡️ 다음 (학습 완료)';
 }
 
 function getDeck(mode){
 let arr=words.map((w,i)=>({w,i}));
-arr=arr.filter(x=>!x.w.mastered);
-if(mode==='fav') arr=arr.filter(x=>x.w.favorite);
-if(mode==='wrong') arr=arr.filter(x=>x.w.wrong);
-return arr;
+if(mode==='wrong'){
+// 오답노트는 학습완료 여부와 무관하게, 아직 '외웠어요' 처리 안 된 오답 단어만
+return arr.filter(x=>x.w.wrong && x.w.wrongResult!=='correct');
+}
+// 일반 학습은 학습 완료된 단어 제외
+return arr.filter(x=>!x.w.mastered);
 }
 
 function randomMode(mode){
 lastMode=mode;
 let arr=getDeck(mode);
-if(!arr.length) return alert('단어 없음');
+if(!arr.length){
+if(mode==='wrong') return alert('복습할 오답노트 단어가 없어요! 👍');
+if(words.length===0) return alert('먼저 단어를 추가해 주세요');
+return alert('학습할 단어가 없어요. 모두 학습 완료했어요! 🎉');
+}
 let pick=arr[Math.floor(Math.random()*arr.length)];
 showWord(pick.w,pick.i);
 }
 
 function nextCard(){
-// 현재 보고 있던 카드를 자동으로 '학습 완료'로 표시 (진도율 상승)
-if(currentIndex>=0 && words[currentIndex] && !words[currentIndex].mastered){
+if(currentIndex>=0 && words[currentIndex]){
+if(lastMode==='wrong'){
+// 오답노트 학습: 학습 완료가 아니라 '오답노트 안에서' 외운 것으로 처리
+words[currentIndex].wrongResult='correct';
+registerActivity();
+save();
+showToast(praises[Math.floor(Math.random()*praises.length)]+' (오답노트에서 외웠어요!)');
+}else if(!words[currentIndex].mastered){
+// 일반 학습: 학습 완료로 표시 (진도율 상승)
 words[currentIndex].mastered=true;
 registerActivity();
 save();
 showToast(praises[Math.floor(Math.random()*praises.length)]+' (오늘 '+(stats.todayCount||0)+'개)');
 }
-// 같은 모드에서 아직 학습하지 않은 단어 중 다음 카드 선택
+}
+// 같은 모드에서 다음 카드 선택
 let arr=getDeck(lastMode);
 if(!arr.length){
 currentIndex=-1;
-document.getElementById('front').innerText='🎉 모두 학습했어요!';
+document.getElementById('front').innerText=lastMode==='wrong'?'🎉 오답노트 끝!':'🎉 모두 학습했어요!';
 document.getElementById('back').innerText='';
 document.getElementById('card').classList.remove('revealed');
 showCardActions();
 confetti();
-showToast('모두 학습했어요! 정말 대단해요! 🏆');
+showToast(lastMode==='wrong'?'오답노트를 모두 복습했어요! 👏':'모두 학습했어요! 정말 대단해요! 🏆');
 return;
 }
 let pick=arr[Math.floor(Math.random()*arr.length)];
@@ -582,6 +600,7 @@ save();
 }
 function markWrong(i){
 words[i].wrong=true;
+words[i].wrongResult=null;
 words[i].lastResult='wrong';
 save();
 }
@@ -617,25 +636,40 @@ function clearAllWords(){
 let q=searchVal('searchBox');
 bulkDelete(words.map((w,i)=>({w,i})).filter(x=>matchQ(x.w,q)));
 }
-function clearFavorites(){
-let q=searchVal('favSearch');
-let items=words.filter(w=>w.favorite&&matchQ(w,q));
-if(!items.length) return alert('즐겨찾기한 단어가 없습니다');
-if(!confirm(items.length+'개의 단어를 즐겨찾기에서 해제할까요? (전체 단어 목록에는 그대로 남아요)')) return;
-items.forEach(w=>w.favorite=false);
-save();
-}
 function clearWrongs(){
 let q=searchVal('wrongSearch');
 let items=words.filter(w=>w.wrong&&matchQ(w,q));
 if(!items.length) return alert('오답노트에 단어가 없습니다');
 if(!confirm(items.length+'개의 단어를 오답노트에서 해제할까요? (전체 단어 목록에는 그대로 남아요)')) return;
-items.forEach(w=>w.wrong=false);
+items.forEach(w=>{w.wrong=false;w.wrongResult=null;});
 save();
 }
-function del(i){if(editIndex===i)editIndex=-1;words.splice(i,1);save();}
-function toggleFav(i){words[i].favorite=!words[i].favorite;save();}
-function toggleWrongFlag(i){words[i].wrong=!words[i].wrong;save();}
+function del(i){
+if(editIndex===i)editIndex=-1;
+let curWord=currentIndex>=0?words[currentIndex]:null;
+let removed=words[i];
+words.splice(i,1);
+// 학습 중이던 단어가 삭제됐으면 해제, 아니면 새 위치로 인덱스 보정
+currentIndex=(curWord && curWord!==removed)?words.indexOf(curWord):-1;
+save();
+}
+function toggleWrongFlag(i){
+words[i].wrong=!words[i].wrong;
+if(words[i].wrong) words[i].wrongResult=null; // 새로 담으면 복습 대상으로
+save();
+}
+function wrongNoteCorrect(i){
+// 오답노트 안에서 외운 것으로 처리 (학습 완료와는 별개)
+words[i].wrongResult='correct';
+registerActivity();
+save();
+showToast('잘했어요! 오답노트에서 외웠어요 👏');
+}
+function wrongNoteAgain(i){
+// 다시 틀림 → 계속 복습 대상으로 유지
+words[i].wrongResult='wrong';
+save();
+}
 function toggleMaster(i){words[i].mastered=!words[i].mastered;if(words[i].mastered)registerActivity();save();}
 function toggle(id,el){document.getElementById(id).classList.toggle('open');if(el)el.classList.toggle('open-arrow');}
 
@@ -670,7 +704,7 @@ let data;
 try{data=JSON.parse(raw);}catch(e){return alert('백업 데이터 형식이 올바르지 않습니다');}
 if(!data||!Array.isArray(data.words)) return alert('백업 데이터에 단어가 없습니다');
 if(!confirm('현재 단어를 백업 데이터로 덮어쓸까요? (지금 단어는 사라집니다)')) return;
-words=data.words.map(w=>({eng:w.eng||'',kor:w.kor||'',favorite:!!w.favorite,wrong:!!w.wrong,mastered:!!w.mastered,lastResult:w.lastResult}));
+words=data.words.map(w=>({eng:w.eng||'',kor:w.kor||'',wrong:!!w.wrong,mastered:!!w.mastered,lastResult:w.lastResult,wrongResult:w.wrongResult||null}));
 if(data.stats&&typeof data.stats==='object'){stats=data.stats;saveStats();}
 editIndex=-1;currentIndex=-1;
 save();
@@ -689,7 +723,6 @@ if(i===editIndex){
 return `<li><input id="editEng" value="${w.eng.replace(/"/g,'&quot;')}"><input id="editKor" value="${w.kor.replace(/"/g,'&quot;')}"><span class="btns"><button onclick="saveEdit(${i})">💾</button><button onclick="cancelEdit()">↩️</button></span></li>`;
 }
 return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':''}"><span>${w.eng} - ${w.kor}</span><span class="btns">
-<button onclick="toggleFav(${i})">${w.favorite?'⭐':'☆'}</button>
 <button onclick="toggleWrongFlag(${i})">${w.wrong?'❌':'⭕'}</button>
 <button onclick="toggleMaster(${i})">${w.mastered?'✅':'⬜'}</button>
 <button onclick="startEdit(${i})">✏️</button>
@@ -698,10 +731,8 @@ return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='w
 <button onclick="del(${i})">🗑</button></span></li>`;
 }).join('')+'</ul>';
 
-let fq=searchVal('favSearch');
-document.getElementById('favoritesList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.favorite&&matchQ(x.w,fq)).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="toggleFav(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let wq=searchVal('wrongSearch');
-document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="toggleWrongFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li class="${x.w.wrongResult==='correct'?'result-correct':x.w.wrongResult==='wrong'?'result-wrong':''}"><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="wrongNoteCorrect(${x.i})">⭕ 외웠어요</button><button onclick="wrongNoteAgain(${x.i})">❌ 또 틀림</button><button onclick="toggleWrongFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let mq=searchVal('masteredSearch');
 document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq)).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="toggleMaster(${x.i})">↩️ 학습취소</button><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let total=words.length;
@@ -711,7 +742,6 @@ document.getElementById('progressText').innerText=mastered+' / '+total;
 document.getElementById('progressPct').innerText=pct+'%';
 document.getElementById('progressFill').style.width=pct+'%';
 document.getElementById('cntAll').innerText='('+total+')';
-document.getElementById('cntFav').innerText='('+words.filter(w=>w.favorite).length+')';
 document.getElementById('cntWrong').innerText='('+words.filter(w=>w.wrong).length+')';
 document.getElementById('cntMastered').innerText='('+mastered+')';
 updateStats();
@@ -719,6 +749,12 @@ updateStats();
 render();
 ensureBulkRows();
 updateDarkBtn();
+
+// 영어/뜻 입력칸에서 Enter 키로 바로 추가
+['eng','kor'].forEach(id=>{
+let el=document.getElementById(id);
+if(el) el.addEventListener('keydown',e=>{if(e.key==='Enter')addWord();});
+});
 
 (function(){
 let card=document.getElementById('card');
