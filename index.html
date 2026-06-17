@@ -290,6 +290,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <body>
 <div class="container">
 <div class="row" style="justify-content:flex-end;margin-bottom:14px">
+<button class="small" onclick="toggleSound()" id="soundBtn">🔊 소리 켜짐</button>
 <button class="small" onclick="toggleDark()" id="darkBtn">🌙 다크모드</button>
 </div>
 <h2>민복이와 도형이의 영어 단어 연습장</h2>
@@ -449,6 +450,54 @@ setTimeout(()=>s.remove(),3400);
 }
 }
 
+// ===== 효과음 (Web Audio로 직접 합성, 음원 파일 없음) =====
+let soundOn=localStorage.getItem('soundOn')!=='0'; // 기본 켜짐
+let audioCtx=null;
+function getCtx(){
+let AC=window.AudioContext||window.webkitAudioContext;
+if(!AC) return null;
+if(!audioCtx) audioCtx=new AC();
+if(audioCtx.state==='suspended') audioCtx.resume();
+return audioCtx;
+}
+// 단일 톤 (부드러운 엔벨로프로 클릭음 방지)
+function tone(freq,start,dur,type,vol){
+let ctx=getCtx(); if(!ctx) return;
+let t0=ctx.currentTime+start;
+let osc=ctx.createOscillator(), g=ctx.createGain();
+osc.type=type||'sine';
+osc.frequency.value=freq;
+g.gain.setValueAtTime(0.0001,t0);
+g.gain.exponentialRampToValueAtTime(vol||0.18,t0+0.012);
+g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+osc.connect(g); g.connect(ctx.destination);
+osc.start(t0); osc.stop(t0+dur+0.03);
+}
+function playSound(name){
+if(!soundOn) return;
+if(!getCtx()) return;
+switch(name){
+case 'tap':      tone(420,0,0.07,'sine',0.10); break;
+case 'add':      tone(620,0,0.10,'triangle',0.16); tone(880,0.07,0.13,'triangle',0.15); break;
+case 'flip':     tone(320,0,0.08,'sine',0.10); tone(500,0.04,0.10,'sine',0.09); break;
+case 'correct':  tone(523.25,0,0.12,'triangle',0.18); tone(659.25,0.09,0.12,'triangle',0.18); tone(783.99,0.18,0.18,'triangle',0.2); break;
+case 'wrong':    tone(311.13,0,0.16,'sine',0.16); tone(233.08,0.13,0.22,'sine',0.16); break;
+case 'complete': tone(523.25,0,0.13,'triangle',0.18); tone(659.25,0.11,0.13,'triangle',0.18); tone(783.99,0.22,0.13,'triangle',0.18); tone(1046.5,0.33,0.30,'triangle',0.22); break;
+case 'delete':   tone(260,0,0.10,'sine',0.13); tone(180,0.07,0.14,'sine',0.13); break;
+case 'toggle':   tone(500,0,0.06,'square',0.07); break;
+}
+}
+function updateSoundBtn(){
+let b=document.getElementById('soundBtn');
+if(b) b.innerText=soundOn?'🔊 소리 켜짐':'🔇 소리 꺼짐';
+}
+function toggleSound(){
+soundOn=!soundOn;
+localStorage.setItem('soundOn',soundOn?'1':'0');
+updateSoundBtn();
+if(soundOn) playSound('add'); // 켤 때 확인음
+}
+
 function applyTheme(isDark){
 document.documentElement.style.colorScheme=isDark?'dark':'light';
 var m=document.querySelector('meta[name="theme-color"]');
@@ -478,6 +527,7 @@ words.push({eng,kor,wrong:false,mastered:false,wrongResult:null});
 document.getElementById('eng').value='';
 document.getElementById('kor').value='';
 save();
+playSound('add');
 showToast('단어를 추가했어요! ➕');
 }
 
@@ -512,6 +562,7 @@ if(added){
 document.getElementById('bulkRows').innerHTML='';
 for(let i=0;i<3;i++) addBulkRow();
 save();
+playSound('add');
 showToast(added+'개 단어를 추가했어요! 📋');
 }else{
 alert('추가할 단어가 없습니다. (영어와 뜻을 모두 입력했는지, 중복은 아닌지 확인해 주세요)');
@@ -753,6 +804,7 @@ if(!text.trim()) throw new Error('empty');
 let added=addFromCsvText(text);
 addSheetUrl(url); // 성공한 주소를 기록에 저장
 if(added>0){
+playSound('add');
 showToast(added+'개 단어를 불러왔어요! 📥');
 alert((sheetName?('"'+sheetName+'" 시트에서 '):'')+added+'개의 단어를 불러왔습니다');
 }else{
@@ -844,6 +896,7 @@ document.getElementById('back').innerText='';
 document.getElementById('card').classList.remove('revealed');
 showCardActions();
 confetti();
+playSound('complete');
 showToast(lastMode==='wrong'?'오답노트를 모두 복습했어요! 👏':'모두 학습했어요! 정말 대단해요! 🏆');
 return;
 }
@@ -880,7 +933,8 @@ showToast(quizMode?'객관식 퀴즈 모드를 켰어요 🧩':'객관식 퀴즈
 // 객관식 문제가 떠 있고 아직 안 풀었으면 카드 뒤집기(정답 미리보기) 막기
 function cardClick(){
 if(quizMode && quizState && !quizAnswered) return;
-document.getElementById('card').classList.toggle('revealed');
+let revealed=document.getElementById('card').classList.toggle('revealed');
+if(revealed) playSound('flip');
 }
 
 function startQuiz(){ loadQuizQuestion(); }
@@ -966,17 +1020,21 @@ words[i].lastResult='correct';
 if(lastMode==='wrong') words[i].wrongResult='correct'; // 오답노트에서 외움
 else words[i].mastered=true;                           // 일반: 학습 완료
 registerActivity();
+playSound('correct');
 showToast(praises[Math.floor(Math.random()*praises.length)]);
 }else{
 words[i].lastResult='wrong';
 words[i].wrong=true;                                    // 오답노트 자동 등록
 if(lastMode==='wrong') words[i].wrongResult='wrong';    // 계속 복습 대상 유지
 else words[i].wrongResult=null;
+playSound('wrong');
 showToast('아쉬워요! 오답노트에 담았어요 ✏️');
 }
 save();
 document.getElementById('quizAfter').style.display='flex';
-quizTimer=setTimeout(function(){ if(quizAnswered) loadQuizQuestion(); },1600);
+// 정답이면 빠르게(0.8초), 오답이면 정답을 확인할 시간을 주려고 1.6초 유지
+let delay=correct?800:1600;
+quizTimer=setTimeout(function(){ if(quizAnswered) loadQuizQuestion(); },delay);
 }
 
 function nextQuiz(){ clearTimeout(quizTimer); loadQuizQuestion(); }
@@ -991,6 +1049,7 @@ document.getElementById('front').innerText=lastMode==='wrong'?'🎉 오답노트
 document.getElementById('back').innerText='';
 document.getElementById('card').classList.remove('revealed');
 confetti();
+playSound('complete');
 showToast(lastMode==='wrong'?'오답노트를 모두 복습했어요! 👏':'모두 학습했어요! 정말 대단해요! 🏆');
 }
 
@@ -1008,6 +1067,7 @@ save();
 function clearAll(){
 if(!words.length) return alert('단어가 없습니다');
 if(!confirm('모든 단어를 삭제하고 초기화할까요? (연속 학습 일수와 오늘 학습 기록도 함께 초기화됩니다)')) return;
+playSound('delete');
 words=[];
 currentIndex=-1;
 stats={};
@@ -1018,6 +1078,7 @@ save();
 function clearMastered(){
 if(!words.some(w=>w.mastered)) return alert('학습 완료된 단어가 없습니다');
 if(!confirm('학습 완료된 단어를 모두 다시 학습하도록 되돌릴까요?')) return;
+playSound('delete');
 words.forEach(w=>{if(w.mastered) w.mastered=false;});
 save();
 }
@@ -1025,6 +1086,7 @@ save();
 function bulkDelete(items){
 if(!items.length) return alert('삭제할 단어가 없습니다');
 if(!confirm(items.length+'개의 단어를 삭제할까요?')) return;
+playSound('delete');
 let set=new Set(items.map(x=>x.w));
 let curWord=currentIndex>=0?words[currentIndex]:null;
 words=words.filter(w=>!set.has(w));
@@ -1041,10 +1103,12 @@ let q=searchVal('wrongSearch');
 let items=words.filter(w=>w.wrong&&matchQ(w,q));
 if(!items.length) return alert('오답노트에 단어가 없습니다');
 if(!confirm(items.length+'개의 단어를 오답노트에서 해제할까요? (전체 단어 목록에는 그대로 남아요)')) return;
+playSound('delete');
 items.forEach(w=>{w.wrong=false;w.wrongResult=null;});
 save();
 }
 function del(i){
+playSound('delete');
 if(editIndex===i)editIndex=-1;
 let curWord=currentIndex>=0?words[currentIndex]:null;
 let removed=words[i];
@@ -1063,6 +1127,7 @@ function wrongNoteCorrect(i){
 words[i].wrongResult='correct';
 registerActivity();
 save();
+playSound('add');
 showToast('잘했어요! 오답노트에서 외웠어요 👏');
 }
 function wrongNoteAgain(i){
@@ -1151,7 +1216,14 @@ ensureBulkRows();
 updateDarkBtn();
 renderSheetHistory();
 updateQuizToggleBtn();
+updateSoundBtn();
 if(quizMode) document.getElementById('front').innerText='랜덤 단어 또는 오답노트를 눌러 시작하세요';
+
+// 모든 버튼에 공통 탭 효과음 (객관식 보기는 정답/오답 소리가 따로 있어 제외)
+document.addEventListener('click',function(e){
+let b=e.target.closest('button');
+if(b && !b.classList.contains('quiz-opt')) playSound('tap');
+},true);
 
 // 영어/뜻 입력칸에서 Enter 키로 바로 추가
 ['eng','kor'].forEach(id=>{
