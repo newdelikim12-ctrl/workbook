@@ -367,12 +367,6 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 </div>
 
-<div class="modes">
-<button onclick="randomMode('all')"><span class="ico">🎲</span><span class="lbl">랜덤 단어</span></button>
-<button onclick="randomMode('wrong')"><span class="ico">❌</span><span class="lbl">오답노트</span></button>
-<button onclick="toggleBothMode()" id="bothModeBtn"><span class="ico">👁</span><span class="lbl">영+한 보기</span></button>
-</div>
-
 <div id="rangeWrap" style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:nowrap;overflow:hidden">
 <span style="color:var(--muted);font-size:12px;white-space:nowrap;flex-shrink:0">범위</span>
 <input type="number" id="rangeFrom" min="1" placeholder="처음" style="width:0;flex:1;min-width:0;padding:6px 6px;font-size:13px">
@@ -381,6 +375,12 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="small" onclick="applyRange()" style="flex-shrink:0;padding:7px 10px">적용</button>
 <button class="small" onclick="clearRange()" style="flex-shrink:0;padding:7px 10px">전체</button>
 <span id="rangeCnt" style="color:var(--muted);font-size:12px;flex-shrink:0"></span>
+</div>
+
+<div class="modes">
+<button onclick="randomMode('all')"><span class="ico">🎲</span><span class="lbl">랜덤 단어</span></button>
+<button onclick="randomMode('wrong')"><span class="ico">❌</span><span class="lbl">오답노트</span></button>
+<button onclick="toggleBothMode()" id="bothModeBtn"><span class="ico">👁</span><span class="lbl">영+한 보기</span></button>
 </div>
 
 <div class="flashcard" id="card" onclick="cardClick()">
