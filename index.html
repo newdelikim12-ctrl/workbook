@@ -419,6 +419,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearAllWords()">🗑 전체 삭제</button>
 </div>
 <div id="allWordsList"></div>
+<div style="text-align:center;margin-top:10px"><button class="small" onclick="closeSection('allWords')" style="background:var(--h3-bg);color:var(--text-main);box-shadow:none">▲ 접기</button></div>
 </div>
 
 <h3 onclick="toggle('wrongs',this)"><span>❌ 오답노트 <b id="cntWrong" class="cnt"></b></span></h3>
@@ -432,6 +433,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearWrongs()">🗑 전체 삭제</button>
 </div>
 <div id="wrongsList"></div>
+<div style="text-align:center;margin-top:10px"><button class="small" onclick="closeSection('wrongs')" style="background:var(--h3-bg);color:var(--text-main);box-shadow:none">▲ 접기</button></div>
 </div>
 
 <h3 onclick="toggle('mastered',this)"><span>✅ 학습 완료 <b id="cntMastered" class="cnt"></b></span></h3>
@@ -441,6 +443,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearMastered()">↩️ 전체 학습취소</button>
 </div>
 <div id="masteredList"></div>
+<div style="text-align:center;margin-top:10px"><button class="small" onclick="closeSection('mastered')" style="background:var(--h3-bg);color:var(--text-main);box-shadow:none">▲ 접기</button></div>
 </div>
 
 <h3 onclick="toggle('addWord',this);ensureBulkRows()"><span>➕ 단어 추가</span></h3>
@@ -470,6 +473,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearDupes()" style="flex:1">🗑 중복 기록 비우기</button>
 </div>
 <div id="dupesList"></div>
+<div style="text-align:center;margin-top:10px"><button class="small" onclick="closeSection('dupeBox')" style="background:var(--h3-bg);color:var(--text-main);box-shadow:none">▲ 접기</button></div>
 </div>
 
 <h3 onclick="toggle('backup',this)"><span>💾 데이터 백업</span></h3>
@@ -1375,6 +1379,14 @@ if(state) playSound('add');
 showToast(state?'전체 단어를 학습 완료로 표시했어요 🏆':'전체 단어를 학습 안 함으로 되돌렸어요');
 }
 function toggle(id,el){document.getElementById(id).classList.toggle('open');if(el)el.classList.toggle('open-arrow');}
+function closeSection(id){
+let c=document.getElementById(id);
+if(!c) return;
+c.classList.remove('open');
+let h3=c.previousElementSibling;
+if(h3&&h3.tagName==='H3') h3.classList.remove('open-arrow');
+h3.scrollIntoView({behavior:'smooth',block:'start'});
+}
 
 function startEdit(i){editIndex=i;render();}
 function cancelEdit(){editIndex=-1;render();}
