@@ -333,13 +333,6 @@ li input{flex:1;min-width:90px;font-size:14px}
 }
 .quiz-dunno:hover{background:var(--li-bg);color:var(--text-main);transform:translateY(-1px);box-shadow:none;filter:none}
 .quiz-dunno:disabled{opacity:.45;cursor:default}
-.src-btn{
-  padding:6px 12px;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;
-  font-family:'Quicksand','Gowun Dodum','Malgun Gothic',sans-serif;
-  background:var(--h3-bg);color:var(--muted);transition:.15s;box-shadow:0 2px 6px var(--shadow);
-}
-.src-btn:hover{background:var(--h3-bg-hover);color:var(--text-main)}
-.src-btn.on{background:linear-gradient(135deg,#7c9cff,#9b8cff);color:#fff;box-shadow:0 3px 10px rgba(124,156,255,.35)}
 </style>
 </head>
 <body>
@@ -358,12 +351,6 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger" style="flex:1;min-width:0;padding:11px 6px;font-size:13px;white-space:nowrap;letter-spacing:-.3px" onclick="clearAll()">🗑 전체 초기화</button>
 </div>
 <div id="sheetTabs" style="margin-top:8px"></div>
-
-<div id="srcFilterSection" style="display:none">
-<h3 id="srcFilterH3" onclick="toggle('srcFilterContent',this)"><span>📄 시트별 학습 범위</span></h3>
-<div id="srcFilterContent" class="section-content">
-</div>
-</div>
 
 <div id="rangeWrap" style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:nowrap;overflow:hidden">
 <span style="color:var(--muted);font-size:12px;white-space:nowrap;flex-shrink:0">범위</span>
@@ -938,7 +925,6 @@ alert('불러오기 실패! 다음을 확인해 주세요.\n\n① 시트 공유 
 
 let currentIndex=-1;
 let lastMode='all';
-let srcFilter=null;
 let bothMode=localStorage.getItem('bothMode')==='1';
 let rangeFrom=null,rangeTo=null;
 let quizMode=localStorage.getItem('quizMode')==='1';
@@ -1012,73 +998,12 @@ if(nb) nb.innerText=lastMode==='wrong'?'➡️ 다음 (외웠어요)':'➡️ �
 
 function getDeck(mode){
 let arr=words.map((w,i)=>({w,i,num:i+1}));
-if(srcFilter) arr=arr.filter(x=>x.w.src===srcFilter);
 if(rangeFrom) arr=arr.filter(x=>x.num>=rangeFrom);
 if(rangeTo) arr=arr.filter(x=>x.num<=rangeTo);
 if(mode==='wrong'){
 return arr.filter(x=>x.w.wrong && x.w.wrongResult!=='correct');
 }
 return arr.filter(x=>!x.w.mastered);
-}
-
-function setSrcFilter(src){
-srcFilter=src;
-renderSrcFilter();
-}
-function deleteSheetWords(src){
-if(!confirm('"'+src+'" 시트의 단어를 전부 삭제할까요?')) return;
-let before=words.length;
-let curWord=currentIndex>=0?words[currentIndex]:null;
-words=words.filter(w=>w.src!==src);
-currentIndex=(curWord&&words.includes(curWord))?words.indexOf(curWord):-1;
-if(srcFilter===src) srcFilter=null;
-playSound('delete');
-save();
-showToast('"'+src+'" 단어 '+(before-words.length)+'개 삭제 🗑');
-}
-function renderSrcFilter(){
-let srcs=[...new Set(words.map(w=>w.src).filter(Boolean))];
-let section=document.getElementById('srcFilterSection');
-let content=document.getElementById('srcFilterContent');
-if(!section||!content) return;
-if(!srcs.length){
-section.style.display='none';
-if(srcFilter&&!srcs.includes(srcFilter)) srcFilter=null;
-return;
-}
-section.style.display='';
-// 시트가 생기면 자동 펼침
-if(!content.classList.contains('open')){
-content.classList.add('open');
-let h3=document.getElementById('srcFilterH3');
-if(h3) h3.classList.add('open-arrow');
-}
-// 필터 버튼 행
-let html='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">';
-html+='<button class="src-btn'+(srcFilter===null?' on':'')+'" onclick="setSrcFilter(null)">📚 전체</button>';
-srcs.forEach(s=>{
-html+='<button class="src-btn'+(srcFilter===s?' on':'')+'" onclick="setSrcFilter('+JSON.stringify(s)+')">📄 '+escapeHtml(s)+'</button>';
-});
-html+='</div>';
-// 선택된 시트의 단어 목록 (하나씩 삭제 가능)
-if(srcFilter!==null){
-let sheetWords=words.map((w,i)=>({w,i})).filter(x=>x.w.src===srcFilter);
-html+='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--input-border)">';
-html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-html+='<span style="color:var(--muted);font-size:13px">📄 '+escapeHtml(srcFilter)+' · '+sheetWords.length+'개</span>';
-html+='<button class="small danger" onclick="deleteSheetWords('+JSON.stringify(srcFilter)+')" style="font-size:12px;padding:5px 10px">🗑 시트 전체 삭제</button>';
-html+='</div>';
-if(sheetWords.length){
-html+='<ul style="margin:0">'+sheetWords.map(({w,i})=>
-'<li><span>'+escapeHtml(w.eng)+' - '+escapeHtml(w.kor)+'</span>'
-+'<span class="btns"><button onclick="del('+i+')">🗑</button></span></li>'
-).join('')+'</ul>';
-}else{
-html+='<div style="color:var(--muted);font-size:13px;padding:6px 0">단어가 없어요</div>';
-}
-html+='</div>';
-}
-content.innerHTML=html;
 }
 
 function randomMode(mode){
@@ -1484,7 +1409,6 @@ function matchQ(w,q){return !q||w.eng.toLowerCase().includes(q)||w.kor.toLowerCa
 function searchVal(id){return (document.getElementById(id)?.value||'').trim().toLowerCase();}
 
 function render(){
-renderSrcFilter();
 let all=document.getElementById('allWordsList');
 let q=searchVal('searchBox');
 let list=words.map((w,i)=>({w,i})).filter(x=>matchQ(x.w,q));
