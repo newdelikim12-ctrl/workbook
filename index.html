@@ -259,6 +259,18 @@ li input{flex:1;min-width:90px;font-size:14px}
   border:1.5px solid var(--input-border);border-radius:14px;padding:4px 6px;
   scrollbar-width:thin;scrollbar-color:var(--accent-soft) transparent;
 }
+#wrongsList li{
+  margin:5px 0;padding:8px 10px;font-size:13px;border-radius:10px;
+}
+#wrongsList li span:first-child{font-size:13px}
+#wrongsList li button{padding:5px 7px;font-size:12px}
+.fold-btn{
+  display:block;width:100%;margin-top:10px;padding:7px 0;
+  background:none;border:1.5px solid var(--input-border);border-radius:12px;
+  color:var(--muted);font-size:13px;font-weight:600;letter-spacing:.5px;
+  box-shadow:none;cursor:pointer;transition:.15s;
+}
+.fold-btn:hover{background:var(--li-bg-hover);color:var(--text-main);transform:none;filter:none;box-shadow:none}
 #allWordsList::-webkit-scrollbar,#wrongsList::-webkit-scrollbar,
 #masteredList::-webkit-scrollbar,#dupesList::-webkit-scrollbar{width:5px}
 #allWordsList::-webkit-scrollbar-thumb,#wrongsList::-webkit-scrollbar-thumb,
@@ -432,7 +444,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearAllWords()">🗑 전체 삭제</button>
 </div>
 <div id="allWordsList"></div>
-<div style="text-align:center;margin-top:10px"><button class="small" onclick="closeSection('allWords')" style="background:var(--h3-bg);color:var(--text-main);box-shadow:none">▲ 접기</button></div>
+<button class="fold-btn" onclick="closeSection('allWords')">∧ 접기</button>
 </div>
 
 <h3 onclick="toggle('wrongs',this)"><span>❌ 오답노트 <b id="cntWrong" class="cnt"></b></span></h3>
@@ -446,7 +458,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearWrongs()">🗑 전체 삭제</button>
 </div>
 <div id="wrongsList"></div>
-<div style="text-align:center;margin-top:10px"><button class="small" onclick="closeSection('wrongs')" style="background:var(--h3-bg);color:var(--text-main);box-shadow:none">▲ 접기</button></div>
+<button class="fold-btn" onclick="closeSection('wrongs')">∧ 접기</button>
 </div>
 
 <h3 onclick="toggle('mastered',this)"><span>✅ 학습 완료 <b id="cntMastered" class="cnt"></b></span></h3>
@@ -456,7 +468,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearMastered()">↩️ 전체 학습취소</button>
 </div>
 <div id="masteredList"></div>
-<div style="text-align:center;margin-top:10px"><button class="small" onclick="closeSection('mastered')" style="background:var(--h3-bg);color:var(--text-main);box-shadow:none">▲ 접기</button></div>
+<button class="fold-btn" onclick="closeSection('mastered')">∧ 접기</button>
 </div>
 
 <h3 onclick="toggle('addWord',this);ensureBulkRows()"><span>➕ 단어 추가</span></h3>
@@ -486,7 +498,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearDupes()" style="flex:1">🗑 중복 기록 비우기</button>
 </div>
 <div id="dupesList"></div>
-<div style="text-align:center;margin-top:10px"><button class="small" onclick="closeSection('dupeBox')" style="background:var(--h3-bg);color:var(--text-main);box-shadow:none">▲ 접기</button></div>
+<button class="fold-btn" onclick="closeSection('dupeBox')">∧ 접기</button>
 </div>
 
 <h3 onclick="toggle('backup',this)"><span>💾 데이터 백업</span></h3>
