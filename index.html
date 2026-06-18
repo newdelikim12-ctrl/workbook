@@ -253,6 +253,16 @@ li input{flex:1;min-width:90px;font-size:14px}
   .progress-bar{height:10px}
 }
 
+#allWordsList,#wrongsList,#masteredList,#dupesList{
+  max-height:280px;overflow-y:auto;margin-top:6px;
+  border:1.5px solid var(--input-border);border-radius:14px;padding:4px 6px;
+  scrollbar-width:thin;scrollbar-color:var(--accent-soft) transparent;
+}
+#allWordsList::-webkit-scrollbar,#wrongsList::-webkit-scrollbar,
+#masteredList::-webkit-scrollbar,#dupesList::-webkit-scrollbar{width:5px}
+#allWordsList::-webkit-scrollbar-thumb,#wrongsList::-webkit-scrollbar-thumb,
+#masteredList::-webkit-scrollbar-thumb,#dupesList::-webkit-scrollbar-thumb{
+  background:var(--accent-soft);border-radius:4px}
 .toast{
   position:fixed;left:50%;bottom:30px;
   transform:translateX(-50%) translateY(20px);
