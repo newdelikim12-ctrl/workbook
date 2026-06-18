@@ -388,10 +388,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 <div id="back">뜻</div>
 <div class="hint" id="cardHint">카드를 클릭하면 뜻이 표시됩니다</div>
 </div>
-<div class="row" id="cardActions" style="display:none;justify-content:center">
-<button onclick="event.stopPropagation();speakWord()" id="cardSpeakBtn">🔊 발음 듣기</button>
-<button onclick="event.stopPropagation();toggleWrongFlag(currentIndex);showCardActions()" id="cardWrongBtn">❌ 오답노트</button>
-<button onclick="event.stopPropagation();nextCard()" id="cardNextBtn">➡️ 다음 (학습 완료)</button>
+<div id="cardActions" style="display:none;gap:8px;margin-top:10px;flex-wrap:nowrap">
+<button onclick="event.stopPropagation();speakWord()" id="cardSpeakBtn" style="flex:1;min-width:0;padding:10px 6px;font-size:13px;white-space:nowrap">🔊 발음</button>
+<button onclick="event.stopPropagation();toggleWrongFlag(currentIndex);showCardActions()" id="cardWrongBtn" style="flex:1;min-width:0;padding:10px 6px;font-size:13px;white-space:nowrap">❌ 오답노트</button>
+<button onclick="event.stopPropagation();nextCard()" id="cardNextBtn" style="flex:2;min-width:0;padding:10px 6px;font-size:13px;white-space:nowrap">➡️ 다음 (학습 완료)</button>
 </div>
 
 <div id="quizPanel" style="display:none">
