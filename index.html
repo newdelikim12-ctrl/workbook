@@ -131,7 +131,7 @@ input[type=file]::file-selector-button{
 
 .flashcard{
   margin-top:18px;
-  min-height:150px;
+  min-height:225px;
   cursor:pointer;
   background:linear-gradient(135deg,#7c9cff 0%,#a78bff 55%,#c89bff 100%);
   border-radius:24px;
@@ -139,7 +139,7 @@ input[type=file]::file-selector-button{
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  padding:28px;
+  padding:42px;
   text-align:center;
   color:#fff;
   box-shadow:0 12px 32px rgba(124,124,255,.4);
@@ -209,8 +209,6 @@ li .btns{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-
 li button{padding:6px 9px;font-size:13px;border-radius:10px;background:var(--h3-bg);color:var(--text-main);box-shadow:none;font-weight:600}
 li button:hover{background:var(--h3-bg-hover);filter:none;transform:none}
 
-.stats-line{text-align:center;color:var(--muted);font-size:15px;margin-top:10px}
-.stats-line b{color:#ff8a5c;font-size:17px}
 .cnt{font-size:13px;color:var(--accent-soft);font-weight:400}
 li input{flex:1;min-width:90px;font-size:14px}
 #backupBox{height:92px;font-size:12px}
@@ -228,7 +226,7 @@ li input{flex:1;min-width:90px;font-size:14px}
   body{padding:10px 10px}
   .container{padding:14px 14px}
   h2{font-size:22px;margin-bottom:2px}
-  .flashcard{margin-top:10px;min-height:100px;padding:16px 18px;border-radius:18px}
+  .flashcard{margin-top:10px;min-height:150px;padding:24px 27px;border-radius:18px}
   #front{font-size:clamp(16px,5.5vw,22px)}
   #back{font-size:15px;margin-top:8px}
   .hint{font-size:12px;margin-top:6px}
@@ -253,7 +251,6 @@ li input{flex:1;min-width:90px;font-size:14px}
   .progress-wrap{margin:10px 0;padding:10px 14px}
   .progress-label{font-size:13px;margin-bottom:6px}
   .progress-bar{height:10px}
-  .stats-line{font-size:13px;margin-top:6px}
 }
 
 .toast{
@@ -362,6 +359,30 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 <div id="sheetTabs" style="margin-top:8px"></div>
 
+<div id="srcFilterSection" style="display:none">
+<h3 id="srcFilterH3" onclick="toggle('srcFilterContent',this)"><span>📄 시트별 학습 범위</span></h3>
+<div id="srcFilterContent" class="section-content">
+<div id="srcFilterBtns" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
+<div id="srcDeleteBtns" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--input-border);align-items:center"></div>
+</div>
+</div>
+
+<div class="modes">
+<button onclick="randomMode('all')"><span class="ico">🎲</span><span class="lbl">랜덤 단어</span></button>
+<button onclick="randomMode('wrong')"><span class="ico">❌</span><span class="lbl">오답노트</span></button>
+<button onclick="toggleBothMode()" id="bothModeBtn"><span class="ico">👁</span><span class="lbl">영+한 보기</span></button>
+</div>
+
+<div id="rangeWrap" style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+<span style="color:var(--muted);font-size:13px">번호 범위:</span>
+<input type="number" id="rangeFrom" min="1" placeholder="처음" style="width:70px;padding:6px 8px;font-size:13px;flex:0 0 auto">
+<span style="color:var(--muted);font-size:13px">~</span>
+<input type="number" id="rangeTo" min="1" placeholder="끝" style="width:70px;padding:6px 8px;font-size:13px;flex:0 0 auto">
+<button class="small" onclick="applyRange()" style="flex:0 0 auto">적용</button>
+<button class="small" onclick="clearRange()" style="flex:0 0 auto">전체</button>
+<span id="rangeCnt" style="color:var(--muted);font-size:12px"></span>
+</div>
+
 <div class="flashcard" id="card" onclick="cardClick()">
 <div id="front">단어를 선택하세요</div>
 <div id="back">뜻</div>
@@ -396,42 +417,11 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 </div>
 
-<div id="srcFilterWrap" style="display:none;margin-bottom:8px">
-<div style="color:var(--muted);font-size:12px;margin-bottom:5px;text-align:center">📄 시트별 학습 범위</div>
-<div id="srcFilterBtns" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center"></div>
-</div>
-
-<div class="modes">
-<button onclick="randomMode('all')"><span class="ico">🎲</span><span class="lbl">랜덤 단어</span></button>
-<button onclick="randomMode('wrong')"><span class="ico">❌</span><span class="lbl">오답노트</span></button>
-</div>
-
 <div class="progress-wrap">
 <div class="progress-label">학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</div>
 <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-<div class="stats-line">🔥 연속 <b id="streakDays">0</b>일 · 오늘 학습 <b id="todayLearned">0</b>개</div>
 </div>
 
-
-<h3 onclick="toggle('addWord',this);ensureBulkRows()"><span>➕ 단어 추가</span></h3>
-<div id="addWord" class="section-content">
-<div style="margin-top:12px">
-  <div style="color:var(--text-title);font-family:Jua,sans-serif;font-size:14px;margin-bottom:8px">단일 추가</div>
-  <div class="row">
-    <input id="eng" placeholder="English">
-    <input id="kor" placeholder="뜻">
-  </div>
-  <div class="row" style="justify-content:center;margin-top:4px">
-    <button onclick="addWord()">➕ 추가</button>
-  </div>
-  <div style="color:var(--text-title);font-family:Jua,sans-serif;font-size:14px;margin-top:18px;margin-bottom:8px">일괄 추가</div>
-  <div id="bulkRows" style="max-height:260px;overflow-y:auto;overflow-x:hidden;padding:4px;border:2px dashed var(--accent-soft);border-radius:16px"></div>
-  <div class="row" style="justify-content:center;margin-top:10px">
-    <button class="small" onclick="addBulkRow()">➕ 행 추가</button>
-    <button class="small" onclick="bulkAdd()">📋 일괄 추가</button>
-  </div>
-</div>
-</div>
 
 <h3 onclick="toggle('allWords',this)"><span>📖 전체 단어 <b id="cntAll" class="cnt"></b></span></h3>
 <div id="allWords" class="section-content">
@@ -466,6 +456,26 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearMastered()">↩️ 전체 학습취소</button>
 </div>
 <div id="masteredList"></div>
+</div>
+
+<h3 onclick="toggle('addWord',this);ensureBulkRows()"><span>➕ 단어 추가</span></h3>
+<div id="addWord" class="section-content">
+<div style="margin-top:12px">
+  <div style="color:var(--text-title);font-family:Jua,sans-serif;font-size:14px;margin-bottom:8px">단일 추가</div>
+  <div class="row">
+    <input id="eng" placeholder="English">
+    <input id="kor" placeholder="뜻">
+  </div>
+  <div class="row" style="justify-content:center;margin-top:4px">
+    <button onclick="addWord()">➕ 추가</button>
+  </div>
+  <div style="color:var(--text-title);font-family:Jua,sans-serif;font-size:14px;margin-top:18px;margin-bottom:8px">일괄 추가</div>
+  <div id="bulkRows" style="max-height:260px;overflow-y:auto;overflow-x:hidden;padding:4px;border:2px dashed var(--accent-soft);border-radius:16px"></div>
+  <div class="row" style="justify-content:center;margin-top:10px">
+    <button class="small" onclick="addBulkRow()">➕ 행 추가</button>
+    <button class="small" onclick="bulkAdd()">📋 일괄 추가</button>
+  </div>
+</div>
 </div>
 
 <h3 onclick="toggle('dupeBox',this)"><span>🔁 중복 단어 <b id="cntDupes" class="cnt"></b></span></h3>
@@ -853,8 +863,7 @@ return '<button class="small" onclick="importSheetTab('+i+')" style="'+(active?'
 }).join('');
 html+='</div>';
 }else{
-html+='<div style="color:var(--text-title);font-family:Jua,sans-serif;font-size:14px;margin-bottom:6px">📑 시트 목록을 자동으로 불러오지 못했어요</div>';
-html+='<div style="color:var(--muted);font-size:12px">아래에 시트 탭 이름을 직접 입력하거나, 첫 번째 시트를 바로 불러올 수 있어요.</div>';
+html+='<div style="color:var(--muted);font-size:13px;margin-bottom:4px">아래에 시트 탭 이름을 입력하세요</div>';
 }
 html+='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--input-border)">';
 html+='<div style="color:var(--muted);font-size:12px;margin-bottom:6px">시트 탭 이름을 직접 입력해서 불러오기</div>';
@@ -932,7 +941,9 @@ alert('불러오기 실패! 다음을 확인해 주세요.\n\n① 시트 공유 
 
 let currentIndex=-1;
 let lastMode='all';
-let srcFilter=null; // null=전체, 문자열=특정 시트만
+let srcFilter=null;
+let bothMode=localStorage.getItem('bothMode')==='1';
+let rangeFrom=null,rangeTo=null;
 let quizMode=localStorage.getItem('quizMode')==='1';
 let quizDir=localStorage.getItem('quizDir')||'random'; // 'e2k'(영어 제시) | 'k2e'(한글 제시) | 'random'
 let quizState=null;     // {i, dir:'e2k'|'k2e', correct, opts}
@@ -952,8 +963,45 @@ function showWord(w,i){
 currentIndex=i!==undefined?i:-1;
 document.getElementById('front').innerText=w.eng;
 document.getElementById('back').innerText=w.kor;
-document.getElementById('card').classList.remove('revealed');
+let card=document.getElementById('card');
+card.classList.remove('revealed');
+if(bothMode) card.classList.add('revealed');
 showCardActions();
+}
+
+function toggleBothMode(){
+bothMode=!bothMode;
+localStorage.setItem('bothMode',bothMode?'1':'0');
+updateBothModeBtn();
+if(currentIndex>=0 && words[currentIndex]) showWord(words[currentIndex],currentIndex);
+showToast(bothMode?'영어+한글 동시 표시 켜짐 👁':'플래시카드 모드로 변경 📖');
+}
+function updateBothModeBtn(){
+let b=document.getElementById('bothModeBtn');
+if(!b) return;
+if(bothMode){b.style.background='linear-gradient(135deg,#56c596,#3eb489)';b.style.color='#fff';}
+else{b.style.background='';b.style.color='';}
+}
+
+function applyRange(){
+let f=parseInt(document.getElementById('rangeFrom').value)||null;
+let t=parseInt(document.getElementById('rangeTo').value)||null;
+rangeFrom=f; rangeTo=t;
+updateRangeCnt();
+showToast(f||t?'범위 '+(f||1)+'~'+(t||words.length)+'번 단어':'전체 단어');
+}
+function clearRange(){
+rangeFrom=null; rangeTo=null;
+document.getElementById('rangeFrom').value='';
+document.getElementById('rangeTo').value='';
+updateRangeCnt();
+showToast('전체 단어로 학습할게요');
+}
+function updateRangeCnt(){
+let cnt=document.getElementById('rangeCnt');
+if(!cnt) return;
+if(rangeFrom||rangeTo) cnt.innerText='('+getDeck(lastMode).length+'개)';
+else cnt.innerText='';
 }
 function showCardActions(){
 let box=document.getElementById('cardActions');
@@ -966,8 +1014,10 @@ if(nb) nb.innerText=lastMode==='wrong'?'➡️ 다음 (외웠어요)':'➡️ �
 }
 
 function getDeck(mode){
-let arr=words.map((w,i)=>({w,i}));
+let arr=words.map((w,i)=>({w,i,num:i+1}));
 if(srcFilter) arr=arr.filter(x=>x.w.src===srcFilter);
+if(rangeFrom) arr=arr.filter(x=>x.num>=rangeFrom);
+if(rangeTo) arr=arr.filter(x=>x.num<=rangeTo);
 if(mode==='wrong'){
 return arr.filter(x=>x.w.wrong && x.w.wrongResult!=='correct');
 }
@@ -978,18 +1028,35 @@ function setSrcFilter(src){
 srcFilter=src;
 renderSrcFilter();
 }
+function deleteSheetWords(src){
+if(!confirm('"'+src+'" 시트의 단어를 모두 삭제할까요?')) return;
+let before=words.length;
+words=words.filter(w=>w.src!==src);
+if(srcFilter===src) srcFilter=null;
+playSound('delete');
+save();
+showToast('"'+src+'" 단어 '+(before-words.length)+'개 삭제 🗑');
+}
 function renderSrcFilter(){
 let srcs=[...new Set(words.map(w=>w.src).filter(Boolean))];
-let wrap=document.getElementById('srcFilterWrap');
+let section=document.getElementById('srcFilterSection');
 let box=document.getElementById('srcFilterBtns');
-if(!wrap||!box) return;
-if(srcs.length<2){wrap.style.display='none';srcFilter=null;return;}
-wrap.style.display='';
+let delBox=document.getElementById('srcDeleteBtns');
+if(!section||!box) return;
+if(!srcs.length){section.style.display='none';if(srcFilter&&!srcs.includes(srcFilter))srcFilter=null;return;}
+section.style.display='';
 let html='<button class="src-btn'+(srcFilter===null?' on':'')+'" onclick="setSrcFilter(null)">📚 전체</button>';
 srcs.forEach(s=>{
 html+='<button class="src-btn'+(srcFilter===s?' on':'')+'" onclick="setSrcFilter('+JSON.stringify(s)+')" title="'+escapeHtml(s)+'">📄 '+escapeHtml(s)+'</button>';
 });
 box.innerHTML=html;
+if(delBox){
+let dhtml='<span style="color:var(--muted);font-size:12px">시트 삭제:</span>';
+srcs.forEach(s=>{
+dhtml+='<button class="src-btn" onclick="deleteSheetWords('+JSON.stringify(s)+')" style="background:linear-gradient(135deg,#ff8a8a,#ff6b9d);color:#fff">🗑 '+escapeHtml(s)+'</button>';
+});
+delBox.innerHTML=dhtml;
+}
 }
 
 function randomMode(mode){
@@ -1427,12 +1494,12 @@ document.getElementById('cntWrong').innerText='('+words.filter(w=>w.wrong).lengt
 document.getElementById('cntMastered').innerText='('+mastered+')';
 document.getElementById('cntDupes').innerText='('+dupes.length+')';
 renderDupes();
-updateStats();
 }
 render();
 updateDarkBtn();
 updateQuizModeBtns();
 updateSoundBtn();
+updateBothModeBtn();
 if(quizMode) document.getElementById('front').innerText='랜덤 단어 또는 오답노트를 눌러 시작하세요';
 
 // 모든 버튼에 공통 탭 효과음 (객관식 보기는 정답/오답 소리가 따로 있어 제외)
