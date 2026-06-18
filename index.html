@@ -373,14 +373,14 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button onclick="toggleBothMode()" id="bothModeBtn"><span class="ico">👁</span><span class="lbl">영+한 보기</span></button>
 </div>
 
-<div id="rangeWrap" style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-<span style="color:var(--muted);font-size:13px">번호 범위:</span>
-<input type="number" id="rangeFrom" min="1" placeholder="처음" style="width:70px;padding:6px 8px;font-size:13px;flex:0 0 auto">
-<span style="color:var(--muted);font-size:13px">~</span>
-<input type="number" id="rangeTo" min="1" placeholder="끝" style="width:70px;padding:6px 8px;font-size:13px;flex:0 0 auto">
-<button class="small" onclick="applyRange()" style="flex:0 0 auto">적용</button>
-<button class="small" onclick="clearRange()" style="flex:0 0 auto">전체</button>
-<span id="rangeCnt" style="color:var(--muted);font-size:12px"></span>
+<div id="rangeWrap" style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:nowrap;overflow:hidden">
+<span style="color:var(--muted);font-size:12px;white-space:nowrap;flex-shrink:0">범위</span>
+<input type="number" id="rangeFrom" min="1" placeholder="처음" style="width:0;flex:1;min-width:0;padding:6px 6px;font-size:13px">
+<span style="color:var(--muted);font-size:12px;flex-shrink:0">~</span>
+<input type="number" id="rangeTo" min="1" placeholder="끝" style="width:0;flex:1;min-width:0;padding:6px 6px;font-size:13px">
+<button class="small" onclick="applyRange()" style="flex-shrink:0;padding:7px 10px">적용</button>
+<button class="small" onclick="clearRange()" style="flex-shrink:0;padding:7px 10px">전체</button>
+<span id="rangeCnt" style="color:var(--muted);font-size:12px;flex-shrink:0"></span>
 </div>
 
 <div class="flashcard" id="card" onclick="cardClick()">
