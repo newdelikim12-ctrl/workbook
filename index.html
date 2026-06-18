@@ -314,21 +314,6 @@ li input{flex:1;min-width:90px;font-size:14px}
 <h2>민복이와 도형이의 영어 단어 연습장</h2>
 
 <div class="row">
-<input id="eng" placeholder="English">
-<input id="kor" placeholder="뜻">
-</div>
-
-<div class="row" style="justify-content:center;margin-top:4px">
-<button onclick="addWord()">➕ 추가</button>
-</div>
-
-<div id="bulkRows" style="max-height:260px;overflow-y:auto;overflow-x:hidden;margin-top:14px;padding:4px;border:2px dashed var(--accent-soft);border-radius:16px"></div>
-<div class="row" style="justify-content:center;margin-top:10px">
-<button class="small" onclick="addBulkRow()">➕ 행 추가</button>
-<button class="small" onclick="bulkAdd()">📋 일괄 추가</button>
-</div>
-
-<div class="row">
 <input type="text" id="sheetUrl" placeholder="구글 시트 공유 링크를 붙여넣으세요">
 </div>
 <div class="row" style="flex-wrap:nowrap">
@@ -336,7 +321,6 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger" style="flex:1;min-width:0;padding:11px 6px;font-size:13px;white-space:nowrap;letter-spacing:-.3px" onclick="clearAll()">🗑 전체 초기화</button>
 </div>
 <div id="sheetTabs" style="margin-top:8px"></div>
-<div id="sheetHistory" style="margin-top:6px"></div>
 
 <div class="flashcard" id="card" onclick="cardClick()">
 <div id="front">단어를 선택하세요</div>
@@ -383,6 +367,26 @@ li input{flex:1;min-width:90px;font-size:14px}
 <div class="stats-line">🔥 연속 <b id="streakDays">0</b>일 · 오늘 학습 <b id="todayLearned">0</b>개</div>
 </div>
 
+
+<h3 onclick="toggle('addWord',this);ensureBulkRows()"><span>➕ 단어 추가</span></h3>
+<div id="addWord" class="section-content">
+<div style="margin-top:12px">
+  <div style="color:var(--text-title);font-family:Jua,sans-serif;font-size:14px;margin-bottom:8px">단일 추가</div>
+  <div class="row">
+    <input id="eng" placeholder="English">
+    <input id="kor" placeholder="뜻">
+  </div>
+  <div class="row" style="justify-content:center;margin-top:4px">
+    <button onclick="addWord()">➕ 추가</button>
+  </div>
+  <div style="color:var(--text-title);font-family:Jua,sans-serif;font-size:14px;margin-top:18px;margin-bottom:8px">일괄 추가</div>
+  <div id="bulkRows" style="max-height:260px;overflow-y:auto;overflow-x:hidden;padding:4px;border:2px dashed var(--accent-soft);border-radius:16px"></div>
+  <div class="row" style="justify-content:center;margin-top:10px">
+    <button class="small" onclick="addBulkRow()">➕ 행 추가</button>
+    <button class="small" onclick="bulkAdd()">📋 일괄 추가</button>
+  </div>
+</div>
+</div>
 
 <h3 onclick="toggle('allWords',this)"><span>📖 전체 단어 <b id="cntAll" class="cnt"></b></span></h3>
 <div id="allWords" class="section-content">
@@ -708,52 +712,6 @@ box.innerHTML='<ul>'+dupes.map((d,i)=>
 +'<span class="btns"><button onclick="removeDupe('+i+')">🗑</button></span></li>').join('')+'</ul>';
 }
 
-// ===== 구글 시트 주소 기록 =====
-let sheetUrls=JSON.parse(localStorage.getItem('sheetUrls')||'[]');
-function saveSheetUrls(){localStorage.setItem('sheetUrls',JSON.stringify(sheetUrls));}
-function addSheetUrl(url){
-url=url.trim();
-if(!url) return;
-sheetUrls=sheetUrls.filter(u=>u!==url); // 중복 제거
-sheetUrls.unshift(url);                 // 최근 것을 맨 위로
-if(sheetUrls.length>10) sheetUrls=sheetUrls.slice(0,10);
-saveSheetUrls();
-renderSheetHistory();
-}
-function removeSheetUrl(i){
-sheetUrls.splice(i,1);
-saveSheetUrls();
-renderSheetHistory();
-}
-function clearSheetUrls(){
-if(!sheetUrls.length) return;
-if(!confirm('저장된 구글 시트 주소 기록을 모두 지울까요?')) return;
-sheetUrls=[];
-saveSheetUrls();
-renderSheetHistory();
-}
-function useSheetUrl(i){
-document.getElementById('sheetUrl').value=sheetUrls[i];
-importGoogleSheet();
-}
-function shortUrl(u){
-let m=u.match(/\/d\/([a-zA-Z0-9-_]+)/);
-let id=m?m[1]:u;
-return (id.length>16?id.slice(0,16)+'…':id);
-}
-function renderSheetHistory(){
-let box=document.getElementById('sheetHistory');
-if(!box) return;
-if(!sheetUrls.length){box.innerHTML='';return;}
-box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 2px 4px">'
-+'<span style="color:var(--muted);font-size:13px">📌 저장된 시트 주소</span>'
-+'<button class="small danger" onclick="clearSheetUrls()" style="padding:5px 9px;font-size:12px">기록 전체 삭제</button></div>'
-+'<ul>'+sheetUrls.map((u,i)=>
-'<li style="font-size:13px"><span style="font-size:13px" title="'+u.replace(/"/g,'&quot;')+'">📄 '+shortUrl(u)+'</span>'
-+'<span class="btns"><button onclick="useSheetUrl('+i+')">📥 불러오기</button>'
-+'<button onclick="removeSheetUrl('+i+')">🗑</button></span></li>').join('')+'</ul>';
-}
-
 // ===== 시트(탭) 선택해서 불러오기 =====
 function parseSheetId(url){let m=url.match(/\/d\/([a-zA-Z0-9-_]+)/);return m?m[1]:null;}
 function parseSheetGid(url){let m=url.match(/[#&?]gid=([0-9]+)/);return m?m[1]:null;}
@@ -859,7 +817,6 @@ html+='<div class="row" style="flex-wrap:nowrap;margin:0">';
 html+='<input type="text" id="manualSheetName" placeholder="예: 1과, Unit1, Sheet2" style="min-width:0">';
 html+='<button class="small" style="flex:0 0 auto" onclick="importManualSheet()">📥 불러오기</button>';
 html+='</div>';
-html+='<button class="small" onclick="importGoogleSheet()" style="width:100%;margin-top:8px;background:var(--h3-bg);color:var(--text-main);box-shadow:none">📄 첫 번째 시트 그대로 불러오기</button>';
 html+='</div>';
 html+='</div>';
 box.innerHTML=html;
@@ -905,7 +862,6 @@ if(!text.trim()) throw new Error('empty');
 let srcLabel=sheetName||('시트(gid '+gid+')');
 let res=addFromCsvText(text, srcLabel);
 let added=res.added, updated=res.updated, dups=res.dups||[];
-addSheetUrl(url); // 성공한 주소를 기록에 저장
 if(dups.length) recordDupes(dups); // 중복 영단어 기록에 저장
 if(added>0 || updated>0 || dups.length>0){
 if(added>0||updated>0) playSound('add');
@@ -1410,9 +1366,7 @@ renderDupes();
 updateStats();
 }
 render();
-ensureBulkRows();
 updateDarkBtn();
-renderSheetHistory();
 updateQuizModeBtns();
 updateSoundBtn();
 if(quizMode) document.getElementById('front').innerText='랜덤 단어 또는 오답노트를 눌러 시작하세요';
