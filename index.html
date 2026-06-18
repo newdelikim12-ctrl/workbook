@@ -415,6 +415,15 @@ li input{flex:1;min-width:90px;font-size:14px}
 <div id="masteredList"></div>
 </div>
 
+<h3 onclick="toggle('dupeBox',this)"><span>🔁 중복 단어 <b id="cntDupes" class="cnt"></b></span></h3>
+<div id="dupeBox" class="section-content">
+<p style="color:var(--muted);font-size:13px;margin:10px 0 6px">여러 시트에 겹쳐서 불러와진 영단어예요. 시트에서 하나만 남기고 지우면 깔끔해요.</p>
+<div class="row" style="margin-top:4px">
+<button class="danger small" onclick="clearDupes()" style="flex:1">🗑 중복 기록 비우기</button>
+</div>
+<div id="dupesList"></div>
+</div>
+
 <h3 onclick="toggle('backup',this)"><span>💾 데이터 백업</span></h3>
 <div id="backup" class="section-content">
 <p style="color:var(--muted);font-size:13px;margin:10px 0 6px">단어는 이 브라우저에만 저장됩니다. 기록을 지우거나 기기를 바꾸기 전에 백업하세요.</p>
@@ -618,8 +627,16 @@ else cur+=c;
 out.push(cur);
 return out;
 }
-function addFromCsvText(text){
-let added=0;
+function addFromCsvText(text, srcLabel){
+let added=0, updated=0;
+let label=srcLabel||'시트';
+let seen=new Set();      // 이번 시트에서 본 영단어(소문자)
+let dupMap=new Map();    // 소문자영단어 -> {eng, sheets:Set}
+function flag(engL,eng,sheets){
+let e=dupMap.get(engL);
+if(!e){ e={eng:eng,sheets:new Set()}; dupMap.set(engL,e); }
+sheets.forEach(s=>{ if(s) e.sheets.add(s); });
+}
 let lines=text.replace(/\r/g,'').split('\n');
 lines.forEach((l,idx)=>{
 if(!l.trim()) return;
@@ -633,12 +650,58 @@ let h1=eng.toLowerCase(), h2=(p[1]||'').trim().toLowerCase();
 let headerWords=['영어','단어','english','word','뜻','한글','의미','meaning','korean'];
 if(headerWords.includes(h1) || headerWords.includes(h2)) return;
 }
-if(eng==='' || !kor || duplicate(eng)) return;
-words.push({eng,kor,wrong:false,mastered:false,wrongResult:null});
+if(eng==='' || !kor) return;
+let engL=eng.toLowerCase();
+let ex=words.find(w=>w.eng.toLowerCase()===engL);
+if(ex){
+if(seen.has(engL)){
+// 같은 시트 안에서 또 등장 → 시트 내부 중복
+flag(engL,ex.eng,[label]);
+}else if(ex.src && ex.src!==label){
+// 다른 시트에 이미 있던 단어 → 시트 간 중복
+flag(engL,ex.eng,[ex.src,label]);
+}else if(!ex.src){
+// 출처를 모르던 기존 단어 → 이번 시트를 출처로 채택(같은 시트 재불러오기 오탐 방지)
+ex.src=label;
+}
+// 시트에서 뜻이 바뀌었으면 반영(학습 진도·오답 기록은 유지)
+if(ex.kor!==kor){ ex.kor=kor; updated++; }
+seen.add(engL);
+return;
+}
+words.push({eng,kor,wrong:false,mastered:false,wrongResult:null,src:label});
 added++;
+seen.add(engL);
 });
 save();
-return added;
+let dups=[...dupMap.values()].map(e=>({eng:e.eng,sheets:[...e.sheets]}));
+return {added,updated,dups};
+}
+
+// ===== 중복 단어 기록 (여러 시트에 겹쳐 들어온 영단어) =====
+let dupes=JSON.parse(localStorage.getItem('dupes')||'[]'); // [{eng, sheets:[...], n}]
+function saveDupes(){ localStorage.setItem('dupes',JSON.stringify(dupes)); }
+function recordDupes(list){
+(list||[]).forEach(d=>{
+let e=dupes.find(x=>x.eng.toLowerCase()===d.eng.toLowerCase());
+if(!e){ e={eng:d.eng,sheets:[],n:0}; dupes.push(e); }
+e.n++;
+(d.sheets||[]).forEach(s=>{ if(s && !e.sheets.includes(s)) e.sheets.push(s); });
+});
+saveDupes();
+}
+function removeDupe(i){ dupes.splice(i,1); saveDupes(); render(); }
+function clearDupes(){ if(!dupes.length) return; if(!confirm('중복 단어 기록을 모두 지울까요?')) return; dupes=[]; saveDupes(); render(); showToast('중복 기록을 지웠어요'); }
+function renderDupes(){
+let box=document.getElementById('dupesList'); if(!box) return;
+if(!dupes.length){ box.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px">아직 중복으로 감지된 단어가 없어요. 시트를 불러오면 겹치는 영단어가 여기에 기록돼요.</div>'; return; }
+box.innerHTML='<ul>'+dupes.map((d,i)=>
+'<li><span><b>'+escapeHtml(d.eng)+'</b>'
++'<span style="color:var(--muted);font-size:12px;display:block;margin-top:2px">'
++(d.sheets.length?('📄 '+d.sheets.map(escapeHtml).join(' · ')):'시트 정보 없음')
++(d.n>1?('  ·  '+d.n+'회 감지'):'')
++'</span></span>'
++'<span class="btns"><button onclick="removeDupe('+i+')">🗑</button></span></li>').join('')+'</ul>';
 }
 
 // ===== 구글 시트 주소 기록 =====
@@ -694,8 +757,11 @@ function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;
 // 직접 URL + (모바일 CORS 우회용) 프록시 URL 후보 만들기
 function withProxies(urls){
 let out=[];
-urls.forEach(u=>out.push(u));
-urls.forEach(u=>{
+// 캐시 무효화: 매번 고유 파라미터를 붙여 브라우저·구글·프록시의 옛 사본을 피함
+let bust=u=>u+(u.includes('?')?'&':'?')+'_cb='+Date.now()+'x'+Math.floor(Math.random()*1e6);
+let fresh=urls.map(bust);
+fresh.forEach(u=>out.push(u)); // 직접 시도(캐시 무효화 포함)
+fresh.forEach(u=>{
 out.push('https://corsproxy.io/?url='+encodeURIComponent(u));
 out.push('https://api.allorigins.win/raw?url='+encodeURIComponent(u));
 });
@@ -706,7 +772,7 @@ async function fetchFirstOk(urls,validate){
 let lastErr=null;
 for(let u of urls){
 try{
-let r=await fetch(u);
+let r=await fetch(u,{cache:'no-store'});
 if(!r.ok) throw new Error('status '+r.status);
 let text=await r.text();
 if(validate) validate(text);
@@ -826,20 +892,31 @@ showToast(label+' 불러오는 중... ⏳');
 let lastErr=null;
 for(let u of urls){
 try{
-let r=await fetch(u);
+let r=await fetch(u,{cache:'no-store'});
 if(!r.ok) throw new Error('status '+r.status);
 let text=await r.text();
 // 로그인/오류 페이지(HTML)가 돌아온 경우 거르기
 if(/^\s*</.test(text) || /<!DOCTYPE|<html/i.test(text.slice(0,200))) throw new Error('html returned');
 if(!text.trim()) throw new Error('empty');
-let added=addFromCsvText(text);
+let srcLabel=sheetName||('시트(gid '+gid+')');
+let res=addFromCsvText(text, srcLabel);
+let added=res.added, updated=res.updated, dups=res.dups||[];
 addSheetUrl(url); // 성공한 주소를 기록에 저장
-if(added>0){
-playSound('add');
-showToast(added+'개 단어를 불러왔어요! 📥');
-alert((sheetName?('"'+sheetName+'" 시트에서 '):'')+added+'개의 단어를 불러왔습니다');
+if(dups.length) recordDupes(dups); // 중복 영단어 기록에 저장
+if(added>0 || updated>0 || dups.length>0){
+if(added>0||updated>0) playSound('add');
+let parts=[];
+if(added>0) parts.push('새 단어 '+added+'개');
+if(updated>0) parts.push('뜻 수정 '+updated+'개');
+if(dups.length>0) parts.push('중복 '+dups.length+'개 발견');
+let msg=parts.join(', ');
+showToast(msg+' 📥');
+let shown=dups.slice(0,15).map(d=>'• '+d.eng+(d.sheets.length?(' ('+d.sheets.join(', ')+')'):'')).join('\n');
+let extra=dups.length>15?('\n…외 '+(dups.length-15)+'개 더'):'';
+let dupMsg=dups.length?('\n\n⚠️ 다른 시트와 겹치는 영단어 '+dups.length+'개를 발견했어요:\n'+shown+extra+'\n\n시트에서 하나만 남기고 정리하면 좋아요.\n(앱의 "🔁 중복 단어" 기록에도 저장했어요)'):'';
+alert((sheetName?('"'+sheetName+'" 시트에서 '):'')+(msg||'변경 없음')+'을(를) 반영했습니다.'+dupMsg);
 }else{
-alert('새로 추가된 단어가 없습니다. (이미 있는 단어이거나, 시트의 형식이 "영어, 뜻" 두 열인지 확인해 주세요)');
+alert('변경된 내용이 없습니다. (시트가 이미 반영돼 있거나, 형식이 "영어, 뜻" 두 열인지 확인해 주세요)');
 }
 return;
 }catch(e){lastErr=e;}
@@ -1312,6 +1389,8 @@ document.getElementById('progressFill').style.width=pct+'%';
 document.getElementById('cntAll').innerText='('+total+')';
 document.getElementById('cntWrong').innerText='('+words.filter(w=>w.wrong).length+')';
 document.getElementById('cntMastered').innerText='('+mastered+')';
+document.getElementById('cntDupes').innerText='('+dupes.length+')';
+renderDupes();
 updateStats();
 }
 render();
