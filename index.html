@@ -154,9 +154,9 @@ input[type=file]::file-selector-button{
   background:rgba(255,255,255,.12);
 }
 .flashcard:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 18px 40px rgba(124,124,255,.5)}
-#front{font-size:31px;font-weight:700;font-family:'Quicksand','Gowun Dodum','Malgun Gothic',sans-serif;white-space:normal;overflow-wrap:break-word;word-break:keep-all;width:100%;text-align:center;position:relative;line-height:1.25;letter-spacing:.2px}
+#front{font-size:35px;font-weight:700;font-family:'Quicksand','Gowun Dodum','Malgun Gothic',sans-serif;white-space:normal;overflow-wrap:break-word;word-break:keep-all;width:100%;text-align:center;position:relative;line-height:1.25;letter-spacing:.2px}
 @media (max-width:480px){
-#front{font-size:clamp(22px,6.6vw,31px)}
+#front{font-size:clamp(24px,7.5vw,35px)}
 }
 #back{
   font-size:20px;
@@ -1492,7 +1492,7 @@ return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='w
 }).join('')+'</ul>';
 
 let wq=searchVal('wrongSearch');
-document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li class="${x.w.wrongResult==='correct'?'result-correct':x.w.wrongResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:stretch;gap:6px"><span style="font-size:15px;font-weight:700">${x.w.eng} <span style="color:var(--muted);font-weight:500">— ${x.w.kor}</span></span><span class="btns" style="justify-content:stretch;gap:6px"><button style="flex:1" onclick="wrongNoteCorrect(${x.i})">⭕ 외웠어요</button><button style="flex:1" onclick="wrongNoteAgain(${x.i})">❌ 또 틀림</button><button style="flex:0 0 auto" onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li class="${x.w.wrongResult==='correct'?'result-correct':x.w.wrongResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff">${x.w.eng} <span style="color:rgba(255,255,255,.75);font-weight:500">— ${x.w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="flex:1" onclick="wrongNoteCorrect(${x.i})">⭕ 외웠어요</button><button style="flex:1" onclick="wrongNoteAgain(${x.i})">❌ 또 틀림</button><button style="flex:0 0 auto" onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let mq=searchVal('masteredSearch');
 document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq)).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="toggleMaster(${x.i})">↩️ 학습취소</button><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let total=words.length;
