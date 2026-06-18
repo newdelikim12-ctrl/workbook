@@ -387,6 +387,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 <h3 onclick="toggle('allWords',this)"><span>📖 전체 단어 <b id="cntAll" class="cnt"></b></span></h3>
 <div id="allWords" class="section-content">
 <div class="row" style="margin-top:10px">
+<button class="small" style="flex:1;min-width:120px" onclick="bulkMaster(true)">✅ 전부 학습 완료</button>
+<button class="small" style="flex:1;min-width:120px" onclick="bulkMaster(false)">⬜ 전부 학습 취소</button>
+</div>
+<div class="row" style="margin-top:8px">
 <input type="text" id="searchBox" placeholder="🔍 단어 또는 뜻 검색" oninput="render()">
 <button class="danger small" onclick="clearAllWords()">🗑 전체 삭제</button>
 </div>
@@ -1316,6 +1320,18 @@ if(result==='correct') playSound('add');
 showToast(result==='correct'?'오답노트를 모두 외운 것으로 표시했어요 👏':'모두 다시 복습할 단어로 표시했어요 ✏️');
 }
 function toggleMaster(i){words[i].mastered=!words[i].mastered;if(words[i].mastered)registerActivity();save();}
+function bulkMaster(state){
+let q=searchVal('searchBox');
+let items=words.filter(w=>matchQ(w,q));
+if(!items.length) return alert('단어가 없습니다');
+let label=state?'학습 완료':'학습 안 함';
+if(!confirm(items.length+"개를 모두 '"+label+"'(으)로 표시할까요?")) return;
+items.forEach(w=>{ w.mastered=state; });
+if(state) registerActivity();
+save();
+if(state) playSound('add');
+showToast(state?'전체 단어를 학습 완료로 표시했어요 🏆':'전체 단어를 학습 안 함으로 되돌렸어요');
+}
 function toggle(id,el){document.getElementById(id).classList.toggle('open');if(el)el.classList.toggle('open-arrow');}
 
 function startEdit(i){editIndex=i;render();}
