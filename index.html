@@ -416,7 +416,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 <div class="progress-wrap">
 <div class="progress-label">📖 학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</div>
 <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-<div class="progress-label" style="margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px">❌ 오답 학습률: <b id="wrongProgressText">0 / 0</b> (<span id="wrongProgressPct">0%</span>)<button onclick="resetWrongProgress()" title="오답노트 전체 다시 복습" style="padding:3px 8px;font-size:13px;border-radius:10px;background:var(--h3-bg);color:var(--text-main);box-shadow:none;line-height:1">↺</button></div>
+<div style="margin-top:12px;display:flex;align-items:center;gap:10px">
+<div class="progress-label" style="flex:1;text-align:left;margin:0">❌ 오답 학습률: <b id="wrongProgressText">0 / 0</b> (<span id="wrongProgressPct">0%</span>)</div>
+<button onclick="resetWrongProgress()" title="오답노트 전체 다시 복습" style="flex:0 0 auto;padding:7px 12px;font-size:16px;border-radius:12px;background:var(--h3-bg);color:var(--text-main);box-shadow:none;line-height:1">↺</button>
+</div>
 <div class="progress-bar"><div class="progress-fill" id="wrongProgressFill" style="background:linear-gradient(90deg,#ff8a8a,#ff6b9d,#ffb347)"></div></div>
 </div>
 
