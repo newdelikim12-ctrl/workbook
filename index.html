@@ -773,12 +773,12 @@ function renderDupes(){
 let box=document.getElementById('dupesList'); if(!box) return;
 if(!dupes.length){ box.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px">아직 중복으로 감지된 단어가 없어요. 시트를 불러오면 겹치는 영단어가 여기에 기록돼요.</div>'; return; }
 box.innerHTML='<ul>'+dupes.map((d,i)=>
-'<li><span><b>'+escapeHtml(d.eng)+'</b>'
-+'<span style="color:var(--muted);font-size:12px;display:block;margin-top:2px">'
+'<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span><b style="font-size:15px;font-weight:700;color:#fff">'+escapeHtml(d.eng)+'</b>'
++'<span style="color:rgba(255,255,255,.65);font-size:12px;display:block;margin-top:2px">'
 +(d.sheets.length?('📄 '+d.sheets.map(escapeHtml).join(' · ')):'시트 정보 없음')
 +(d.n>1?('  ·  '+d.n+'회 감지'):'')
 +'</span></span>'
-+'<span class="btns"><button onclick="removeDupe('+i+')">🗑</button></span></li>').join('')+'</ul>';
++'<span class="btns" style="justify-content:center"><button onclick="removeDupe('+i+')">🗑</button></span></li>').join('')+'</ul>';
 }
 
 // ===== 시트(탭) 선택해서 불러오기 =====
@@ -1482,7 +1482,7 @@ all.innerHTML='<ul>'+list.map(({w,i})=>{
 if(i===editIndex){
 return `<li><input id="editEng" value="${w.eng.replace(/"/g,'&quot;')}"><input id="editKor" value="${w.kor.replace(/"/g,'&quot;')}"><span class="btns"><button onclick="saveEdit(${i})">💾</button><button onclick="cancelEdit()">↩️</button></span></li>`;
 }
-return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':''}"><span>${w.eng} - ${w.kor}</span><span class="btns">
+return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff">${w.eng} <span style="color:rgba(255,255,255,.75);font-weight:500">— ${w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px">
 <button onclick="toggleWrongFlag(${i})">${w.wrong?'❌':'⭕'}</button>
 <button onclick="toggleMaster(${i})">${w.mastered?'✅':'⬜'}</button>
 <button onclick="startEdit(${i})">✏️</button>
@@ -1492,9 +1492,9 @@ return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='w
 }).join('')+'</ul>';
 
 let wq=searchVal('wrongSearch');
-document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li class="${x.w.wrongResult==='correct'?'result-correct':x.w.wrongResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:14px;font-weight:600;color:var(--text-main);font-family:inherit">${x.w.eng} <span style="color:var(--text-main);font-weight:600">— ${x.w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="flex:1;white-space:nowrap" onclick="wrongNoteCorrect(${x.i})">⭕ 외웠어요</button><button style="flex:1;white-space:nowrap" onclick="wrongNoteAgain(${x.i})">❌ 또 틀림</button><button style="flex:0 0 auto;white-space:nowrap" onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li class="${x.w.wrongResult==='correct'?'result-correct':x.w.wrongResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff">${x.w.eng} <span style="color:rgba(255,255,255,.75);font-weight:500">— ${x.w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="flex:1;white-space:nowrap" onclick="wrongNoteCorrect(${x.i})">⭕ 외웠어요</button><button style="flex:1;white-space:nowrap" onclick="wrongNoteAgain(${x.i})">❌ 또 틀림</button><button style="flex:0 0 auto;white-space:nowrap" onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let mq=searchVal('masteredSearch');
-document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq)).map(x=>`<li><span>${x.w.eng} - ${x.w.kor}</span><span class="btns"><button onclick="toggleMaster(${x.i})">↩️ 학습취소</button><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq)).map(x=>`<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff">${x.w.eng} <span style="color:rgba(255,255,255,.75);font-weight:500">— ${x.w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="white-space:nowrap" onclick="toggleMaster(${x.i})">↩️ 학습취소</button><button onclick="del(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let total=words.length;
 let mastered=words.filter(w=>w.mastered).length;
 let pct=total?Math.round(mastered/total*100):0;
