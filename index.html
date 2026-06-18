@@ -414,8 +414,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 
 <div class="progress-wrap">
-<div class="progress-label">학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</div>
+<div class="progress-label">📖 학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</div>
 <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="progress-label" style="margin-top:12px">❌ 오답 학습률: <b id="wrongProgressText">0 / 0</b> (<span id="wrongProgressPct">0%</span>)</div>
+<div class="progress-bar"><div class="progress-fill" id="wrongProgressFill" style="background:linear-gradient(90deg,#ff8a8a,#ff6b9d,#ffb347)"></div></div>
 </div>
 
 
@@ -1478,6 +1480,12 @@ let pct=total?Math.round(mastered/total*100):0;
 document.getElementById('progressText').innerText=mastered+' / '+total;
 document.getElementById('progressPct').innerText=pct+'%';
 document.getElementById('progressFill').style.width=pct+'%';
+let wrongTotal=words.filter(w=>w.wrong).length;
+let wrongDone=words.filter(w=>w.wrong&&w.wrongResult==='correct').length;
+let wrongPct=wrongTotal?Math.round(wrongDone/wrongTotal*100):0;
+document.getElementById('wrongProgressText').innerText=wrongDone+' / '+wrongTotal;
+document.getElementById('wrongProgressPct').innerText=wrongPct+'%';
+document.getElementById('wrongProgressFill').style.width=wrongPct+'%';
 document.getElementById('cntAll').innerText='('+total+')';
 document.getElementById('cntWrong').innerText='('+words.filter(w=>w.wrong).length+')';
 document.getElementById('cntMastered').innerText='('+mastered+')';
