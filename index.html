@@ -991,7 +991,7 @@ let box=document.getElementById('cardActions');
 if(currentIndex<0){box.style.display='none';return;}
 box.style.display='flex';
 let w=words[currentIndex];
-document.getElementById('cardWrongBtn').innerText=w.wrong?'❌ 오답노트 해제':'❌ 오답노트';
+document.getElementById('cardWrongBtn').innerText=w.wrong?'❌ 오답해제':'❌ 오답노트';
 let nb=document.getElementById('cardNextBtn');
 if(nb) nb.innerText=lastMode==='wrong'?'➡️ 다음 (외웠어요)':'➡️ 다음 (학습 완료)';
 }
