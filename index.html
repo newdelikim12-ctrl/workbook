@@ -362,8 +362,6 @@ li input{flex:1;min-width:90px;font-size:14px}
 <div id="srcFilterSection" style="display:none">
 <h3 id="srcFilterH3" onclick="toggle('srcFilterContent',this)"><span>📄 시트별 학습 범위</span></h3>
 <div id="srcFilterContent" class="section-content">
-<div id="srcFilterBtns" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
-<div id="srcDeleteBtns" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--input-border);align-items:center"></div>
 </div>
 </div>
 
@@ -1028,9 +1026,11 @@ srcFilter=src;
 renderSrcFilter();
 }
 function deleteSheetWords(src){
-if(!confirm('"'+src+'" 시트의 단어를 모두 삭제할까요?')) return;
+if(!confirm('"'+src+'" 시트의 단어를 전부 삭제할까요?')) return;
 let before=words.length;
+let curWord=currentIndex>=0?words[currentIndex]:null;
 words=words.filter(w=>w.src!==src);
+currentIndex=(curWord&&words.includes(curWord))?words.indexOf(curWord):-1;
 if(srcFilter===src) srcFilter=null;
 playSound('delete');
 save();
@@ -1039,23 +1039,46 @@ showToast('"'+src+'" 단어 '+(before-words.length)+'개 삭제 🗑');
 function renderSrcFilter(){
 let srcs=[...new Set(words.map(w=>w.src).filter(Boolean))];
 let section=document.getElementById('srcFilterSection');
-let box=document.getElementById('srcFilterBtns');
-let delBox=document.getElementById('srcDeleteBtns');
-if(!section||!box) return;
-if(!srcs.length){section.style.display='none';if(srcFilter&&!srcs.includes(srcFilter))srcFilter=null;return;}
-section.style.display='';
-let html='<button class="src-btn'+(srcFilter===null?' on':'')+'" onclick="setSrcFilter(null)">📚 전체</button>';
-srcs.forEach(s=>{
-html+='<button class="src-btn'+(srcFilter===s?' on':'')+'" onclick="setSrcFilter('+JSON.stringify(s)+')" title="'+escapeHtml(s)+'">📄 '+escapeHtml(s)+'</button>';
-});
-box.innerHTML=html;
-if(delBox){
-let dhtml='<span style="color:var(--muted);font-size:12px">시트 삭제:</span>';
-srcs.forEach(s=>{
-dhtml+='<button class="src-btn" onclick="deleteSheetWords('+JSON.stringify(s)+')" style="background:linear-gradient(135deg,#ff8a8a,#ff6b9d);color:#fff">🗑 '+escapeHtml(s)+'</button>';
-});
-delBox.innerHTML=dhtml;
+let content=document.getElementById('srcFilterContent');
+if(!section||!content) return;
+if(!srcs.length){
+section.style.display='none';
+if(srcFilter&&!srcs.includes(srcFilter)) srcFilter=null;
+return;
 }
+section.style.display='';
+// 시트가 생기면 자동 펼침
+if(!content.classList.contains('open')){
+content.classList.add('open');
+let h3=document.getElementById('srcFilterH3');
+if(h3) h3.classList.add('open-arrow');
+}
+// 필터 버튼 행
+let html='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">';
+html+='<button class="src-btn'+(srcFilter===null?' on':'')+'" onclick="setSrcFilter(null)">📚 전체</button>';
+srcs.forEach(s=>{
+html+='<button class="src-btn'+(srcFilter===s?' on':'')+'" onclick="setSrcFilter('+JSON.stringify(s)+')">📄 '+escapeHtml(s)+'</button>';
+});
+html+='</div>';
+// 선택된 시트의 단어 목록 (하나씩 삭제 가능)
+if(srcFilter!==null){
+let sheetWords=words.map((w,i)=>({w,i})).filter(x=>x.w.src===srcFilter);
+html+='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--input-border)">';
+html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+html+='<span style="color:var(--muted);font-size:13px">📄 '+escapeHtml(srcFilter)+' · '+sheetWords.length+'개</span>';
+html+='<button class="small danger" onclick="deleteSheetWords('+JSON.stringify(srcFilter)+')" style="font-size:12px;padding:5px 10px">🗑 시트 전체 삭제</button>';
+html+='</div>';
+if(sheetWords.length){
+html+='<ul style="margin:0">'+sheetWords.map(({w,i})=>
+'<li><span>'+escapeHtml(w.eng)+' - '+escapeHtml(w.kor)+'</span>'
++'<span class="btns"><button onclick="del('+i+')">🗑</button></span></li>'
+).join('')+'</ul>';
+}else{
+html+='<div style="color:var(--muted);font-size:13px;padding:6px 0">단어가 없어요</div>';
+}
+html+='</div>';
+}
+content.innerHTML=html;
 }
 
 function randomMode(mode){
