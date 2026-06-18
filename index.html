@@ -925,6 +925,7 @@ alert('불러오기 실패! 다음을 확인해 주세요.\n\n① 시트 공유 
 
 let currentIndex=-1;
 let lastMode='all';
+let cardHistory=[]; // 이전 카드 인덱스 스택
 let bothMode=localStorage.getItem('bothMode')==='1';
 let rangeFrom=null,rangeTo=null;
 let quizMode=localStorage.getItem('quizMode')==='1';
@@ -942,7 +943,9 @@ u.lang='en-US';
 speechSynthesis.speak(u);
 }
 
-function showWord(w,i){
+function showWord(w,i,skipHistory){
+if(!skipHistory && currentIndex>=0) cardHistory.push(currentIndex);
+if(cardHistory.length>50) cardHistory.shift(); // 최대 50개 유지
 currentIndex=i!==undefined?i:-1;
 document.getElementById('front').innerText=w.eng;
 document.getElementById('back').innerText=w.kor;
@@ -1019,6 +1022,12 @@ let pick=arr[Math.floor(Math.random()*arr.length)];
 showWord(pick.w,pick.i);
 }
 
+function prevCard(){
+if(!cardHistory.length) return showToast('첫 번째 단어예요 🙂');
+let i=cardHistory.pop();
+if(!words[i]) return prevCard(); // 삭제된 단어면 더 이전으로
+showWord(words[i],i,true); // skipHistory=true: 뒤로가기는 히스토리에 쌓지 않음
+}
 function nextCard(){
 if(currentIndex>=0 && words[currentIndex]){
 if(lastMode==='wrong'){
@@ -1471,7 +1480,8 @@ let dx=e.changedTouches[0].clientX-sx;
 let dy=e.changedTouches[0].clientY-sy;
 if(Math.abs(dx)>40 && Math.abs(dx)>Math.abs(dy)){
 if(quizMode){ if(quizState && quizAnswered) nextQuiz(); }
-else nextCard();
+else if(dx<0) nextCard();   // ← 왼쪽 스와이프: 다음 단어
+else prevCard();             // → 오른쪽 스와이프: 이전 단어
 }
 });
 })();
