@@ -416,7 +416,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <div class="progress-wrap">
 <div class="progress-label">📖 학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</div>
 <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-<div class="progress-label" style="margin-top:12px">❌ 오답 학습률: <b id="wrongProgressText">0 / 0</b> (<span id="wrongProgressPct">0%</span>)</div>
+<div class="progress-label" style="margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px">❌ 오답 학습률: <b id="wrongProgressText">0 / 0</b> (<span id="wrongProgressPct">0%</span>)<button onclick="resetWrongProgress()" title="오답노트 전체 다시 복습" style="padding:3px 8px;font-size:13px;border-radius:10px;background:var(--h3-bg);color:var(--text-main);box-shadow:none;line-height:1">↺</button></div>
 <div class="progress-bar"><div class="progress-fill" id="wrongProgressFill" style="background:linear-gradient(90deg,#ff8a8a,#ff6b9d,#ffb347)"></div></div>
 </div>
 
@@ -1376,6 +1376,15 @@ function wrongNoteAgain(i){
 // 다시 틀림 → 계속 복습 대상으로 유지
 words[i].wrongResult='wrong';
 save();
+}
+function resetWrongProgress(){
+let items=words.filter(w=>w.wrong);
+if(!items.length) return showToast('오답노트가 비어있어요');
+if(!confirm('오답노트 단어 '+items.length+'개를 모두 다시 복습할 단어로 초기화할까요?')) return;
+items.forEach(w=>{w.wrongResult=null;});
+save();
+playSound('toggle');
+showToast('오답노트를 다시 복습할 단어로 초기화했어요 ↺');
 }
 function bulkWrong(result){
 let q=searchVal('wrongSearch');
