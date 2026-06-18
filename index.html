@@ -223,6 +223,39 @@ li input{flex:1;min-width:90px;font-size:14px}
   li{font-size:14px}
 }
 
+/* 모바일 세로 공간 압축 */
+@media (max-width:480px){
+  body{padding:10px 10px}
+  .container{padding:14px 14px}
+  h2{font-size:22px;margin-bottom:2px}
+  .flashcard{margin-top:10px;min-height:100px;padding:16px 18px;border-radius:18px}
+  #front{font-size:clamp(16px,5.5vw,22px)}
+  #back{font-size:15px;margin-top:8px}
+  .hint{font-size:12px;margin-top:6px}
+  #cardActions{margin-top:6px}
+  #cardActions button{padding:8px 10px;font-size:13px}
+  #quizPanel{margin-top:8px}
+  .quiz-q-head{margin-bottom:6px;gap:6px}
+  .quiz-q-tag{font-size:13px}
+  .quiz-opts{gap:6px}
+  .quiz-opt{padding:9px 12px;border-radius:12px;font-size:14px}
+  .quiz-opt .num{width:24px;height:24px;font-size:13px}
+  .quiz-dunno{margin-top:6px;padding:9px 12px;font-size:14px}
+  #quizAfter{margin-top:8px}
+  .quiz-toggle-row{margin-top:8px;gap:6px}
+  .quiz-toggle-row .label{font-size:13px}
+  .quiz-modes{gap:4px}
+  .qmode{padding:7px 4px;font-size:12px;border-radius:11px}
+  .modes{margin-top:8px;gap:8px}
+  .modes button{padding:10px 6px;gap:4px}
+  .modes .ico{font-size:20px}
+  .modes .lbl{font-size:13px}
+  .progress-wrap{margin:10px 0;padding:10px 14px}
+  .progress-label{font-size:13px;margin-bottom:6px}
+  .progress-bar{height:10px}
+  .stats-line{font-size:13px;margin-top:6px}
+}
+
 .toast{
   position:fixed;left:50%;bottom:30px;
   transform:translateX(-50%) translateY(20px);
