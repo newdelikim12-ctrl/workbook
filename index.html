@@ -402,6 +402,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button onclick="event.stopPropagation();nextCard()" id="cardNextBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">➡️ 다음 단어</button>
 </div>
 <div id="autoPlayBar" style="display:none;margin-top:8px;align-items:center;justify-content:center;gap:8px;flex-wrap:nowrap">
+<button id="autoSpeakBtn" onclick="event.stopPropagation();toggleAutoSpeak()" style="padding:7px 16px;font-size:13px;white-space:nowrap;box-shadow:none;background:var(--h3-bg);color:var(--text-main)">🔇 발음 자동읽기</button>
 <button id="autoPlayBtn" onclick="event.stopPropagation();toggleAutoPlay()" style="padding:7px 16px;font-size:13px;white-space:nowrap;box-shadow:none;background:var(--h3-bg);color:var(--text-main)">▶ 자동재생</button>
 <div style="display:flex;gap:4px;align-items:center">
 <span style="font-size:12px;color:var(--muted);white-space:nowrap">간격</span>
@@ -990,9 +991,31 @@ u.lang='en-US';
 speechSynthesis.speak(u);
 }
 
+let autoSpeak=localStorage.getItem('autoSpeak')==='1';
 let autoPlay=false;
 let autoPlaySpeed=parseInt(localStorage.getItem('autoPlaySpeed')||'3');
 let autoPlayTimer=null;
+
+function toggleAutoSpeak(){
+  autoSpeak=!autoSpeak;
+  localStorage.setItem('autoSpeak',autoSpeak?'1':'0');
+  updateAutoSpeakBtn();
+  if(autoSpeak) speakWord();
+}
+
+function updateAutoSpeakBtn(){
+  let btn=document.getElementById('autoSpeakBtn');
+  if(!btn) return;
+  if(autoSpeak){
+    btn.textContent='🔊 발음 자동읽기';
+    btn.style.background='linear-gradient(135deg,var(--accent),var(--accent-soft))';
+    btn.style.color='#fff';
+  } else {
+    btn.textContent='🔇 발음 자동읽기';
+    btn.style.background='var(--h3-bg)';
+    btn.style.color='var(--text-main)';
+  }
+}
 
 function setAutoPlaySpeed(v){
   autoPlaySpeed=parseInt(v);
@@ -1039,7 +1062,10 @@ let card=document.getElementById('card');
 card.classList.remove('revealed');
 if(bothMode) card.classList.add('revealed');
 showCardActions();
-if(autoPlay&&!quizMode){ speakWord(); scheduleAutoPlay(); }
+if(!quizMode){
+  if(autoSpeak||autoPlay) speakWord();
+  if(autoPlay) scheduleAutoPlay();
+}
 }
 
 function toggleBothMode(){
@@ -1082,6 +1108,7 @@ let bar=document.getElementById('autoPlayBar');
 if(currentIndex<0){box.style.display='none';if(bar)bar.style.display='none';return;}
 box.style.display='flex';
 if(bar){bar.style.display='flex';let sel=document.getElementById('autoPlaySpeed');if(sel)sel.value=autoPlaySpeed;}
+updateAutoSpeakBtn();
 updateAutoPlayBtn();
 let w=words[currentIndex];
 let wb=document.getElementById('cardWrongBtn');
