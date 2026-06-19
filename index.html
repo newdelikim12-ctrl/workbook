@@ -401,6 +401,19 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button onclick="event.stopPropagation();toggleWrongFlag(currentIndex);showCardActions()" id="cardWrongBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">❌ 오답등록</button>
 <button onclick="event.stopPropagation();nextCard()" id="cardNextBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">➡️ 다음 단어</button>
 </div>
+<div id="autoPlayBar" style="display:none;margin-top:8px;align-items:center;justify-content:center;gap:8px;flex-wrap:nowrap">
+<button id="autoPlayBtn" onclick="event.stopPropagation();toggleAutoPlay()" style="padding:7px 16px;font-size:13px;white-space:nowrap;box-shadow:none;background:var(--h3-bg);color:var(--text-main)">▶ 자동재생</button>
+<div style="display:flex;gap:4px;align-items:center">
+<span style="font-size:12px;color:var(--muted);white-space:nowrap">간격</span>
+<select id="autoPlaySpeed" onchange="event.stopPropagation();setAutoPlaySpeed(this.value)" style="padding:5px 8px;font-size:13px;border-radius:10px;border:1.5px solid var(--input-border);background:var(--input-bg);color:var(--text-main);cursor:pointer">
+<option value="1">1초</option>
+<option value="2">2초</option>
+<option value="3" selected>3초</option>
+<option value="4">4초</option>
+<option value="5">5초</option>
+</select>
+</div>
+</div>
 
 <div id="quizPanel" style="display:none">
 <div class="quiz-q-head">
@@ -972,6 +985,45 @@ u.lang='en-US';
 speechSynthesis.speak(u);
 }
 
+let autoPlay=false;
+let autoPlaySpeed=parseInt(localStorage.getItem('autoPlaySpeed')||'3');
+let autoPlayTimer=null;
+
+function setAutoPlaySpeed(v){
+  autoPlaySpeed=parseInt(v);
+  localStorage.setItem('autoPlaySpeed',autoPlaySpeed);
+  if(autoPlay) scheduleAutoPlay();
+}
+
+function scheduleAutoPlay(){
+  clearTimeout(autoPlayTimer);
+  if(!autoPlay||currentIndex<0) return;
+  autoPlayTimer=setTimeout(()=>{
+    nextCard();
+  },autoPlaySpeed*1000);
+}
+
+function toggleAutoPlay(){
+  autoPlay=!autoPlay;
+  updateAutoPlayBtn();
+  if(autoPlay){ speakWord(); scheduleAutoPlay(); }
+  else clearTimeout(autoPlayTimer);
+}
+
+function updateAutoPlayBtn(){
+  let btn=document.getElementById('autoPlayBtn');
+  if(!btn) return;
+  if(autoPlay){
+    btn.textContent='⏹ 자동재생 중';
+    btn.style.background='linear-gradient(135deg,var(--accent),var(--accent-soft))';
+    btn.style.color='#fff';
+  } else {
+    btn.textContent='▶ 자동재생';
+    btn.style.background='var(--h3-bg)';
+    btn.style.color='var(--text-main)';
+  }
+}
+
 function showWord(w,i,skipHistory){
 if(!skipHistory && currentIndex>=0) cardHistory.push(currentIndex);
 if(cardHistory.length>50) cardHistory.shift(); // 최대 50개 유지
@@ -982,6 +1034,7 @@ let card=document.getElementById('card');
 card.classList.remove('revealed');
 if(bothMode) card.classList.add('revealed');
 showCardActions();
+if(autoPlay&&!quizMode){ speakWord(); scheduleAutoPlay(); }
 }
 
 function toggleBothMode(){
@@ -1020,8 +1073,11 @@ else cnt.innerText='';
 }
 function showCardActions(){
 let box=document.getElementById('cardActions');
-if(currentIndex<0){box.style.display='none';return;}
+let bar=document.getElementById('autoPlayBar');
+if(currentIndex<0){box.style.display='none';if(bar)bar.style.display='none';return;}
 box.style.display='flex';
+if(bar){bar.style.display='flex';let sel=document.getElementById('autoPlaySpeed');if(sel)sel.value=autoPlaySpeed;}
+updateAutoPlayBtn();
 let w=words[currentIndex];
 let wb=document.getElementById('cardWrongBtn');
 if(w.wrong){
@@ -1063,6 +1119,7 @@ showWord(pick.w,pick.i);
 }
 
 function prevCard(){
+clearTimeout(autoPlayTimer);
 if(!cardHistory.length) return showToast('첫 번째 단어예요 🙂');
 let i=cardHistory.pop();
 if(!words[i]) return prevCard(); // 삭제된 단어면 더 이전으로
