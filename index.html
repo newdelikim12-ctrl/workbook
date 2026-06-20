@@ -740,7 +740,8 @@ if(!l.trim()) return;
 let p=parseCsvLine(l);
 if(p.length<2) return;
 let eng=p[0].trim();
-let kor=p.slice(1).map(s=>s.trim()).filter(s=>s).join(', ');
+let kor=(p[1]||'').trim();
+let example=(p[2]||'').trim();
 // 첫 번째 줄이 명백한 헤더(예: 영어/단어/뜻/한글/meaning 등)면 건너뜀
 if(idx===0){
 let h1=eng.toLowerCase(), h2=(p[1]||'').trim().toLowerCase();
@@ -761,12 +762,13 @@ flag(engL,ex.eng,[ex.src,label]);
 // 출처를 모르던 기존 단어 → 이번 시트를 출처로 채택(같은 시트 재불러오기 오탐 방지)
 ex.src=label;
 }
-// 시트에서 뜻이 바뀌었으면 반영(학습 진도·오답 기록은 유지)
+// 시트에서 뜻/예문이 바뀌었으면 반영(학습 진도·오답 기록은 유지)
 if(ex.kor!==kor){ ex.kor=kor; updated++; }
+if(example && ex.example!==example) ex.example=example;
 seen.add(engL);
 return;
 }
-words.push({eng,kor,wrong:false,mastered:false,wrongResult:null,src:label});
+words.push({eng,kor,example:example||'',wrong:false,mastered:false,wrongResult:null,src:label});
 added++;
 seen.add(engL);
 });
@@ -1064,8 +1066,7 @@ card.classList.remove('revealed');
 showExample('');
 if(bothMode){
   card.classList.add('revealed');
-  let word=w.eng.split(/[\s,]/)[0];
-  fetchExample(word).then(ex=>showExample(ex));
+  showExample(w.example||'');
 }
 showCardActions();
 if(!quizMode){
@@ -1223,26 +1224,6 @@ let msg=!quizMode?'플래시카드 모드로 바꿨어요 📖'
 showToast(msg);
 }
 
-// 예문 캐시 (단어 → 예문 문자열)
-const exampleCache={};
-
-async function fetchExample(word){
-  if(exampleCache[word]!==undefined) return exampleCache[word];
-  try{
-    let res=await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
-    if(!res.ok){exampleCache[word]='';return '';}
-    let data=await res.json();
-    for(let entry of data){
-      for(let meaning of entry.meanings||[]){
-        for(let def of meaning.definitions||[]){
-          if(def.example){exampleCache[word]=def.example;return def.example;}
-        }
-      }
-    }
-    exampleCache[word]='';return '';
-  }catch(e){exampleCache[word]='';return '';}
-}
-
 function showExample(text){
   let el=document.getElementById('cardExample');
   if(!el) return;
@@ -1257,9 +1238,7 @@ let revealed=document.getElementById('card').classList.toggle('revealed');
 if(revealed){
   playSound('flip');
   if(currentIndex>=0 && words[currentIndex]){
-    let word=words[currentIndex].eng.split(/[\s,]/)[0]; // 첫 단어만 조회
-    showExample('');
-    fetchExample(word).then(ex=>showExample(ex));
+    showExample(words[currentIndex].example||'');
   }
 }else{
   showExample('');
@@ -1603,7 +1582,7 @@ let data;
 try{data=JSON.parse(raw);}catch(e){return alert('백업 데이터 형식이 올바르지 않습니다');}
 if(!data||!Array.isArray(data.words)) return alert('백업 데이터에 단어가 없습니다');
 if(!confirm('현재 단어를 백업 데이터로 덮어쓸까요? (지금 단어는 사라집니다)')) return;
-words=data.words.map(w=>({eng:w.eng||'',kor:w.kor||'',wrong:!!w.wrong,mastered:!!w.mastered,lastResult:w.lastResult,wrongResult:w.wrongResult||null}));
+words=data.words.map(w=>({eng:w.eng||'',kor:w.kor||'',example:w.example||'',wrong:!!w.wrong,mastered:!!w.mastered,lastResult:w.lastResult,wrongResult:w.wrongResult||null}));
 if(data.stats&&typeof data.stats==='object'){stats=data.stats;saveStats();}
 editIndex=-1;currentIndex=-1;
 save();
