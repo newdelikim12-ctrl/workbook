@@ -398,8 +398,8 @@ li input{flex:1;min-width:90px;font-size:14px}
 <div class="hint" id="cardHint">카드를 클릭하면 뜻이 표시됩니다</div>
 </div>
 <div id="cardActions" style="display:none;gap:8px;margin-top:10px;flex-wrap:nowrap;align-items:stretch">
-<button onclick="event.stopPropagation();speakWord('eng')" id="cardSpeakBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">🔊 영어</button>
-<button onclick="event.stopPropagation();speakWord('both')" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">🔊 영+한</button>
+<button onclick="event.stopPropagation();speakWord('eng')" id="cardSpeakEngBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">🔊 영어</button>
+<button onclick="event.stopPropagation();speakWord('both')" id="cardSpeakBothBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">🔊 영+한</button>
 <button onclick="event.stopPropagation();toggleWrongFlag(currentIndex);showCardActions()" id="cardWrongBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">❌ 오답등록</button>
 <button onclick="event.stopPropagation();nextCard()" id="cardNextBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">➡️ 다음 단어</button>
 </div>
@@ -988,19 +988,33 @@ let quizTimer=null;
 function speakWord(mode){
 if(currentIndex<0) return;
 if(!('speechSynthesis' in window)) return alert('이 기기에서는 음성 기능을 지원하지 않습니다');
+if(mode && mode!==speakMode){ speakMode=mode; localStorage.setItem('speakMode',speakMode); updateSpeakBtns(); }
+let m=mode||speakMode;
 let w=words[currentIndex];
 speechSynthesis.cancel();
 let uEng=new SpeechSynthesisUtterance(w.eng);
 uEng.lang='en-US';
 speechSynthesis.speak(uEng);
-if(mode==='both'){
+if(m==='both'){
   let uKor=new SpeechSynthesisUtterance(w.kor);
   uKor.lang='ko-KR';
   speechSynthesis.speak(uKor);
 }
 }
+function updateSpeakBtns(){
+let btnEng=document.getElementById('cardSpeakEngBtn');
+let btnBoth=document.getElementById('cardSpeakBothBtn');
+if(!btnEng||!btnBoth) return;
+let on='linear-gradient(135deg,var(--accent),var(--accent-soft))';
+let off='';
+btnEng.style.background=speakMode==='eng'?on:off;
+btnEng.style.color=speakMode==='eng'?'#fff':'';
+btnBoth.style.background=speakMode==='both'?on:off;
+btnBoth.style.color=speakMode==='both'?'#fff':'';
+}
 
 let autoSpeak=localStorage.getItem('autoSpeak')==='1';
+let speakMode=localStorage.getItem('speakMode')||'eng';
 let autoPlay=false;
 let autoPlaySpeed=parseInt(localStorage.getItem('autoPlaySpeed')||'3');
 let autoPlayTimer=null;
@@ -1131,6 +1145,7 @@ box.style.display='flex';
 if(bar){bar.style.display='flex';let sel=document.getElementById('autoPlaySpeed');if(sel)sel.value=autoPlaySpeed;}
 updateAutoSpeakBtn();
 updateAutoPlayBtn();
+updateSpeakBtns();
 let w=words[currentIndex];
 let wb=document.getElementById('cardWrongBtn');
 if(w.wrong){
