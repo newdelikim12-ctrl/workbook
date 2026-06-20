@@ -377,9 +377,9 @@ li input{flex:1;min-width:90px;font-size:14px}
 
 <div id="rangeWrap" style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:nowrap;overflow:hidden">
 <span style="color:var(--muted);font-size:12px;white-space:nowrap;flex-shrink:0">범위</span>
-<input type="number" id="rangeFrom" min="1" placeholder="처음" style="width:0;flex:1;min-width:0;padding:6px 6px;font-size:13px">
+<input type="number" id="rangeFrom" min="1" placeholder="처음" style="width:0;flex:1;min-width:0;padding:6px 6px;font-size:13px" onkeydown="if(event.key==='Enter')applyRange()">
 <span style="color:var(--muted);font-size:12px;flex-shrink:0">~</span>
-<input type="number" id="rangeTo" min="1" placeholder="끝" style="width:0;flex:1;min-width:0;padding:6px 6px;font-size:13px">
+<input type="number" id="rangeTo" min="1" placeholder="끝" style="width:0;flex:1;min-width:0;padding:6px 6px;font-size:13px" onkeydown="if(event.key==='Enter')applyRange()">
 <button class="small" onclick="applyRange()" style="flex-shrink:0;padding:7px 10px">적용</button>
 <button class="small" onclick="clearRange()" style="flex-shrink:0;padding:7px 10px">전체</button>
 <span id="rangeCnt" style="color:var(--muted);font-size:12px;flex-shrink:0"></span>
@@ -1090,11 +1090,12 @@ else{b.style.background='';b.style.color='';}
 }
 
 function applyRange(){
-let f=parseInt(document.getElementById('rangeFrom').value)||null;
-let t=parseInt(document.getElementById('rangeTo').value)||null;
-rangeFrom=f; rangeTo=t;
+let fv=parseInt(document.getElementById('rangeFrom').value);
+let tv=parseInt(document.getElementById('rangeTo').value);
+rangeFrom=(fv>0)?fv:null;
+rangeTo=(tv>0)?tv:null;
 updateRangeCnt();
-showToast(f||t?'범위 '+(f||1)+'~'+(t||words.length)+'번 단어':'전체 단어');
+showToast(rangeFrom||rangeTo?'범위 '+(rangeFrom||1)+'~'+(rangeTo||words.length)+'번 단어':'전체 단어');
 }
 function clearRange(){
 rangeFrom=null; rangeTo=null;
@@ -1106,8 +1107,15 @@ showToast('전체 단어로 학습할게요');
 function updateRangeCnt(){
 let cnt=document.getElementById('rangeCnt');
 if(!cnt) return;
-if(rangeFrom||rangeTo) cnt.innerText='('+getDeck(lastMode).length+'개)';
-else cnt.innerText='';
+if(rangeFrom||rangeTo){
+  let total=words.filter((_,i)=>{
+    let num=i+1;
+    if(rangeFrom && num<rangeFrom) return false;
+    if(rangeTo && num>rangeTo) return false;
+    return true;
+  }).length;
+  cnt.innerText='(총 '+total+'개)';
+}else cnt.innerText='';
 }
 function showCardActions(){
 let box=document.getElementById('cardActions');
