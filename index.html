@@ -398,7 +398,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 <div class="hint" id="cardHint">카드를 클릭하면 뜻이 표시됩니다</div>
 </div>
 <div id="cardActions" style="display:none;gap:8px;margin-top:10px;flex-wrap:nowrap;align-items:stretch">
-<button onclick="event.stopPropagation();toggleSpeakMode()" id="cardSpeakBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">🔊 영어</button>
+<div id="cardSpeakBtn" onclick="event.stopPropagation()" style="flex:1;min-width:0;display:flex;border-radius:12px;overflow:hidden;border:1.5px solid var(--input-border);box-sizing:border-box">
+  <button onclick="speakWord('eng')" id="speakSegEng" style="flex:1;padding:10px 4px;font-size:13px;border-radius:0;box-shadow:none;border:none;white-space:nowrap">🔊 영</button>
+  <button onclick="speakWord('both')" id="speakSegBoth" style="flex:1;padding:10px 4px;font-size:13px;border-radius:0;box-shadow:none;border:none;border-left:1.5px solid var(--input-border);white-space:nowrap">한</button>
+</div>
 <button onclick="event.stopPropagation();toggleWrongFlag(currentIndex);showCardActions()" id="cardWrongBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">❌ 오답등록</button>
 <button onclick="event.stopPropagation();nextCard()" id="cardNextBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">➡️ 다음 단어</button>
 </div>
@@ -987,6 +990,7 @@ let quizTimer=null;
 function speakWord(mode){
 if(currentIndex<0) return;
 if(!('speechSynthesis' in window)) return alert('이 기기에서는 음성 기능을 지원하지 않습니다');
+if(mode && mode!==speakMode){ speakMode=mode; localStorage.setItem('speakMode',speakMode); updateSpeakBtns(); }
 let m=mode||speakMode;
 let w=words[currentIndex];
 speechSynthesis.cancel();
@@ -1006,16 +1010,16 @@ updateSpeakBtns();
 speakWord();
 }
 function updateSpeakBtns(){
-let btn=document.getElementById('cardSpeakBtn');
-if(!btn) return;
+let eng=document.getElementById('speakSegEng');
+let both=document.getElementById('speakSegBoth');
+if(!eng||!both) return;
+let active='linear-gradient(135deg,var(--accent),var(--accent-soft))';
 if(speakMode==='both'){
-  btn.textContent='🔊 영+한';
-  btn.style.background='linear-gradient(135deg,var(--accent),var(--accent-soft))';
-  btn.style.color='#fff';
+  eng.style.background=''; eng.style.color='';
+  both.style.background=active; both.style.color='#fff';
 }else{
-  btn.textContent='🔊 영어';
-  btn.style.background='';
-  btn.style.color='';
+  eng.style.background=active; eng.style.color='#fff';
+  both.style.background=''; both.style.color='';
 }
 }
 
