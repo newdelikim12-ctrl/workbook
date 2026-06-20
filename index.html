@@ -394,6 +394,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <div class="flashcard" id="card" onclick="cardClick()">
 <div id="front">단어를 선택하세요</div>
 <div id="back">뜻</div>
+<div id="cardExample" style="display:none;margin-top:10px;font-size:13px;font-style:italic;color:rgba(255,255,255,.65);line-height:1.5;text-align:center"></div>
 <div class="hint" id="cardHint">카드를 클릭하면 뜻이 표시됩니다</div>
 </div>
 <div id="cardActions" style="display:none;gap:8px;margin-top:10px;flex-wrap:nowrap;align-items:stretch">
@@ -1060,7 +1061,12 @@ document.getElementById('front').innerText=w.eng;
 document.getElementById('back').innerText=w.kor;
 let card=document.getElementById('card');
 card.classList.remove('revealed');
-if(bothMode) card.classList.add('revealed');
+showExample('');
+if(bothMode){
+  card.classList.add('revealed');
+  let word=w.eng.split(/[\s,]/)[0];
+  fetchExample(word).then(ex=>showExample(ex));
+}
 showCardActions();
 if(!quizMode){
   if(autoSpeak||autoPlay) speakWord();
@@ -1217,11 +1223,47 @@ let msg=!quizMode?'플래시카드 모드로 바꿨어요 📖'
 showToast(msg);
 }
 
+// 예문 캐시 (단어 → 예문 문자열)
+const exampleCache={};
+
+async function fetchExample(word){
+  if(exampleCache[word]!==undefined) return exampleCache[word];
+  try{
+    let res=await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+    if(!res.ok){exampleCache[word]='';return '';}
+    let data=await res.json();
+    for(let entry of data){
+      for(let meaning of entry.meanings||[]){
+        for(let def of meaning.definitions||[]){
+          if(def.example){exampleCache[word]=def.example;return def.example;}
+        }
+      }
+    }
+    exampleCache[word]='';return '';
+  }catch(e){exampleCache[word]='';return '';}
+}
+
+function showExample(text){
+  let el=document.getElementById('cardExample');
+  if(!el) return;
+  if(text){el.textContent='"'+text+'"';el.style.display='block';}
+  else el.style.display='none';
+}
+
 // 객관식 문제가 떠 있고 아직 안 풀었으면 카드 뒤집기(정답 미리보기) 막기
 function cardClick(){
 if(quizMode && quizState && !quizAnswered) return;
 let revealed=document.getElementById('card').classList.toggle('revealed');
-if(revealed) playSound('flip');
+if(revealed){
+  playSound('flip');
+  if(currentIndex>=0 && words[currentIndex]){
+    let word=words[currentIndex].eng.split(/[\s,]/)[0]; // 첫 단어만 조회
+    showExample('');
+    fetchExample(word).then(ex=>showExample(ex));
+  }
+}else{
+  showExample('');
+}
 }
 
 function startQuiz(){ loadQuizQuestion(); }
