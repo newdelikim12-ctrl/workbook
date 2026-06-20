@@ -1535,12 +1535,17 @@ words[i].mastered=false;
 playSound('delete');save();render();
 }
 function wrongNoteCorrect(i){
-// 오답노트 안에서 외운 것으로 처리 (학습 완료와는 별개)
 words[i].wrongResult='correct';
+words[i].mastered=true;
 registerActivity();
 save();
 playSound('add');
-showToast('잘했어요! 오답노트에서 외웠어요 👏');
+showToast('잘했어요! 학습 완료로 이동했어요 🏆');
+// 학습 완료 탭 열기
+let sec=document.getElementById('mastered');
+let h3=sec?sec.previousElementSibling:null;
+if(sec&&!sec.classList.contains('open')){sec.classList.add('open');if(h3)h3.classList.add('open-arrow');}
+if(sec) setTimeout(()=>sec.scrollIntoView({behavior:'smooth',block:'start'}),150);
 }
 function wrongNoteAgain(i){
 // 다시 틀림 → 계속 복습 대상으로 유지
