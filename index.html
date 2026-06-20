@@ -1458,6 +1458,7 @@ showToast(lastMode==='wrong'?'오답노트를 모두 복습했어요! 👏':'모
 
 function markCorrect(i){
 words[i].lastResult='correct';
+words[i].mastered=true;
 save();
 }
 function markWrong(i){
