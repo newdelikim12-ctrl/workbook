@@ -474,7 +474,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <div id="wrongs" class="section-content">
 <div class="row" style="margin-top:10px">
 <button class="small" style="flex:1;min-width:120px" onclick="bulkWrong('correct')">⭕ 전부 외웠어요</button>
-<button class="small" style="flex:1;min-width:120px" onclick="bulkWrong('wrong')">❌ 전부 또 틀림</button>
+<button class="small" style="flex:1;min-width:120px" onclick="bulkWrong('wrong')">❌ 전부 재도전</button>
 </div>
 <div class="row" style="margin-top:8px">
 <input type="text" id="wrongSearch" placeholder="🔍 오답노트 검색" oninput="render()">
@@ -1568,7 +1568,7 @@ function bulkWrong(result){
 let q=searchVal('wrongSearch');
 let items=words.filter(w=>w.wrong&&matchQ(w,q));
 if(!items.length) return alert('오답노트에 단어가 없습니다');
-let label=result==='correct'?'외웠어요':'또 틀림';
+let label=result==='correct'?'외웠어요':'재도전';
 if(!confirm(items.length+"개를 모두 '"+label+"'(으)로 표시할까요?")) return;
 items.forEach(w=>{ w.wrongResult=result; });
 if(result==='correct') registerActivity();
@@ -1658,7 +1658,7 @@ return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='w
 }).join('')+'</ul>';
 
 let wq=searchVal('wrongSearch');
-document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li class="${x.w.wrongResult==='correct'?'result-correct':x.w.wrongResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff">${x.w.eng} <span style="color:rgba(255,255,255,.75);font-weight:500">— ${x.w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="flex:1;white-space:nowrap" onclick="wrongNoteCorrect(${x.i})">⭕ 외웠어요</button><button style="flex:1;white-space:nowrap" onclick="wrongNoteAgain(${x.i})">❌ 또 틀림</button><button style="flex:0 0 auto;white-space:nowrap" onclick="removeWrongFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li class="${x.w.wrongResult==='correct'?'result-correct':x.w.wrongResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff">${x.w.eng} <span style="color:rgba(255,255,255,.75);font-weight:500">— ${x.w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="flex:1;white-space:nowrap" onclick="wrongNoteCorrect(${x.i})">⭕ 외웠어요</button><button style="flex:1;white-space:nowrap" onclick="wrongNoteAgain(${x.i})">❌ 재도전</button><button style="flex:0 0 auto;white-space:nowrap" onclick="removeWrongFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let mq=searchVal('masteredSearch');
 document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq)).map(x=>`<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff">${x.w.eng} <span style="color:rgba(255,255,255,.75);font-weight:500">— ${x.w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="white-space:nowrap" onclick="toggleMaster(${x.i})">↩️ 학습취소</button><button onclick="removeMasteredFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let total=words.length;
