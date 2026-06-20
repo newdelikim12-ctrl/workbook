@@ -446,7 +446,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 
 <div class="progress-wrap">
-<div class="progress-label">📖 학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</div>
+<div class="progress-label" style="position:relative;display:flex;justify-content:center;align-items:center">📖 학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)<button onclick="resetProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
 <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 <div class="progress-label" style="margin-top:12px;position:relative;display:flex;justify-content:center;align-items:center">❌ 오답 학습률: <b id="wrongProgressText">0 / 0</b> (<span id="wrongProgressPct">0%</span>)<button onclick="resetWrongProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
 <div class="progress-bar"><div class="progress-fill" id="wrongProgressFill" style="background:linear-gradient(90deg,#ff8a8a,#ff6b9d,#ffb347)"></div></div>
@@ -1541,6 +1541,15 @@ function wrongNoteAgain(i){
 // 다시 틀림 → 계속 복습 대상으로 유지
 words[i].wrongResult='wrong';
 save();
+}
+function resetProgress(){
+let items=words.filter(w=>w.mastered);
+if(!items.length) return showToast('학습 완료된 단어가 없어요');
+if(!confirm('학습 완료된 단어 '+items.length+'개를 모두 다시 학습할 단어로 초기화할까요?')) return;
+items.forEach(w=>{w.mastered=false;w.lastResult=null;});
+save();
+playSound('toggle');
+showToast('학습 진도율을 초기화했어요 ↺');
 }
 function resetWrongProgress(){
 let items=words.filter(w=>w.wrong);
