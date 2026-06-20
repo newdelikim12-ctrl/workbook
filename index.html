@@ -986,12 +986,15 @@ let quizAnswered=false;
 let quizTimer=null;
 function speakWord(){
 if(currentIndex<0) return;
-let text=words[currentIndex].eng;
 if(!('speechSynthesis' in window)) return alert('이 기기에서는 음성 기능을 지원하지 않습니다');
+let w=words[currentIndex];
 speechSynthesis.cancel();
-let u=new SpeechSynthesisUtterance(text);
-u.lang='en-US';
-speechSynthesis.speak(u);
+let uEng=new SpeechSynthesisUtterance(w.eng);
+uEng.lang='en-US';
+let uKor=new SpeechSynthesisUtterance(w.kor);
+uKor.lang='ko-KR';
+speechSynthesis.speak(uEng);
+speechSynthesis.speak(uKor);
 }
 
 let autoSpeak=localStorage.getItem('autoSpeak')==='1';
