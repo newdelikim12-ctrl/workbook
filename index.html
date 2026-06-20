@@ -402,12 +402,12 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button onclick="event.stopPropagation();toggleWrongFlag(currentIndex);showCardActions()" id="cardWrongBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">❌ 오답등록</button>
 <button onclick="event.stopPropagation();nextCard()" id="cardNextBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">➡️ 다음 단어</button>
 </div>
-<div id="autoPlayBar" style="display:none;margin-top:8px;align-items:center;justify-content:center;gap:8px;flex-wrap:nowrap">
+<div id="autoPlayBar" style="display:none;margin-top:8px;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;overflow:hidden;box-sizing:border-box;width:100%">
 <button id="autoSpeakBtn" onclick="event.stopPropagation();toggleAutoSpeak()" style="padding:7px 16px;font-size:13px;white-space:nowrap;box-shadow:none;background:var(--h3-bg);color:var(--text-main)">🔇 발음 자동읽기</button>
 <button id="autoPlayBtn" onclick="event.stopPropagation();toggleAutoPlay()" style="padding:7px 16px;font-size:13px;white-space:nowrap;box-shadow:none;background:var(--h3-bg);color:var(--text-main)">▶ 자동재생</button>
 <div style="display:flex;gap:4px;align-items:center">
 <span style="font-size:12px;color:var(--muted);white-space:nowrap">간격</span>
-<select id="autoPlaySpeed" onchange="event.stopPropagation();setAutoPlaySpeed(this.value)" style="padding:5px 8px;font-size:13px;border-radius:10px;border:1.5px solid var(--input-border);background:var(--input-bg);color:var(--text-main);cursor:pointer">
+<select id="autoPlaySpeed" onchange="event.stopPropagation();setAutoPlaySpeed(this.value)" style="padding:5px 6px;font-size:13px;border-radius:10px;border:1.5px solid var(--input-border);background:var(--input-bg);color:var(--text-main);cursor:pointer;max-width:70px">
 <option value="1">1초</option>
 <option value="2">2초</option>
 <option value="3" selected>3초</option>
