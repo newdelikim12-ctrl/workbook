@@ -214,11 +214,17 @@ li button:hover{background:var(--h3-bg-hover);filter:none;transform:none}
 li input{flex:1;min-width:90px;font-size:14px}
 #backupBox{height:92px;font-size:12px}
 
+#allWordsList li{
+  margin:4px 0;padding:6px 10px;font-size:13px;border-radius:10px;flex-direction:row;align-items:center;gap:6px;
+}
+#allWordsList li span:first-child{font-size:13px;text-align:left}
+#allWordsList li button{padding:4px 7px;font-size:12px}
+
 @media (max-width:480px){
   .container{padding:24px 18px;border-radius:22px}
-  #allWordsList li{flex-direction:column;align-items:stretch;gap:8px}
-  #allWordsList li span:first-child{text-align:center}
-  #allWordsList li .btns{justify-content:center}
+  #allWordsList li{flex-direction:row;align-items:center}
+  #allWordsList li span:first-child{text-align:left}
+  #allWordsList li .btns{justify-content:flex-end}
   li{font-size:14px}
 }
 
