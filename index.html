@@ -390,6 +390,11 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="small" onclick="clearRange()" style="flex-shrink:0;padding:7px 10px">전체</button>
 <span id="rangeCnt" style="color:var(--muted);font-size:12px;flex-shrink:0"></span>
 </div>
+<div style="display:flex;align-items:center;gap:5px;margin-top:5px">
+<button class="small" onclick="rangeStep(-1)" style="flex:1;padding:6px 4px;font-size:12px;box-shadow:none">◀ 이전</button>
+<span id="rangeStepLabel" style="flex:2;text-align:center;font-size:12px;color:var(--muted);white-space:nowrap">20개 단위</span>
+<button class="small" onclick="rangeStep(1)" style="flex:1;padding:6px 4px;font-size:12px;box-shadow:none">다음 ▶</button>
+</div>
 
 <div class="modes">
 <button onclick="randomMode('all')"><span class="ico">🎲</span><span class="lbl">랜덤 단어</span></button>
@@ -1146,6 +1151,27 @@ document.getElementById('rangeFrom').value='';
 document.getElementById('rangeTo').value='';
 updateRangeCnt();
 showToast('전체 단어로 학습할게요');
+}
+const RANGE_STEP=20;
+function rangeStep(dir){
+  if(!words.length) return showToast('단어를 먼저 불러오세요');
+  let total=words.length;
+  let curFrom=rangeFrom||1;
+  let curTo=rangeTo||total;
+  // 현재 블록 번호 계산 (0-based)
+  let block=Math.floor((curFrom-1)/RANGE_STEP);
+  block+=dir;
+  let maxBlock=Math.ceil(total/RANGE_STEP)-1;
+  if(block<0) block=maxBlock;
+  if(block>maxBlock) block=0;
+  let newFrom=block*RANGE_STEP+1;
+  let newTo=Math.min(newFrom+RANGE_STEP-1,total);
+  rangeFrom=newFrom; rangeTo=newTo;
+  document.getElementById('rangeFrom').value=newFrom;
+  document.getElementById('rangeTo').value=newTo;
+  updateRangeCnt();
+  document.getElementById('rangeStepLabel').textContent=newFrom+'~'+newTo+'번';
+  showToast(newFrom+'~'+newTo+'번 단어 ('+RANGE_STEP+'개 단위)');
 }
 function updateRangeCnt(){
 let cnt=document.getElementById('rangeCnt');
