@@ -379,7 +379,6 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button style="flex:1;min-width:0;padding:11px 6px;font-size:13px;white-space:nowrap;letter-spacing:-.3px" onclick="loadSheetTabs()">📑 시트 목록 불러오기</button>
 <button class="danger" style="flex:1;min-width:0;padding:11px 6px;font-size:13px;white-space:nowrap;letter-spacing:-.3px" onclick="clearAll()">🗑 전체 초기화</button>
 </div>
-<button onclick="forceUpdate()" style="width:100%;margin-top:6px;padding:9px;font-size:13px;background:var(--h3-bg);color:var(--muted);box-shadow:none;border-radius:12px;border:1.5px solid var(--input-border)">🔄 앱 업데이트 확인</button>
 <div id="sheetTabs" style="margin-top:8px"></div>
 
 <div id="rangeWrap" style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:nowrap;overflow:hidden">
@@ -449,12 +448,6 @@ li input{flex:1;min-width:90px;font-size:14px}
 <canvas id="drawCanvas" style="display:block;width:100%;touch-action:none;background:#1a2340;border-radius:18px;cursor:crosshair"></canvas>
 <div style="position:absolute;top:8px;right:8px;display:flex;gap:6px">
 <button onclick="event.stopPropagation();clearCanvas()" style="padding:5px 12px;font-size:12px;background:rgba(255,255,255,.15);color:#fff;box-shadow:none;border-radius:10px">🧹 지우기</button>
-</div>
-<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:6px">
-<button onclick="setDrawColor('#ffffff')" style="width:22px;height:22px;border-radius:50%;background:#ffffff;box-shadow:none;padding:0;border:2px solid rgba(255,255,255,.5)"></button>
-<button onclick="setDrawColor('#7c9cff')" style="width:22px;height:22px;border-radius:50%;background:#7c9cff;box-shadow:none;padding:0"></button>
-<button onclick="setDrawColor('#ff8a8a')" style="width:22px;height:22px;border-radius:50%;background:#ff8a8a;box-shadow:none;padding:0"></button>
-<button onclick="setDrawColor('#56c596')" style="width:22px;height:22px;border-radius:50%;background:#56c596;box-shadow:none;padding:0"></button>
 </div>
 </div>
 <button onclick="toggleDrawBoard()" id="drawBoardBtn" style="width:100%;margin-top:8px;padding:8px;font-size:13px;background:var(--h3-bg);color:var(--text-main);box-shadow:none;border-radius:12px;border:1.5px solid var(--input-border)">✏️ 칠판 열기</button>
@@ -1487,16 +1480,6 @@ words[i].wrongResult=null;
 words[i].lastResult='wrong';
 save();
 }
-
-async function forceUpdate(){
-  if('serviceWorker' in navigator){
-    let regs=await navigator.serviceWorker.getRegistrations();
-    for(let r of regs) await r.unregister();
-  }
-  let keys=await caches.keys();
-  for(let k of keys) await caches.delete(k);
-  location.reload(true);
-}
 function clearAll(){
 if(!words.length) return alert('단어가 없습니다');
 if(!confirm('모든 단어를 삭제하고 초기화할까요? (연속 학습 일수와 오늘 학습 기록도 함께 초기화됩니다)')) return;
@@ -1757,7 +1740,7 @@ function initCanvas(){
   canvas._init=true;
   let dpr=window.devicePixelRatio||1;
   let w=canvas.getBoundingClientRect().width;
-  let h=Math.round(w*0.45);
+  let h=Math.round(w*0.65);
   canvas.width=w*dpr; canvas.height=h*dpr;
   canvas.style.height=h+'px';
   let ctx=canvas.getContext('2d');
