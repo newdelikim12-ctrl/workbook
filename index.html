@@ -411,12 +411,12 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button onclick="event.stopPropagation();toggleWrongFlag(currentIndex);showCardActions()" id="cardWrongBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">❌ 오답등록</button>
 <button onclick="event.stopPropagation();nextCard()" id="cardNextBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">➡️ 다음 단어</button>
 </div>
-<div id="autoPlayBar" style="display:none;margin-top:8px;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;overflow:hidden;box-sizing:border-box;width:100%">
-<button id="autoSpeakBtn" onclick="event.stopPropagation();toggleAutoSpeak()" style="padding:7px 16px;font-size:13px;white-space:nowrap;box-shadow:none;background:var(--h3-bg);color:var(--text-main)">🔇 발음 자동읽기</button>
-<button id="autoPlayBtn" onclick="event.stopPropagation();toggleAutoPlay()" style="padding:7px 16px;font-size:13px;white-space:nowrap;box-shadow:none;background:var(--h3-bg);color:var(--text-main)">▶ 자동재생</button>
-<div style="display:flex;gap:4px;align-items:center">
+<div id="autoPlayBar" style="display:none;margin-top:8px;align-items:center;justify-content:center;gap:6px;flex-wrap:nowrap;overflow:hidden;box-sizing:border-box;width:100%">
+<button id="autoSpeakBtn" onclick="event.stopPropagation();toggleAutoSpeak()" style="flex:1;padding:7px 4px;font-size:12px;white-space:nowrap;box-shadow:none;background:var(--h3-bg);color:var(--text-main)">🔇 자동읽기</button>
+<button id="autoPlayBtn" onclick="event.stopPropagation();toggleAutoPlay()" style="flex:1;padding:7px 4px;font-size:12px;white-space:nowrap;box-shadow:none;background:var(--h3-bg);color:var(--text-main)">▶ 자동재생</button>
+<div style="display:flex;gap:4px;align-items:center;flex-shrink:0">
 <span style="font-size:12px;color:var(--muted);white-space:nowrap">간격</span>
-<select id="autoPlaySpeed" onchange="event.stopPropagation();setAutoPlaySpeed(this.value)" style="padding:5px 6px;font-size:13px;border-radius:10px;border:1.5px solid var(--input-border);background:var(--input-bg);color:var(--text-main);cursor:pointer;max-width:70px">
+<select id="autoPlaySpeed" onchange="event.stopPropagation();setAutoPlaySpeed(this.value)" style="padding:5px 4px;font-size:12px;border-radius:10px;border:1.5px solid var(--input-border);background:var(--input-bg);color:var(--text-main);cursor:pointer;max-width:60px">
 <option value="1">1초</option>
 <option value="2">2초</option>
 <option value="3" selected>3초</option>
@@ -444,6 +444,27 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 </div>
 
+<div id="drawBoard" style="margin-top:12px;border-radius:18px;overflow:hidden;position:relative;display:none">
+<canvas id="drawCanvas" style="display:block;width:100%;touch-action:none;background:#1a2340;border-radius:18px;cursor:crosshair"></canvas>
+<div style="position:absolute;top:8px;right:8px;display:flex;gap:6px">
+<button onclick="event.stopPropagation();clearCanvas()" style="padding:5px 12px;font-size:12px;background:rgba(255,255,255,.15);color:#fff;box-shadow:none;border-radius:10px">🧹 지우기</button>
+</div>
+<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:6px">
+<button onclick="setDrawColor('#ffffff')" style="width:22px;height:22px;border-radius:50%;background:#ffffff;box-shadow:none;padding:0;border:2px solid rgba(255,255,255,.5)"></button>
+<button onclick="setDrawColor('#7c9cff')" style="width:22px;height:22px;border-radius:50%;background:#7c9cff;box-shadow:none;padding:0"></button>
+<button onclick="setDrawColor('#ff8a8a')" style="width:22px;height:22px;border-radius:50%;background:#ff8a8a;box-shadow:none;padding:0"></button>
+<button onclick="setDrawColor('#56c596')" style="width:22px;height:22px;border-radius:50%;background:#56c596;box-shadow:none;padding:0"></button>
+</div>
+</div>
+<button onclick="toggleDrawBoard()" id="drawBoardBtn" style="width:100%;margin-top:8px;padding:8px;font-size:13px;background:var(--h3-bg);color:var(--text-main);box-shadow:none;border-radius:12px;border:1.5px solid var(--input-border)">✏️ 칠판 열기</button>
+
+<div class="progress-wrap">
+<div class="progress-label" style="position:relative;display:flex;justify-content:center;align-items:center"><span style="transform:translateX(-20px);display:inline-block">📖 학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</span><button onclick="resetProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="progress-label" style="margin-top:12px;position:relative;display:flex;justify-content:center;align-items:center"><span style="transform:translateX(-20px);display:inline-block">❌ 오답 학습률: <b id="wrongProgressText">0 / 0</b> (<span id="wrongProgressPct">0%</span>)</span><button onclick="resetWrongProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
+<div class="progress-bar"><div class="progress-fill" id="wrongProgressFill" style="background:linear-gradient(90deg,#ff8a8a,#ff6b9d,#ffb347)"></div></div>
+</div>
+
 <div class="quiz-toggle-row">
 <span class="label">🧩 객관식 퀴즈 모드</span>
 <div class="quiz-modes">
@@ -453,14 +474,6 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="qmode" data-m="random" onclick="setQuizMode('random')">🎲 랜덤</button>
 </div>
 </div>
-
-<div class="progress-wrap">
-<div class="progress-label" style="position:relative;display:flex;justify-content:center;align-items:center"><span style="transform:translateX(-20px);display:inline-block">📖 학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</span><button onclick="resetProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
-<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-<div class="progress-label" style="margin-top:12px;position:relative;display:flex;justify-content:center;align-items:center"><span style="transform:translateX(-20px);display:inline-block">❌ 오답 학습률: <b id="wrongProgressText">0 / 0</b> (<span id="wrongProgressPct">0%</span>)</span><button onclick="resetWrongProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
-<div class="progress-bar"><div class="progress-fill" id="wrongProgressFill" style="background:linear-gradient(90deg,#ff8a8a,#ff6b9d,#ffb347)"></div></div>
-</div>
-
 
 <h3 onclick="toggle('allWords',this)"><span>📖 전체 단어 <b id="cntAll" class="cnt"></b></span></h3>
 <div id="allWords" class="section-content">
@@ -1721,6 +1734,59 @@ else prevCard();             // → 오른쪽 스와이프: 이전 단어
 }
 });
 })();
+
+// ===== 드로잉 칠판 =====
+let drawColor='#ffffff';
+let drawSize=3;
+let isDrawing=false;
+let lastX=0,lastY=0;
+
+function initCanvas(){
+  let canvas=document.getElementById('drawCanvas');
+  if(!canvas||canvas._init) return;
+  canvas._init=true;
+  let dpr=window.devicePixelRatio||1;
+  let w=canvas.getBoundingClientRect().width;
+  let h=Math.round(w*0.45);
+  canvas.width=w*dpr; canvas.height=h*dpr;
+  canvas.style.height=h+'px';
+  let ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  function getPos(e){
+    let r=canvas.getBoundingClientRect();
+    let s=e.touches?e.touches[0]:e;
+    return [s.clientX-r.left, s.clientY-r.top];
+  }
+  function startDraw(e){isDrawing=true;[lastX,lastY]=getPos(e);}
+  function moveDraw(e){
+    if(!isDrawing) return;
+    let [x,y]=getPos(e);
+    ctx.strokeStyle=drawColor; ctx.lineWidth=drawSize;
+    ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(x,y); ctx.stroke();
+    lastX=x; lastY=y;
+  }
+  canvas.addEventListener('mousedown',startDraw);
+  canvas.addEventListener('mousemove',moveDraw);
+  canvas.addEventListener('mouseup',()=>isDrawing=false);
+  canvas.addEventListener('mouseleave',()=>isDrawing=false);
+  canvas.addEventListener('touchstart',e=>{e.preventDefault();startDraw(e);},{passive:false});
+  canvas.addEventListener('touchmove',e=>{e.preventDefault();moveDraw(e);},{passive:false});
+  canvas.addEventListener('touchend',()=>isDrawing=false);
+}
+function clearCanvas(){
+  let c=document.getElementById('drawCanvas');
+  c.getContext('2d').clearRect(0,0,c.width,c.height);
+}
+function setDrawColor(c){ drawColor=c; drawSize=c==='#ffffff'?3:4; }
+function toggleDrawBoard(){
+  let board=document.getElementById('drawBoard');
+  let btn=document.getElementById('drawBoardBtn');
+  let open=board.style.display==='none'||!board.style.display;
+  board.style.display=open?'block':'none';
+  btn.textContent=open?'✏️ 칠판 닫기':'✏️ 칠판 열기';
+  if(open) setTimeout(initCanvas,50);
+}
 </script>
 
 <script>
