@@ -264,7 +264,10 @@ li input{flex:1;min-width:90px;font-size:14px}
   max-height:360px;overflow-y:auto;margin-top:6px;
   border:1.5px solid var(--input-border);border-radius:14px;padding:4px 6px;
   scrollbar-width:thin;scrollbar-color:var(--accent-soft) transparent;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
 }
+.list-scroll-btns{display:flex;gap:6px;margin-top:6px}
+.list-scroll-btns button{flex:1;padding:5px;font-size:13px;background:var(--h3-bg);color:var(--muted);box-shadow:none;border-radius:10px;border:1.5px solid var(--input-border)}
 #wrongsList li,#masteredList li,#dupesList li{
   margin:5px 0;padding:8px 10px;font-size:13px;border-radius:10px;
 }
@@ -491,6 +494,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearAllWords()">🗑 전체 삭제</button>
 </div>
 <div id="allWordsList"></div>
+<div class="list-scroll-btns">
+  <button onclick="document.getElementById('allWordsList').scrollBy({top:-200,behavior:'smooth'})">▲ 위</button>
+  <button onclick="document.getElementById('allWordsList').scrollBy({top:200,behavior:'smooth'})">▼ 아래</button>
+</div>
 <button class="fold-btn" onclick="closeSection('allWords')">∧ 접기</button>
 </div>
 
@@ -505,6 +512,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearWrongs()">🗑 전체 삭제</button>
 </div>
 <div id="wrongsList"></div>
+<div class="list-scroll-btns">
+  <button onclick="document.getElementById('wrongsList').scrollBy({top:-200,behavior:'smooth'})">▲ 위</button>
+  <button onclick="document.getElementById('wrongsList').scrollBy({top:200,behavior:'smooth'})">▼ 아래</button>
+</div>
 <button class="fold-btn" onclick="closeSection('wrongs')">∧ 접기</button>
 </div>
 
@@ -515,6 +526,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearMastered()">↩️ 전체 학습취소</button>
 </div>
 <div id="masteredList"></div>
+<div class="list-scroll-btns">
+  <button onclick="document.getElementById('masteredList').scrollBy({top:-200,behavior:'smooth'})">▲ 위</button>
+  <button onclick="document.getElementById('masteredList').scrollBy({top:200,behavior:'smooth'})">▼ 아래</button>
+</div>
 <button class="fold-btn" onclick="closeSection('mastered')">∧ 접기</button>
 </div>
 
@@ -525,6 +540,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="danger small" onclick="clearDupes()" style="flex:1">🗑 중복 기록 비우기</button>
 </div>
 <div id="dupesList"></div>
+<div class="list-scroll-btns">
+  <button onclick="document.getElementById('dupesList').scrollBy({top:-200,behavior:'smooth'})">▲ 위</button>
+  <button onclick="document.getElementById('dupesList').scrollBy({top:200,behavior:'smooth'})">▼ 아래</button>
+</div>
 <button class="fold-btn" onclick="closeSection('dupeBox')">∧ 접기</button>
 </div>
 
