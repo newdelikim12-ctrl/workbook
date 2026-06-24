@@ -261,7 +261,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 }
 
 #allWordsList,#wrongsList,#masteredList,#dupesList{
-  max-height:280px;overflow-y:auto;margin-top:6px;
+  max-height:360px;overflow-y:auto;margin-top:6px;
   border:1.5px solid var(--input-border);border-radius:14px;padding:4px 6px;
   scrollbar-width:thin;scrollbar-color:var(--accent-soft) transparent;
 }
@@ -512,6 +512,16 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="fold-btn" onclick="closeSection('mastered')">∧ 접기</button>
 </div>
 
+<h3 onclick="toggle('dupeBox',this)"><span>🔁 중복 단어 <b id="cntDupes" class="cnt"></b></span></h3>
+<div id="dupeBox" class="section-content">
+<p style="color:var(--muted);font-size:13px;margin:10px 0 6px">여러 시트에 겹쳐서 불러와진 영단어예요. 시트에서 하나만 남기고 지우면 깔끔해요.</p>
+<div class="row" style="margin-top:4px">
+<button class="danger small" onclick="clearDupes()" style="flex:1">🗑 중복 기록 비우기</button>
+</div>
+<div id="dupesList"></div>
+<button class="fold-btn" onclick="closeSection('dupeBox')">∧ 접기</button>
+</div>
+
 <h3 onclick="toggle('addWord',this);ensureBulkRows()"><span>➕ 단어 추가</span></h3>
 <div id="addWord" class="section-content">
 <div style="margin-top:12px">
@@ -530,16 +540,6 @@ li input{flex:1;min-width:90px;font-size:14px}
     <button class="small" onclick="bulkAdd()">📋 일괄 추가</button>
   </div>
 </div>
-</div>
-
-<h3 onclick="toggle('dupeBox',this)"><span>🔁 중복 단어 <b id="cntDupes" class="cnt"></b></span></h3>
-<div id="dupeBox" class="section-content">
-<p style="color:var(--muted);font-size:13px;margin:10px 0 6px">여러 시트에 겹쳐서 불러와진 영단어예요. 시트에서 하나만 남기고 지우면 깔끔해요.</p>
-<div class="row" style="margin-top:4px">
-<button class="danger small" onclick="clearDupes()" style="flex:1">🗑 중복 기록 비우기</button>
-</div>
-<div id="dupesList"></div>
-<button class="fold-btn" onclick="closeSection('dupeBox')">∧ 접기</button>
 </div>
 
 <h3 onclick="toggle('backup',this)"><span>💾 데이터 백업</span></h3>
