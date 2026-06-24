@@ -392,25 +392,28 @@ li input{flex:1;min-width:90px;font-size:14px}
 /* Bottom tab bar */
 #tabBar{
   position:fixed;bottom:0;left:0;right:0;
-  display:flex;background:var(--card-bg);
-  border-top:2px solid var(--input-border);
-  z-index:100;box-shadow:0 -6px 24px rgba(0,0,0,.13);
+  display:flex;align-items:stretch;
+  background:var(--card-bg);
+  border-top:1.5px solid var(--input-border);
+  z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.11);
   padding-bottom:env(safe-area-inset-bottom);
 }
 .tab-btn{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:5px;padding:12px 0 14px;
+  flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;
+  gap:7px;padding:11px 0;
   background:none;border:none;border-radius:0;box-shadow:none;
-  font-size:13px;color:var(--muted);font-weight:700;cursor:pointer;transition:.15s;
-  letter-spacing:.01em;
+  font-size:14px;color:var(--muted);font-weight:600;cursor:pointer;
+  transition:background .15s,color .15s;position:relative;
 }
-.tab-btn .ico{font-size:24px;line-height:1;display:block}
+.tab-btn .ico{font-size:18px;line-height:1}
 .tab-btn:active{background:var(--h3-bg);filter:none}
-.tab-active{color:var(--accent)!important}
-.tab-active .tab-pip{display:block}
-.tab-pip{
-  display:none;width:28px;height:3px;border-radius:2px;
-  background:var(--accent);margin-top:2px;
+.tab-active{color:var(--accent)!important;background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.tab-active::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2.5px;
+  background:var(--accent);border-radius:0 0 3px 3px;
+}
+#tabBar .tab-divider{
+  width:1.5px;background:var(--input-border);align-self:stretch;margin:8px 0;
 }
 /* Deck panel cards */
 .deck-card{
@@ -663,8 +666,9 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 
 <div id="tabBar">
-  <button id="tabStudy" class="tab-btn tab-active" onclick="showTab('study')"><span class="ico">📖</span>학습<span class="tab-pip"></span></button>
-  <button id="tabDecks" class="tab-btn" onclick="showTab('decks')"><span class="ico">📚</span>단어장<span class="tab-pip"></span></button>
+  <button id="tabStudy" class="tab-btn tab-active" onclick="showTab('study')"><span class="ico">📖</span>학습</button>
+  <div class="tab-divider"></div>
+  <button id="tabDecks" class="tab-btn" onclick="showTab('decks')"><span class="ico">📚</span>단어장</button>
 </div>
 
 <div id="toast" class="toast"></div>
