@@ -282,6 +282,14 @@ li input{flex:1;min-width:90px;font-size:14px}
   scrollbar-width:thin;scrollbar-color:var(--accent-soft) transparent;
   -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
 }
+/* 목록의 영어 단어 탭하면 발음 */
+.speakable{
+  cursor:pointer;border-bottom:1.5px dotted rgba(255,255,255,.45);
+  padding-bottom:1px;transition:.15s;
+}
+.speakable:hover{border-bottom-color:#fff;color:#aee9ff}
+.speakable:active{opacity:.6}
+.speakable::after{content:'🔊';font-size:11px;margin-left:4px;opacity:.65;vertical-align:middle}
 .list-scroll-btns{display:flex;gap:6px;margin-top:6px}
 .list-scroll-btns button{flex:1;padding:5px;font-size:13px;background:var(--h3-bg);color:var(--muted);box-shadow:none;border-radius:10px;border:1.5px solid var(--input-border)}
 #wrongsList li,#masteredList li,#dupesList li{
@@ -889,6 +897,7 @@ box.innerHTML='<ul>'+list.map(d=>{let i=dupes.indexOf(d);return(
 function parseSheetId(url){let m=url.match(/\/d\/([a-zA-Z0-9-_]+)/);return m?m[1]:null;}
 function parseSheetGid(url){let m=url.match(/[#&?]gid=([0-9]+)/);return m?m[1]:null;}
 function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function speakAttr(s){return escapeHtml(String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"));}
 // 직접 URL + (모바일 CORS 우회용) 프록시 URL 후보 만들기
 function withProxies(urls){
 let out=[];
@@ -1081,6 +1090,14 @@ if(m==='both'){
   uKor.lang='ko-KR';
   speechSynthesis.speak(uKor);
 }
+}
+// 목록에서 단어 텍스트를 탭하면 영어 발음 (currentIndex 무관)
+function speakText(text){
+if(!('speechSynthesis' in window)) return;
+speechSynthesis.cancel();
+let u=new SpeechSynthesisUtterance(text);
+u.lang='en-US';
+speechSynthesis.speak(u);
 }
 function toggleSpeakMode(){
 speakMode=speakMode==='eng'?'both':'eng';
@@ -1748,7 +1765,7 @@ all.innerHTML='<ul>'+list.map(({w,i})=>{
 if(i===editIndex){
 return `<li><input id="editEng" value="${w.eng.replace(/"/g,'&quot;')}"><input id="editKor" value="${w.kor.replace(/"/g,'&quot;')}"><span class="btns"><button onclick="saveEdit(${i})">💾</button><button onclick="cancelEdit()">↩️</button></span></li>`;
 }
-return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff">${w.eng} <span style="color:rgba(255,255,255,.75);font-weight:500">— ${w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px">
+return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff"><span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${w.eng}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px">
 <button onclick="toggleWrongFlag(${i})">${w.wrong?'❌':'⭕'}</button>
 <button onclick="toggleMaster(${i})">${w.mastered?'✅':'⬜'}</button>
 <button onclick="startEdit(${i})">✏️</button>
@@ -1758,9 +1775,9 @@ return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='w
 }).join('')+'</ul>';
 
 let wq=searchVal('wrongSearch');
-document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li class="${x.w.wrongResult==='correct'?'result-correct':x.w.wrongResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff">${x.w.eng} <span style="color:rgba(255,255,255,.75);font-weight:500">— ${x.w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="flex:1;white-space:nowrap" onclick="wrongNoteCorrect(${x.i})">⭕ 외웠어요</button><button style="flex:1;white-space:nowrap" onclick="wrongNoteAgain(${x.i})">❌ 재도전</button><button style="flex:0 0 auto;white-space:nowrap" onclick="removeWrongFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li class="${x.w.wrongResult==='correct'?'result-correct':x.w.wrongResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff"><span class="speakable" onclick="speakText('${speakAttr(x.w.eng)}')">${x.w.eng}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${x.w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="flex:1;white-space:nowrap" onclick="wrongNoteCorrect(${x.i})">⭕ 외웠어요</button><button style="flex:1;white-space:nowrap" onclick="wrongNoteAgain(${x.i})">❌ 재도전</button><button style="flex:0 0 auto;white-space:nowrap" onclick="removeWrongFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let mq=searchVal('masteredSearch');
-document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq)).map(x=>`<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff">${x.w.eng} <span style="color:rgba(255,255,255,.75);font-weight:500">— ${x.w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="white-space:nowrap" onclick="toggleMaster(${x.i})">↩️ 학습취소</button><button onclick="removeMasteredFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq)).map(x=>`<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff"><span class="speakable" onclick="speakText('${speakAttr(x.w.eng)}')">${x.w.eng}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${x.w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="white-space:nowrap" onclick="toggleMaster(${x.i})">↩️ 학습취소</button><button onclick="removeMasteredFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let total=words.length;
 let mastered=words.filter(w=>w.mastered).length;
 let pct=total?Math.round(mastered/total*100):0;
