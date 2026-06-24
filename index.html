@@ -508,7 +508,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="small" style="flex:1;min-width:120px" onclick="bulkWrong('wrong')">❌ 전부 재도전</button>
 </div>
 <div class="row" style="margin-top:8px">
-<input type="text" id="wrongSearch" placeholder="🔍 오답노트 검색" oninput="render()">
+<div style="position:relative;flex:1;display:flex;align-items:center">
+<input type="text" id="wrongSearch" placeholder="🔍 오답노트 검색" oninput="render()" style="width:100%;padding-right:32px">
+<button onclick="document.getElementById('wrongSearch').value='';render()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;box-shadow:none;padding:0;width:22px;height:22px;font-size:15px;color:var(--muted);display:flex;align-items:center;justify-content:center;border-radius:50%">✕</button>
+</div>
 <button class="danger small" onclick="clearWrongs()">🗑 전체 삭제</button>
 </div>
 <div id="wrongsList"></div>
@@ -522,7 +525,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 <h3 onclick="toggle('mastered',this)"><span>✅ 학습 완료 <b id="cntMastered" class="cnt"></b></span></h3>
 <div id="mastered" class="section-content">
 <div class="row" style="margin-top:10px">
-<input type="text" id="masteredSearch" placeholder="🔍 학습 완료 검색" oninput="render()">
+<div style="position:relative;flex:1;display:flex;align-items:center">
+<input type="text" id="masteredSearch" placeholder="🔍 학습 완료 검색" oninput="render()" style="width:100%;padding-right:32px">
+<button onclick="document.getElementById('masteredSearch').value='';render()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;box-shadow:none;padding:0;width:22px;height:22px;font-size:15px;color:var(--muted);display:flex;align-items:center;justify-content:center;border-radius:50%">✕</button>
+</div>
 <button class="danger small" onclick="clearMastered()">↩️ 전체 학습취소</button>
 </div>
 <div id="masteredList"></div>
@@ -536,8 +542,12 @@ li input{flex:1;min-width:90px;font-size:14px}
 <h3 onclick="toggle('dupeBox',this)"><span>🔁 중복 단어 <b id="cntDupes" class="cnt"></b></span></h3>
 <div id="dupeBox" class="section-content">
 <p style="color:var(--muted);font-size:13px;margin:10px 0 6px">여러 시트에 겹쳐서 불러와진 영단어예요. 시트에서 하나만 남기고 지우면 깔끔해요.</p>
-<div class="row" style="margin-top:4px">
-<button class="danger small" onclick="clearDupes()" style="flex:1">🗑 중복 기록 비우기</button>
+<div class="row" style="margin-top:8px">
+<div style="position:relative;flex:1;display:flex;align-items:center">
+<input type="text" id="dupesSearch" placeholder="🔍 중복 단어 검색" oninput="render()" style="width:100%;padding-right:32px">
+<button onclick="document.getElementById('dupesSearch').value='';render()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;box-shadow:none;padding:0;width:22px;height:22px;font-size:15px;color:var(--muted);display:flex;align-items:center;justify-content:center;border-radius:50%">✕</button>
+</div>
+<button class="danger small" onclick="clearDupes()">🗑 비우기</button>
 </div>
 <div id="dupesList"></div>
 <div class="list-scroll-btns">
@@ -839,14 +849,17 @@ function removeDupe(i){ dupes.splice(i,1); saveDupes(); render(); }
 function clearDupes(){ if(!dupes.length) return; if(!confirm('중복 단어 기록을 모두 지울까요?')) return; dupes=[]; saveDupes(); render(); showToast('중복 기록을 지웠어요'); }
 function renderDupes(){
 let box=document.getElementById('dupesList'); if(!box) return;
+let sq=(document.getElementById('dupesSearch')||{}).value||'';
+let list=sq?dupes.filter(d=>d.eng.toLowerCase().includes(sq.toLowerCase())):dupes;
 if(!dupes.length){ box.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px">아직 중복으로 감지된 단어가 없어요. 시트를 불러오면 겹치는 영단어가 여기에 기록돼요.</div>'; return; }
-box.innerHTML='<ul>'+dupes.map((d,i)=>
+if(!list.length){ box.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px">검색 결과가 없어요.</div>'; return; }
+box.innerHTML='<ul>'+list.map(d=>{let i=dupes.indexOf(d);return(
 '<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span><b style="font-size:15px;font-weight:700;color:#fff">'+escapeHtml(d.eng)+'</b>'
 +'<span style="color:rgba(255,255,255,.65);font-size:12px;display:block;margin-top:2px">'
 +(d.sheets.length?('📄 '+d.sheets.map(escapeHtml).join(' · ')):'시트 정보 없음')
 +(d.n>1?('  ·  '+d.n+'회 감지'):'')
 +'</span></span>'
-+'<span class="btns" style="justify-content:center"><button onclick="removeDupe('+i+')">🗑</button></span></li>').join('')+'</ul>';
++'<span class="btns" style="justify-content:center"><button onclick="removeDupe('+i+')">🗑</button></span></li>');}).join('')+'</ul>';
 }
 
 // ===== 시트(탭) 선택해서 불러오기 =====
