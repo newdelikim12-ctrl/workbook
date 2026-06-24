@@ -1945,7 +1945,7 @@ let mq=searchVal('masteredSearch');
 document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq)).map(({w,i})=>{
 let num=`<span style="min-width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.13);font-size:11px;font-weight:800;color:rgba(255,255,255,.7);flex-shrink:0">${i+1}</span>`;
 return `<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff">${num}<span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${escapeHtml(w.kor)}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="white-space:nowrap" onclick="toggleMaster(${i})">↩️ 학습취소</button><button onclick="removeMasteredFlag(${i})">🗑</button></span></li>`;
-}).join('')+'</ul>');
+}).join('')+'</ul>';
 let total=words.length;
 let mastered=words.filter(w=>w.mastered).length;
 let pct=total?Math.round(mastered/total*100):0;
@@ -1975,17 +1975,16 @@ function switchDeck(id){
   rangeFrom=null; rangeTo=null;
   document.getElementById('rangeFrom').value='';
   document.getElementById('rangeTo').value='';
+  pushRecentDeck(id);
   saveDecks();
   render();
   renderDeckPanel();
+  renderRecentDecks();
   let card=document.getElementById('card');
   document.getElementById('front').innerText='단어를 선택하세요';
   document.getElementById('back').innerText='카드를 클릭하면 뜻이 표시됩니다';
   card.classList.remove('revealed');
   showCardActions();
-  pushRecentDeck(id);
-  saveDecks();
-  renderRecentDecks();
   showTab('study');
   showToast('📚 '+d.name);
 }
