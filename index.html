@@ -1068,6 +1068,7 @@ alert('불러오기 실패! 다음을 확인해 주세요.\n\n① 시트 공유 
 let currentIndex=-1;
 let lastMode='all';
 let cardHistory=[]; // 이전 카드 인덱스 스택
+let recentSeen=[]; // 최근 본 단어 인덱스 (중복 방지용)
 let bothMode=localStorage.getItem('bothMode')==='1';
 let rangeFrom=null,rangeTo=null;
 let quizMode=localStorage.getItem('quizMode')==='1';
@@ -1181,9 +1182,22 @@ function updateAutoPlayBtn(){
   }
 }
 
+function pickNext(arr){
+// 최근 본 단어(recentSeen) 제외 후 랜덤 선택, 안되면 현재 단어만 제외
+let exclude=new Set(recentSeen);
+let pool=arr.filter(x=>!exclude.has(x.i));
+if(!pool.length) pool=arr.filter(x=>x.i!==currentIndex);
+if(!pool.length) pool=arr;
+return pool[Math.floor(Math.random()*pool.length)];
+}
 function showWord(w,i,skipHistory){
 if(!skipHistory && currentIndex>=0) cardHistory.push(currentIndex);
-if(cardHistory.length>50) cardHistory.shift(); // 최대 50개 유지
+if(cardHistory.length>50) cardHistory.shift();
+// recentSeen 갱신
+if(i!==undefined && i>=0){
+  recentSeen.push(i);
+  if(recentSeen.length>5) recentSeen.shift(); // 최근 5개만 유지
+}
 currentIndex=i!==undefined?i:-1;
 document.getElementById('front').innerText=w.eng;
 document.getElementById('back').innerText=w.kor;
@@ -1315,7 +1329,7 @@ if(words.length===0) return alert('먼저 단어를 추가해 주세요');
 return alert('학습할 단어가 없어요. 모두 학습 완료했어요! 🎉');
 }
 if(quizMode){ startQuiz(); return; }
-let pick=arr[Math.floor(Math.random()*arr.length)];
+let pick=pickNext(arr);
 showWord(pick.w,pick.i);
 }
 
@@ -1353,7 +1367,7 @@ playSound('complete');
 showToast(lastMode==='wrong'?'오답노트를 모두 복습했어요! 👏':'모두 학습했어요! 정말 대단해요! 🏆');
 return;
 }
-let pick=arr[Math.floor(Math.random()*arr.length)];
+let pick=pickNext(arr);
 showWord(pick.w,pick.i);
 }
 
