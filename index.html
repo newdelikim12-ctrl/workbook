@@ -391,29 +391,25 @@ li input{flex:1;min-width:90px;font-size:14px}
 .quiz-dunno:disabled{opacity:.45;cursor:default}
 /* Bottom tab bar */
 #tabBar{
-  position:fixed;bottom:0;left:0;right:0;
   display:flex;align-items:stretch;
   background:var(--card-bg);
-  border-top:1.5px solid var(--input-border);
-  z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.11);
-  padding-bottom:env(safe-area-inset-bottom);
+  border:1.5px solid var(--input-border);
+  border-radius:18px;
+  margin:18px 16px 24px;
+  overflow:hidden;
 }
 .tab-btn{
   flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;
-  gap:7px;padding:11px 0;
+  gap:7px;padding:13px 0;
   background:none;border:none;border-radius:0;box-shadow:none;
   font-size:14px;color:var(--muted);font-weight:600;cursor:pointer;
-  transition:background .15s,color .15s;position:relative;
+  transition:background .15s,color .15s;
 }
 .tab-btn .ico{font-size:18px;line-height:1}
-.tab-btn:active{background:var(--h3-bg);filter:none}
-.tab-active{color:var(--accent)!important;background:color-mix(in srgb,var(--accent) 8%,transparent)}
-.tab-active::after{
-  content:'';position:absolute;top:0;left:0;right:0;height:2.5px;
-  background:var(--accent);border-radius:0 0 3px 3px;
-}
+.tab-btn:active{filter:none}
+.tab-active{color:var(--accent)!important;background:color-mix(in srgb,var(--accent) 10%,transparent)}
 #tabBar .tab-divider{
-  width:1.5px;background:var(--input-border);align-self:stretch;margin:8px 0;
+  width:1.5px;background:var(--input-border);align-self:stretch;
 }
 /* Deck panel cards */
 .deck-card{
@@ -428,7 +424,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 .deck-badge{margin-top:8px;font-size:12px;color:var(--accent);font-weight:700}
 .deck-actions{display:flex;gap:4px}
 /* Add bottom padding to study view so content isn't hidden behind tab bar */
-.container{padding-bottom:90px}
+.container{padding-bottom:16px}
 </style>
 </head>
 <body>
@@ -659,7 +655,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 </div>
 
-<div id="deckPanel" style="display:none;padding:16px 16px 80px;max-width:480px;margin:0 auto">
+<div id="deckPanel" style="display:none;padding:16px 16px 16px;max-width:480px;margin:0 auto">
   <h2 style="font-family:'Jua',sans-serif;margin-bottom:16px">📚 내 단어장</h2>
   <div id="deckList"></div>
   <button onclick="createDeck()" style="width:100%;margin-top:12px;padding:14px;font-size:15px;border-radius:16px">＋ 새 단어장 만들기</button>
