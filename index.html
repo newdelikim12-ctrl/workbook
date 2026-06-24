@@ -101,6 +101,22 @@ input,textarea{
 }
 input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(124,156,255,.18)}
 input[type=text],input:not([type]){flex:1;min-width:120px}
+
+/* 입력창 + 지우기(X) 버튼 래퍼 */
+.input-clear{position:relative;flex:1;min-width:120px;display:flex;align-items:center}
+.input-clear input{width:100%;flex:1;padding-right:40px}
+.clear-x{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  width:24px;height:24px;padding:0;border-radius:50%;border:none;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--input-border);color:var(--text-main);
+  font-size:13px;line-height:1;box-shadow:none;cursor:pointer;
+  opacity:.55;transition:.15s;
+}
+.clear-x:hover{opacity:1;background:#ff6b9d;color:#fff;filter:none;transform:translateY(-50%)}
+.clear-x:active{transform:translateY(-50%) scale(.9)}
+/* 입력값이 없으면(placeholder 표시중) X 숨김 */
+.input-clear input:placeholder-shown + .clear-x{opacity:0;pointer-events:none}
 textarea{width:100%;height:92px;resize:vertical;font-family:inherit;line-height:1.5}
 
 button{
@@ -376,9 +392,9 @@ li input{flex:1;min-width:90px;font-size:14px}
 <h2>민복이와 도형이의 영어 단어 연습장</h2>
 
 <div class="row">
-<div style="position:relative;flex:1;display:flex;align-items:center">
-<input type="text" id="sheetUrl" placeholder="구글 시트 공유 링크를 붙여넣으세요" style="width:100%;padding-right:32px">
-<button onclick="document.getElementById('sheetUrl').value=''" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;box-shadow:none;padding:0;width:22px;height:22px;font-size:15px;color:var(--muted);display:flex;align-items:center;justify-content:center;border-radius:50%">✕</button>
+<div class="input-clear">
+<input type="text" id="sheetUrl" placeholder="구글 시트 공유 링크를 붙여넣으세요">
+<button class="clear-x" onclick="clearInput('sheetUrl')" aria-label="지우기">✕</button>
 </div>
 </div>
 <div class="row" style="flex-wrap:nowrap">
@@ -487,9 +503,9 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="small" style="flex:1;min-width:120px" onclick="bulkMaster(false)">⬜ 전부 학습 취소</button>
 </div>
 <div class="row" style="margin-top:8px">
-<div style="position:relative;flex:1;display:flex;align-items:center">
-<input type="text" id="searchBox" placeholder="🔍 단어 또는 뜻 검색" oninput="render()" style="width:100%;padding-right:32px">
-<button onclick="document.getElementById('searchBox').value='';render()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;box-shadow:none;padding:0;width:22px;height:22px;font-size:15px;color:var(--muted);display:flex;align-items:center;justify-content:center;border-radius:50%">✕</button>
+<div class="input-clear">
+<input type="text" id="searchBox" placeholder="🔍 단어 또는 뜻 검색" oninput="render()">
+<button class="clear-x" onclick="clearInput('searchBox',true)" aria-label="지우기">✕</button>
 </div>
 <button class="danger small" onclick="clearAllWords()">🗑 전체 삭제</button>
 </div>
@@ -508,9 +524,9 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="small" style="flex:1;min-width:120px" onclick="bulkWrong('wrong')">❌ 전부 재도전</button>
 </div>
 <div class="row" style="margin-top:8px">
-<div style="position:relative;flex:1;display:flex;align-items:center">
-<input type="text" id="wrongSearch" placeholder="🔍 오답노트 검색" oninput="render()" style="width:100%;padding-right:32px">
-<button onclick="document.getElementById('wrongSearch').value='';render()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;box-shadow:none;padding:0;width:22px;height:22px;font-size:15px;color:var(--muted);display:flex;align-items:center;justify-content:center;border-radius:50%">✕</button>
+<div class="input-clear">
+<input type="text" id="wrongSearch" placeholder="🔍 오답노트 검색" oninput="render()">
+<button class="clear-x" onclick="clearInput('wrongSearch',true)" aria-label="지우기">✕</button>
 </div>
 <button class="danger small" onclick="clearWrongs()">🗑 전체 삭제</button>
 </div>
@@ -525,9 +541,9 @@ li input{flex:1;min-width:90px;font-size:14px}
 <h3 onclick="toggle('mastered',this)"><span>✅ 학습 완료 <b id="cntMastered" class="cnt"></b></span></h3>
 <div id="mastered" class="section-content">
 <div class="row" style="margin-top:10px">
-<div style="position:relative;flex:1;display:flex;align-items:center">
-<input type="text" id="masteredSearch" placeholder="🔍 학습 완료 검색" oninput="render()" style="width:100%;padding-right:32px">
-<button onclick="document.getElementById('masteredSearch').value='';render()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;box-shadow:none;padding:0;width:22px;height:22px;font-size:15px;color:var(--muted);display:flex;align-items:center;justify-content:center;border-radius:50%">✕</button>
+<div class="input-clear">
+<input type="text" id="masteredSearch" placeholder="🔍 학습 완료 검색" oninput="render()">
+<button class="clear-x" onclick="clearInput('masteredSearch',true)" aria-label="지우기">✕</button>
 </div>
 <button class="danger small" onclick="clearMastered()">↩️ 전체 학습취소</button>
 </div>
@@ -543,9 +559,9 @@ li input{flex:1;min-width:90px;font-size:14px}
 <div id="dupeBox" class="section-content">
 <p style="color:var(--muted);font-size:13px;margin:10px 0 6px">여러 시트에 겹쳐서 불러와진 영단어예요. 시트에서 하나만 남기고 지우면 깔끔해요.</p>
 <div class="row" style="margin-top:8px">
-<div style="position:relative;flex:1;display:flex;align-items:center">
-<input type="text" id="dupesSearch" placeholder="🔍 중복 단어 검색" oninput="render()" style="width:100%;padding-right:32px">
-<button onclick="document.getElementById('dupesSearch').value='';render()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;box-shadow:none;padding:0;width:22px;height:22px;font-size:15px;color:var(--muted);display:flex;align-items:center;justify-content:center;border-radius:50%">✕</button>
+<div class="input-clear">
+<input type="text" id="dupesSearch" placeholder="🔍 중복 단어 검색" oninput="render()">
+<button class="clear-x" onclick="clearInput('dupesSearch',true)" aria-label="지우기">✕</button>
 </div>
 <button class="danger small" onclick="clearDupes()">🗑 비우기</button>
 </div>
@@ -628,6 +644,13 @@ t.textContent=msg;
 t.classList.add('show');
 clearTimeout(toastTimer);
 toastTimer=setTimeout(()=>t.classList.remove('show'),1500);
+}
+function clearInput(id,doRender){
+let el=document.getElementById(id);
+if(!el) return;
+el.value='';
+el.focus();
+if(doRender) render();
 }
 function confetti(){
 let emojis=['🎉','⭐','✨','🌟','🎈','💫','🏆'];
