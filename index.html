@@ -435,7 +435,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="small" onclick="toggleDark()" id="darkBtn">🌙 다크모드</button>
 </div>
 <h2>민복이와 도형이의 영어 단어 연습장</h2>
-<div id="activeDeckLabel" style="text-align:center;font-size:13px;color:var(--muted);margin-top:-8px;margin-bottom:6px"></div>
+<div id="activeDeckLabel" style="display:flex;justify-content:center;margin-top:6px;margin-bottom:4px"></div>
 
 <div class="row">
 <div class="input-clear">
@@ -1961,7 +1961,7 @@ function switchDeck(id){
   showCardActions();
   showTab('study');
   showToast('📚 '+d.name);
-  document.getElementById('activeDeckLabel').innerText='📚 '+d.name;
+  document.getElementById('activeDeckLabel').innerHTML='<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:linear-gradient(135deg,var(--accent),#b48cff);color:#fff;font-size:13px;font-weight:700;letter-spacing:.02em;box-shadow:0 2px 10px rgba(124,156,255,.35)">📚 '+escapeHtml(d.name)+'</span>';
 }
 
 function createDeck(){
@@ -2032,7 +2032,7 @@ function renderDeckPanel(){
 
 render();
 renderDeckPanel();
-document.getElementById('activeDeckLabel').innerText='📚 '+(getActiveDeck()||{name:''}).name;
+let _dl=getActiveDeck()||{name:''};document.getElementById('activeDeckLabel').innerHTML='<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:linear-gradient(135deg,var(--accent),#b48cff);color:#fff;font-size:13px;font-weight:700;letter-spacing:.02em;box-shadow:0 2px 10px rgba(124,156,255,.35)">📚 '+escapeHtml(_dl.name)+'</span>';
 updateDarkBtn();
 updateQuizModeBtns();
 updateSoundBtn();
