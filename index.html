@@ -435,7 +435,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button class="small" onclick="toggleDark()" id="darkBtn">🌙 다크모드</button>
 </div>
 <h2>민복이와 도형이의 영어 단어 연습장</h2>
-<div id="activeDeckLabel" style="display:flex;justify-content:center;margin-top:6px;margin-bottom:4px"></div>
+<div id="recentDecksBar" style="display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:8px;margin-bottom:2px;min-height:32px"></div>
 
 <div class="row">
 <div class="input-clear">
@@ -676,6 +676,7 @@ let editIndex=-1;
 let dupes=JSON.parse(localStorage.getItem('dupes')||'[]');
 let decks = JSON.parse(localStorage.getItem('decks') || '[]');
 let activeDeckId = localStorage.getItem('activeDeckId') || '';
+let recentDeckIds = JSON.parse(localStorage.getItem('recentDeckIds')||'[]');
 if (!decks.length) {
   let d = {id: 'deck_'+Date.now(), name: '기본 단어장',
             words: JSON.parse(localStorage.getItem('words')||'[]'),
@@ -695,7 +696,23 @@ if (!decks.length) {
   dupes = d.dupes || [];
 })();
 
-function saveDecks(){ localStorage.setItem('decks',JSON.stringify(decks)); localStorage.setItem('activeDeckId',activeDeckId); }
+function saveDecks(){ localStorage.setItem('decks',JSON.stringify(decks)); localStorage.setItem('activeDeckId',activeDeckId); localStorage.setItem('recentDeckIds',JSON.stringify(recentDeckIds)); }
+function pushRecentDeck(id){
+  recentDeckIds=recentDeckIds.filter(x=>x!==id);
+  recentDeckIds.unshift(id);
+  if(recentDeckIds.length>3) recentDeckIds=recentDeckIds.slice(0,3);
+}
+function renderRecentDecks(){
+  let bar=document.getElementById('recentDecksBar');
+  if(!bar) return;
+  let html=recentDeckIds.map(id=>{
+    let d=decks.find(x=>x.id===id);
+    if(!d) return '';
+    let active=id===activeDeckId;
+    return '<button onclick="switchDeck(\''+escapeHtml(id)+'\')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:999px;border:none;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.01em;transition:.15s;box-shadow:0 2px 8px rgba(124,156,255,.25);'+(active?'background:linear-gradient(135deg,var(--accent),#b48cff);color:#fff;box-shadow:0 3px 12px rgba(124,156,255,.45)':'background:var(--li-bg);color:var(--muted);border:1.5px solid var(--input-border)')+'">📚 '+escapeHtml(d.name)+'</button>';
+  }).join('');
+  bar.innerHTML=html||'';
+}
 function saveDeckData(){ let d=decks.find(x=>x.id===activeDeckId); if(d){d.words=words;d.stats=stats;d.dupes=dupes;} saveDecks(); }
 function saveStats(){ saveDeckData(); }
 function dstr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -1959,9 +1976,11 @@ function switchDeck(id){
   document.getElementById('back').innerText='카드를 클릭하면 뜻이 표시됩니다';
   card.classList.remove('revealed');
   showCardActions();
+  pushRecentDeck(id);
+  saveDecks();
+  renderRecentDecks();
   showTab('study');
   showToast('📚 '+d.name);
-  document.getElementById('activeDeckLabel').innerHTML='<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:linear-gradient(135deg,var(--accent),#b48cff);color:#fff;font-size:13px;font-weight:700;letter-spacing:.02em;box-shadow:0 2px 10px rgba(124,156,255,.35)">📚 '+escapeHtml(d.name)+'</span>';
 }
 
 function createDeck(){
@@ -2032,7 +2051,8 @@ function renderDeckPanel(){
 
 render();
 renderDeckPanel();
-let _dl=getActiveDeck()||{name:''};document.getElementById('activeDeckLabel').innerHTML='<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:linear-gradient(135deg,var(--accent),#b48cff);color:#fff;font-size:13px;font-weight:700;letter-spacing:.02em;box-shadow:0 2px 10px rgba(124,156,255,.35)">📚 '+escapeHtml(_dl.name)+'</span>';
+pushRecentDeck(activeDeckId);
+renderRecentDecks();
 updateDarkBtn();
 updateQuizModeBtns();
 updateSoundBtn();
