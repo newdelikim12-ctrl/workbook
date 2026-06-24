@@ -739,7 +739,8 @@ document.getElementById('darkBtn').innerText=document.body.classList.contains('d
 if(localStorage.getItem('darkMode')==='1') document.body.classList.add('dark');
 applyTheme(document.body.classList.contains('dark'));
 
-function save(){localStorage.setItem('words',JSON.stringify(words));render();}
+function saveOnly(){localStorage.setItem('words',JSON.stringify(words));}
+function save(){saveOnly();render();}
 function duplicate(e){return words.some(w=>w.eng.toLowerCase()==e.toLowerCase())}
 
 function addWord(){
@@ -761,8 +762,8 @@ let div=document.createElement('div');
 div.className='row';
 div.style.margin='6px 0';
 div.style.flexWrap='nowrap';
-div.innerHTML=`<input type="text" class="bulkEng" placeholder="English" value="${eng.replace(/"/g,'&quot;')}" style="min-width:0">`+
-`<input type="text" class="bulkKor" placeholder="뜻" value="${kor.replace(/"/g,'&quot;')}" style="min-width:0">`+
+div.innerHTML=`<input type="text" class="bulkEng" placeholder="English" value="${escapeHtml(eng)}" style="min-width:0">`+
+`<input type="text" class="bulkKor" placeholder="뜻" value="${escapeHtml(kor)}" style="min-width:0">`+
 `<button class="small" onclick="this.parentElement.remove()" style="flex:0 0 auto">🗑</button>`;
 box.appendChild(div);
 }
@@ -1083,22 +1084,26 @@ if(mode && mode!==speakMode){ speakMode=mode; localStorage.setItem('speakMode',s
 let m=mode||speakMode;
 let w=words[currentIndex];
 speechSynthesis.cancel();
-let uEng=new SpeechSynthesisUtterance(w.eng);
-uEng.lang='en-US';
-speechSynthesis.speak(uEng);
-if(m==='both'){
-  let uKor=new SpeechSynthesisUtterance(w.kor);
-  uKor.lang='ko-KR';
-  speechSynthesis.speak(uKor);
-}
+setTimeout(()=>{
+  let uEng=new SpeechSynthesisUtterance(w.eng);
+  uEng.lang='en-US';
+  speechSynthesis.speak(uEng);
+  if(m==='both'){
+    let uKor=new SpeechSynthesisUtterance(w.kor);
+    uKor.lang='ko-KR';
+    speechSynthesis.speak(uKor);
+  }
+},50);
 }
 // 목록에서 단어 텍스트를 탭하면 영어 발음 (currentIndex 무관)
 function speakText(text){
 if(!('speechSynthesis' in window)) return;
 speechSynthesis.cancel();
-let u=new SpeechSynthesisUtterance(text);
-u.lang='en-US';
-speechSynthesis.speak(u);
+setTimeout(()=>{
+  let u=new SpeechSynthesisUtterance(text);
+  u.lang='en-US';
+  speechSynthesis.speak(u);
+},50);
 }
 function toggleSpeakMode(){
 speakMode=speakMode==='eng'?'both':'eng';
@@ -1335,23 +1340,25 @@ showWord(pick.w,pick.i);
 
 function prevCard(){
 clearTimeout(autoPlayTimer);
-if(!cardHistory.length) return showToast('첫 번째 단어예요 🙂');
-let i=cardHistory.pop();
-if(!words[i]) return prevCard(); // 삭제된 단어면 더 이전으로
-showWord(words[i],i,true); // skipHistory=true: 뒤로가기는 히스토리에 쌓지 않음
+let i;
+while(cardHistory.length){
+  i=cardHistory.pop();
+  if(words[i]) break;
+  i=undefined;
+}
+if(i===undefined) return showToast('첫 번째 단어예요 🙂');
+showWord(words[i],i,true);
 }
 function nextCard(){
 if(currentIndex>=0 && words[currentIndex]){
 if(lastMode==='wrong'){
-// 오답노트 학습: 학습 완료가 아니라 '오답노트 안에서' 외운 것으로 처리
 words[currentIndex].wrongResult='correct';
 registerActivity();
-save();
+saveOnly();
 }else if(!words[currentIndex].mastered){
-// 일반 학습: 학습 완료로 표시 (진도율 상승)
 words[currentIndex].mastered=true;
 registerActivity();
-save();
+saveOnly();
 }
 }
 // 같은 모드에서 다음 카드 선택
@@ -1732,8 +1739,10 @@ let c=document.getElementById(id);
 if(!c) return;
 c.classList.remove('open');
 let h3=c.previousElementSibling;
-if(h3&&h3.tagName==='H3') h3.classList.remove('open-arrow');
-h3.scrollIntoView({behavior:'smooth',block:'start'});
+if(h3&&h3.tagName==='H3'){
+  h3.classList.remove('open-arrow');
+  h3.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 }
 
 function startEdit(i){editIndex=i;render();}
@@ -1783,9 +1792,9 @@ let q=searchVal('searchBox');
 let list=words.map((w,i)=>({w,i})).filter(x=>matchQ(x.w,q));
 all.innerHTML='<ul>'+list.map(({w,i})=>{
 if(i===editIndex){
-return `<li><input id="editEng" value="${w.eng.replace(/"/g,'&quot;')}"><input id="editKor" value="${w.kor.replace(/"/g,'&quot;')}"><span class="btns"><button onclick="saveEdit(${i})">💾</button><button onclick="cancelEdit()">↩️</button></span></li>`;
+return `<li><input id="editEng" value="${escapeHtml(w.eng)}"><input id="editKor" value="${escapeHtml(w.kor)}"><span class="btns"><button onclick="saveEdit(${i})">💾</button><button onclick="cancelEdit()">↩️</button></span></li>`;
 }
-return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff"><span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${w.eng}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px">
+return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff"><span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${escapeHtml(w.kor)}</span></span><span class="btns" style="justify-content:center;gap:6px">
 <button onclick="toggleWrongFlag(${i})">${w.wrong?'❌':'⭕'}</button>
 <button onclick="toggleMaster(${i})">${w.mastered?'✅':'⬜'}</button>
 <button onclick="startEdit(${i})">✏️</button>
@@ -1795,9 +1804,9 @@ return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='w
 }).join('')+'</ul>';
 
 let wq=searchVal('wrongSearch');
-document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li class="${x.w.wrongResult==='correct'?'result-correct':x.w.wrongResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff"><span class="speakable" onclick="speakText('${speakAttr(x.w.eng)}')">${x.w.eng}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${x.w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="flex:1;white-space:nowrap" onclick="wrongNoteCorrect(${x.i})">⭕ 외웠어요</button><button style="flex:1;white-space:nowrap" onclick="wrongNoteAgain(${x.i})">❌ 재도전</button><button style="flex:0 0 auto;white-space:nowrap" onclick="removeWrongFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(x=>`<li class="${x.w.wrongResult==='correct'?'result-correct':x.w.wrongResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff"><span class="speakable" onclick="speakText('${speakAttr(x.w.eng)}')">${escapeHtml(x.w.eng)}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${escapeHtml(x.w.kor)}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="flex:1;white-space:nowrap" onclick="wrongNoteCorrect(${x.i})">⭕ 외웠어요</button><button style="flex:1;white-space:nowrap" onclick="wrongNoteAgain(${x.i})">❌ 재도전</button><button style="flex:0 0 auto;white-space:nowrap" onclick="removeWrongFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let mq=searchVal('masteredSearch');
-document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq)).map(x=>`<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff"><span class="speakable" onclick="speakText('${speakAttr(x.w.eng)}')">${x.w.eng}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${x.w.kor}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="white-space:nowrap" onclick="toggleMaster(${x.i})">↩️ 학습취소</button><button onclick="removeMasteredFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
+document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq)).map(x=>`<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff"><span class="speakable" onclick="speakText('${speakAttr(x.w.eng)}')">${escapeHtml(x.w.eng)}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${escapeHtml(x.w.kor)}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="white-space:nowrap" onclick="toggleMaster(${x.i})">↩️ 학습취소</button><button onclick="removeMasteredFlag(${x.i})">🗑</button></span></li>`).join('')+'</ul>';
 let total=words.length;
 let mastered=words.filter(w=>w.mastered).length;
 let pct=total?Math.round(mastered/total*100):0;
@@ -1828,6 +1837,12 @@ document.addEventListener('click',function(e){
 let b=e.target.closest('button');
 if(b && !b.classList.contains('quiz-opt') && !b.classList.contains('quiz-dunno')) playSound('tap');
 },true);
+
+// 탭 숨김 시 자동재생 정지, 복귀 시 재개
+document.addEventListener('visibilitychange',function(){
+if(document.hidden){ clearTimeout(autoPlayTimer); }
+else if(autoPlay && currentIndex>=0) scheduleAutoPlay();
+});
 
 // 영어/뜻 입력칸에서 Enter 키로 바로 추가
 ['eng','kor'].forEach(id=>{
