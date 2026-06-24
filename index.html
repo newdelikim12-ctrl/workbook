@@ -998,32 +998,52 @@ function parseSheetId(url){let m=url.match(/\/d\/([a-zA-Z0-9-_]+)/);return m?m[1
 function parseSheetGid(url){let m=url.match(/[#&?]gid=([0-9]+)/);return m?m[1]:null;}
 function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function speakAttr(s){return escapeHtml(String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"));}
-// 직접 URL + (모바일 CORS 우회용) 프록시 URL 후보 만들기
+// 캐시 무효화 파라미터 추가
+function bustUrl(u){return u+(u.includes('?')?'&':'?')+'_cb='+Date.now()+'x'+Math.floor(Math.random()*1e6);}
+// 직접 URL + 프록시 URL 목록 생성 (직접/프록시 분리 반환)
 function withProxies(urls){
-let out=[];
-// 캐시 무효화: 매번 고유 파라미터를 붙여 브라우저·구글·프록시의 옛 사본을 피함
-let bust=u=>u+(u.includes('?')?'&':'?')+'_cb='+Date.now()+'x'+Math.floor(Math.random()*1e6);
-let fresh=urls.map(bust);
-fresh.forEach(u=>out.push(u)); // 직접 시도(캐시 무효화 포함)
-fresh.forEach(u=>{
-out.push('https://corsproxy.io/?url='+encodeURIComponent(u));
-out.push('https://api.allorigins.win/raw?url='+encodeURIComponent(u));
+let bust=urls.map(bustUrl);
+let proxied=[];
+bust.forEach(u=>{
+proxied.push('https://corsproxy.io/?url='+encodeURIComponent(u));
+proxied.push('https://api.allorigins.win/raw?url='+encodeURIComponent(u));
 });
-return out;
+return {direct:bust, proxied};
 }
-// 후보 URL들을 순서대로 시도해 처음 성공한 본문 반환
-async function fetchFirstOk(urls,validate){
-let lastErr=null;
-for(let u of urls){
+// 단일 URL fetch 시도 (타임아웃 포함)
+async function tryFetch(u,validate,timeoutMs){
+let ctrl=new AbortController();
+let tid=setTimeout(()=>ctrl.abort(),timeoutMs||8000);
 try{
-let r=await fetch(u,{cache:'no-store'});
+let r=await fetch(u,{cache:'no-store',signal:ctrl.signal});
+clearTimeout(tid);
 if(!r.ok) throw new Error('status '+r.status);
 let text=await r.text();
 if(validate) validate(text);
 return text;
-}catch(e){lastErr=e;}
+}catch(e){clearTimeout(tid);throw e;}
 }
-throw lastErr||new Error('all failed');
+// 직접 먼저 경쟁, 600ms 후 프록시도 병렬 합류 → 가장 빠른 성공 반환
+async function fetchFirstOk(urlsOrObj,validate){
+let direct,proxied;
+if(urlsOrObj && typeof urlsOrObj==='object' && !Array.isArray(urlsOrObj)){
+direct=urlsOrObj.direct; proxied=urlsOrObj.proxied;
+} else {
+// 이전 방식 호환: 배열이면 전부 직접으로 처리
+direct=urlsOrObj; proxied=[];
+}
+return new Promise((resolve,reject)=>{
+let done=false;
+let errors=[];
+let total=direct.length+proxied.length;
+function onOk(text){if(!done){done=true;resolve(text);}}
+function onErr(e){errors.push(e);if(errors.length>=total&&!done){done=true;reject(errors[errors.length-1]||new Error('all failed'));}}
+direct.forEach(u=>tryFetch(u,validate,8000).then(onOk).catch(onErr));
+// 직접 실패 가능성이 높을 때를 위해 프록시는 600ms 후 병렬 시작
+setTimeout(()=>{
+if(!done) proxied.forEach(u=>tryFetch(u,validate,12000).then(onOk).catch(onErr));
+},600);
+});
 }
 
 // 시트 안에 들어있는 탭(세부 시트) 목록 불러오기
@@ -1124,26 +1144,20 @@ directUrls.push(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:cs
 directUrls.push(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=0&gid=${gid}`);
 directUrls.push(`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`);
 directUrls.push(`https://docs.google.com/spreadsheets/d/${id}/pub?gid=${gid}&single=true&output=csv`);
-// 모바일(특히 삼성 인터넷/크롬)에서 CORS로 직접 fetch가 막히는 경우를 위한 프록시 우회 경로
 let urls=withProxies(directUrls);
-
 let label=sheetName?('"'+sheetName+'" 시트를'):'구글 시트를';
 showToast(label+' 불러오는 중... ⏳');
 (async()=>{
-let lastErr=null;
-for(let u of urls){
 try{
-let r=await fetch(u,{cache:'no-store'});
-if(!r.ok) throw new Error('status '+r.status);
-let text=await r.text();
-// 로그인/오류 페이지(HTML)가 돌아온 경우 거르기
-if(/^\s*</.test(text) || /<!DOCTYPE|<html/i.test(text.slice(0,200))) throw new Error('html returned');
-if(!text.trim()) throw new Error('empty');
+let text=await fetchFirstOk(urls,function(t){
+if(/^\s*</.test(t)||/<!DOCTYPE|<html/i.test(t.slice(0,200))) throw new Error('html returned');
+if(!t.trim()) throw new Error('empty');
+});
 let srcLabel=sheetName||('시트(gid '+gid+')');
-let res=addFromCsvText(text, srcLabel);
-let added=res.added, updated=res.updated, dups=res.dups||[];
-if(dups.length) recordDupes(dups); // 중복 영단어 기록에 저장
-if(added>0 || updated>0 || dups.length>0){
+let res=addFromCsvText(text,srcLabel);
+let added=res.added,updated=res.updated,dups=res.dups||[];
+if(dups.length) recordDupes(dups);
+if(added>0||updated>0||dups.length>0){
 if(added>0||updated>0) playSound('add');
 let parts=[];
 if(added>0) parts.push('새 단어 '+added+'개');
@@ -1158,10 +1172,9 @@ alert((sheetName?('"'+sheetName+'" 시트에서 '):'')+(msg||'변경 없음')+'�
 }else{
 alert('변경된 내용이 없습니다. (시트가 이미 반영돼 있거나, 형식이 "영어, 뜻" 두 열인지 확인해 주세요)');
 }
-return;
-}catch(e){lastErr=e;}
-}
+}catch(e){
 alert('불러오기 실패! 다음을 확인해 주세요.\n\n① 시트 공유 설정이 "링크가 있는 모든 사용자(뷰어)"인지\n② 첫 번째 열은 영어, 두 번째 열은 뜻인지\n\n그래도 안 되면 [파일 → 공유 → 웹에 게시]로 게시한 링크를 사용해 보세요.');
+}
 })();
 }
 
