@@ -589,6 +589,9 @@ li input{flex:1;min-width:90px;font-size:14px}
     <input id="eng" placeholder="English">
     <input id="kor" placeholder="뜻">
   </div>
+  <div class="row" style="margin-top:4px">
+    <input id="exampleInput" placeholder="예문 (선택사항)">
+  </div>
   <div class="row" style="justify-content:center;margin-top:4px">
     <button onclick="addWord()">➕ 추가</button>
   </div>
@@ -746,24 +749,28 @@ function duplicate(e){return words.some(w=>w.eng.toLowerCase()==e.toLowerCase())
 function addWord(){
 let eng=document.getElementById('eng').value.trim();
 let kor=document.getElementById('kor').value.trim();
+let example=(document.getElementById('exampleInput')||{}).value||'';
+example=example.trim();
 if(!eng||!kor) return alert('영어와 뜻을 모두 입력해 주세요');
 if(duplicate(eng)) return alert('이미 있는 단어예요: '+eng);
-words.push({eng,kor,wrong:false,mastered:false,wrongResult:null});
+words.push({eng,kor,example,wrong:false,mastered:false,wrongResult:null});
 document.getElementById('eng').value='';
 document.getElementById('kor').value='';
+document.getElementById('exampleInput').value='';
 save();
 playSound('add');
 showToast('단어를 추가했어요! ➕');
 }
 
-function addBulkRow(eng='',kor=''){
+function addBulkRow(eng='',kor='',example=''){
 let box=document.getElementById('bulkRows');
 let div=document.createElement('div');
 div.className='row';
 div.style.margin='6px 0';
 div.style.flexWrap='nowrap';
-div.innerHTML=`<input type="text" class="bulkEng" placeholder="English" value="${escapeHtml(eng)}" style="min-width:0">`+
-`<input type="text" class="bulkKor" placeholder="뜻" value="${escapeHtml(kor)}" style="min-width:0">`+
+div.innerHTML=`<input type="text" class="bulkEng" placeholder="English" value="${escapeHtml(eng)}" style="min-width:0;flex:2">`+
+`<input type="text" class="bulkKor" placeholder="뜻" value="${escapeHtml(kor)}" style="min-width:0;flex:2">`+
+`<input type="text" class="bulkEx" placeholder="예문(선택)" value="${escapeHtml(example)}" style="min-width:0;flex:3">`+
 `<button class="small" onclick="this.parentElement.remove()" style="flex:0 0 auto">🗑</button>`;
 box.appendChild(div);
 }
@@ -778,8 +785,10 @@ let added=0;
 rows.forEach(r=>{
 let eng=r.querySelector('.bulkEng').value.trim();
 let kor=r.querySelector('.bulkKor').value.trim();
+let example=(r.querySelector('.bulkEx')||{}).value||'';
+example=example.trim();
 if(eng&&kor&&!duplicate(eng)){
-words.push({eng,kor,wrong:false,mastered:false,wrongResult:null});
+words.push({eng,kor,example,wrong:false,mastered:false,wrongResult:null});
 added++;
 }
 });
@@ -1750,9 +1759,11 @@ function cancelEdit(){editIndex=-1;render();}
 function saveEdit(i){
 let e=document.getElementById('editEng').value.trim();
 let k=document.getElementById('editKor').value.trim();
+let ex=(document.getElementById('editEx')||{}).value||'';
+ex=ex.trim();
 if(!e||!k) return alert('영어와 뜻을 모두 입력하세요');
 if(words.some((w,j)=>j!==i && w.eng.toLowerCase()===e.toLowerCase())) return alert('이미 있는 단어예요');
-words[i].eng=e;words[i].kor=k;
+words[i].eng=e; words[i].kor=k; words[i].example=ex;
 editIndex=-1;
 save();
 }
@@ -1792,7 +1803,7 @@ let q=searchVal('searchBox');
 let list=words.map((w,i)=>({w,i})).filter(x=>matchQ(x.w,q));
 all.innerHTML='<ul>'+list.map(({w,i})=>{
 if(i===editIndex){
-return `<li><input id="editEng" value="${escapeHtml(w.eng)}"><input id="editKor" value="${escapeHtml(w.kor)}"><span class="btns"><button onclick="saveEdit(${i})">💾</button><button onclick="cancelEdit()">↩️</button></span></li>`;
+return `<li style="flex-direction:column;gap:6px"><div style="display:flex;gap:6px;width:100%"><input id="editEng" value="${escapeHtml(w.eng)}" style="flex:1;min-width:0"><input id="editKor" value="${escapeHtml(w.kor)}" style="flex:1;min-width:0"></div><input id="editEx" placeholder="예문 (선택사항)" value="${escapeHtml(w.example||'')}" style="width:100%;box-sizing:border-box"><span class="btns" style="justify-content:center"><button onclick="saveEdit(${i})">💾 저장</button><button onclick="cancelEdit()">↩️ 취소</button></span></li>`;
 }
 return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-size:15px;font-weight:700;color:#fff"><span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${escapeHtml(w.kor)}</span></span><span class="btns" style="justify-content:center;gap:6px">
 <button onclick="toggleWrongFlag(${i})">${w.wrong?'❌':'⭕'}</button>
