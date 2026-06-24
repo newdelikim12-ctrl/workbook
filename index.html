@@ -422,7 +422,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 <div style="display:flex;align-items:center;gap:5px;margin-top:5px">
 <button class="small" onclick="rangeStep(-1)" style="flex:1;padding:6px 4px;font-size:12px;box-shadow:none">◀ 이전</button>
-<span id="rangeStepLabel" style="flex:2;text-align:center;font-size:12px;color:var(--muted);white-space:nowrap">20개 단위</span>
+<span id="rangeStepLabel" onclick="cycleRangeStep()" style="flex:2;text-align:center;font-size:12px;color:var(--muted);white-space:nowrap;cursor:pointer;user-select:none">단위 20</span>
 <button class="small" onclick="rangeStep(1)" style="flex:1;padding:6px 4px;font-size:12px;box-shadow:none">다음 ▶</button>
 </div>
 
@@ -1230,26 +1230,32 @@ document.getElementById('rangeTo').value='';
 updateRangeCnt();
 showToast('전체 단어로 학습할게요');
 }
-const RANGE_STEP=20;
+const RANGE_STEPS=[20,40,60];
+let rangeStepIdx=0;
+function cycleRangeStep(){
+  rangeStepIdx=(rangeStepIdx+1)%RANGE_STEPS.length;
+  let step=RANGE_STEPS[rangeStepIdx];
+  document.getElementById('rangeStepLabel').textContent='단위 '+step;
+  showToast('단위를 '+step+'개로 변경했어요');
+}
 function rangeStep(dir){
   if(!words.length) return showToast('단어를 먼저 불러오세요');
+  let step=RANGE_STEPS[rangeStepIdx];
   let total=words.length;
   let curFrom=rangeFrom||1;
-  let curTo=rangeTo||total;
-  // 현재 블록 번호 계산 (0-based)
-  let block=Math.floor((curFrom-1)/RANGE_STEP);
+  let block=Math.floor((curFrom-1)/step);
   block+=dir;
-  let maxBlock=Math.ceil(total/RANGE_STEP)-1;
+  let maxBlock=Math.ceil(total/step)-1;
   if(block<0) block=maxBlock;
   if(block>maxBlock) block=0;
-  let newFrom=block*RANGE_STEP+1;
-  let newTo=Math.min(newFrom+RANGE_STEP-1,total);
+  let newFrom=block*step+1;
+  let newTo=Math.min(newFrom+step-1,total);
   rangeFrom=newFrom; rangeTo=newTo;
   document.getElementById('rangeFrom').value=newFrom;
   document.getElementById('rangeTo').value=newTo;
   updateRangeCnt();
-  document.getElementById('rangeStepLabel').textContent=newFrom+'~'+newTo+'번';
-  showToast(newFrom+'~'+newTo+'번 단어 ('+RANGE_STEP+'개 단위)');
+  document.getElementById('rangeStepLabel').textContent=newFrom+'~'+newTo+'번 (단위 '+step+')';
+  showToast(newFrom+'~'+newTo+'번 단어');
 }
 function updateRangeCnt(){
 let cnt=document.getElementById('rangeCnt');
