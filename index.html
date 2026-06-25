@@ -1391,7 +1391,7 @@ function rangeStep(dir){
   let step=RANGE_STEPS[rangeStepIdx];
   let total=words.length;
   let curFrom=rangeFrom||1;
-  let block=Math.floor((curFrom-1)/step);
+  let block=rangeFrom!==null ? Math.floor((curFrom-1)/step) : -1;
   block+=dir;
   let maxBlock=Math.ceil(total/step)-1;
   if(block<0) block=maxBlock;
