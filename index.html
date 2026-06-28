@@ -1915,13 +1915,13 @@ save();
 showToast('백업을 복원했어요! ♻️');
 }
 
-function matchQ(w,q){return !q||w.eng.toLowerCase().includes(q)||w.kor.toLowerCase().includes(q);}
+function matchQ(w,q,i){return !q||w.eng.toLowerCase().includes(q)||w.kor.toLowerCase().includes(q)||(i!==undefined&&/^\d+$/.test(q)&&String(i+1)===q);}
 function searchVal(id){return (document.getElementById(id)?.value||'').trim().toLowerCase();}
 
 function render(){
 let all=document.getElementById('allWordsList');
 let q=searchVal('searchBox');
-let list=words.map((w,i)=>({w,i})).filter(x=>matchQ(x.w,q));
+let list=words.map((w,i)=>({w,i})).filter(x=>matchQ(x.w,q,x.i));
 all.innerHTML='<ul>'+list.map(({w,i})=>{
 let num=`<span style="min-width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.13);font-size:11px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:-.3px;flex-shrink:0">${i+1}</span>`;
 if(i===editIndex){
@@ -1937,12 +1937,12 @@ return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='w
 }).join('')+'</ul>';
 
 let wq=searchVal('wrongSearch');
-document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq)).map(({w,i})=>{
+document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq,x.i)).map(({w,i})=>{
 let num=`<span style="min-width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.13);font-size:11px;font-weight:800;color:rgba(255,255,255,.7);flex-shrink:0">${i+1}</span>`;
 return `<li class="${w.wrongResult==='correct'?'result-correct':w.wrongResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff">${num}<span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${escapeHtml(w.kor)}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="flex:1;white-space:nowrap" onclick="wrongNoteCorrect(${i})">⭕ 외웠어요</button><button style="flex:1;white-space:nowrap" onclick="wrongNoteAgain(${i})">❌ 재도전</button><button style="flex:0 0 auto;white-space:nowrap" onclick="removeWrongFlag(${i})">🗑</button></span></li>`;
 }).join('')+'</ul>';
 let mq=searchVal('masteredSearch');
-document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq)).map(({w,i})=>{
+document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq,x.i)).map(({w,i})=>{
 let num=`<span style="min-width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.13);font-size:11px;font-weight:800;color:rgba(255,255,255,.7);flex-shrink:0">${i+1}</span>`;
 return `<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff">${num}<span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${escapeHtml(w.kor)}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="white-space:nowrap" onclick="toggleMaster(${i})">↩️ 학습취소</button><button onclick="removeMasteredFlag(${i})">🗑</button></span></li>`;
 }).join('')+'</ul>';
