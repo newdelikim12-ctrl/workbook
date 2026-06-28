@@ -1153,14 +1153,18 @@ let gm=url.match(/[#&?]gid=([0-9]+)/);
 // gid 우선순위: 선택한 탭 > URL의 gid > 0(첫 시트)
 let gid=opts.gid||(gm?gm[1]:null)||'0';
 let sheetName=opts.sheet||null;
-// 구글 직접 엔드포인트들 (시트 이름이 있으면 이름 기반을 먼저 시도)
+// 구글 직접 엔드포인트들
 let directUrls=[];
+// 수동으로 시트 이름만 입력한 경우(gid 없음): 이름 기반 URL만 사용 → 틀린 이름이면 폴백으로 엉뚱한 시트를 불러오지 않도록
+let nameOnly=sheetName && !opts.gid;
 if(sheetName){
 directUrls.push(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=0&sheet=${encodeURIComponent(sheetName)}`);
 }
+if(!nameOnly){
 directUrls.push(`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&headers=0&gid=${gid}`);
 directUrls.push(`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`);
 directUrls.push(`https://docs.google.com/spreadsheets/d/${id}/pub?gid=${gid}&single=true&output=csv`);
+}
 let urls=withProxies(directUrls);
 let label=sheetName?('"'+sheetName+'" 시트를'):'구글 시트를';
 showToast(label+' 불러오는 중... ⏳');
@@ -1168,6 +1172,8 @@ showToast(label+' 불러오는 중... ⏳');
 try{
 let text=await fetchFirstOk(urls,function(t){
 if(/^\s*</.test(t)||/<!DOCTYPE|<html/i.test(t.slice(0,200))) throw new Error('html returned');
+// gviz가 잘못된 시트 이름 등으로 오류를 반환한 경우(JS 콜백/에러 응답)는 CSV가 아니므로 거름
+if(/google\.visualization\.Query|\/\*O_o\*\/|"status"\s*:\s*"error"/.test(t.slice(0,400))) throw new Error('gviz error');
 if(!t.trim()) throw new Error('empty');
 });
 let srcLabel=sheetName||('시트(gid '+gid+')');
