@@ -1465,11 +1465,12 @@ if(nb) nb.innerText=lastMode==='wrong'?'➡️ 다음 단어':'➡️ 다음 단
 
 function getDeck(mode){
 let arr=words.map((w,i)=>({w,i,num:i+1}));
-if(rangeFrom) arr=arr.filter(x=>x.num>=rangeFrom);
-if(rangeTo) arr=arr.filter(x=>x.num<=rangeTo);
+// 오답노트는 범위 설정과 무관하게 전체에서 출제
 if(mode==='wrong'){
 return arr.filter(x=>x.w.wrong && x.w.wrongResult!=='correct');
 }
+if(rangeFrom) arr=arr.filter(x=>x.num>=rangeFrom);
+if(rangeTo) arr=arr.filter(x=>x.num<=rangeTo);
 return arr.filter(x=>!x.w.mastered);
 }
 
