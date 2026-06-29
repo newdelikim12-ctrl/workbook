@@ -169,6 +169,18 @@ input[type=file]::file-selector-button{
   width:180px;height:180px;border-radius:50%;
   background:rgba(255,255,255,.12);
 }
+#cardDirBtn{
+  position:absolute;top:10px;right:10px;z-index:2;
+  display:inline-flex;align-items:center;gap:3px;
+  padding:5px 10px;border:none;border-radius:999px;
+  background:rgba(255,255,255,.22);color:#fff;
+  font-size:11px;font-weight:700;letter-spacing:.02em;
+  box-shadow:none;cursor:pointer;backdrop-filter:blur(2px);
+  transition:.15s;
+}
+#cardDirBtn:hover{background:rgba(255,255,255,.34);filter:none;transform:none}
+#cardDirBtn:active{transform:scale(.92)}
+#cardDirBtn .lbl{font-size:11px}
 .flashcard:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 18px 40px rgba(124,124,255,.5)}
 #front{font-size:35px;font-weight:700;font-family:'Quicksand','Gowun Dodum','Malgun Gothic',sans-serif;white-space:normal;overflow-wrap:break-word;word-break:keep-all;width:100%;text-align:center;position:relative;line-height:1.25;letter-spacing:.2px}
 @media (max-width:480px){
@@ -468,10 +480,10 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button onclick="randomMode('all')"><span class="ico">🎲</span><span class="lbl">랜덤 단어</span></button>
 <button onclick="randomMode('wrong')"><span class="ico">❌</span><span class="lbl">오답노트</span></button>
 <button onclick="toggleBothMode()" id="bothModeBtn"><span class="ico">👁</span><span class="lbl">영+한 보기</span></button>
-<button onclick="toggleCardDir()" id="cardDirBtn"><span class="ico">🔄</span><span class="lbl">영→한</span></button>
 </div>
 
 <div class="flashcard" id="card" onclick="cardClick()">
+<button id="cardDirBtn" onclick="event.stopPropagation();toggleCardDir()" title="영어/한글 먼저 보기 전환">🔄 <span class="lbl">영→한</span></button>
 <div id="front">단어를 선택하세요</div>
 <div id="back">뜻</div>
 <div id="cardExample" style="display:none;margin-top:10px;font-size:13px;font-style:italic;color:rgba(255,255,255,.65);line-height:1.5;text-align:center"></div>
