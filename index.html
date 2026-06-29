@@ -1490,12 +1490,12 @@ if(lastMode==='wrong'){
 words[currentIndex].wrongResult='correct';
 registerActivity();
 saveOnly();
-updateProgress();
+render();
 }else if(!words[currentIndex].mastered){
 words[currentIndex].mastered=true;
 registerActivity();
 saveOnly();
-updateProgress();
+render();
 }
 }
 // 같은 모드에서 다음 카드 선택
