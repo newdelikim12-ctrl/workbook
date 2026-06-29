@@ -468,6 +468,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 <button onclick="randomMode('all')"><span class="ico">🎲</span><span class="lbl">랜덤 단어</span></button>
 <button onclick="randomMode('wrong')"><span class="ico">❌</span><span class="lbl">오답노트</span></button>
 <button onclick="toggleBothMode()" id="bothModeBtn"><span class="ico">👁</span><span class="lbl">영+한 보기</span></button>
+<button onclick="toggleCardDir()" id="cardDirBtn"><span class="ico">🔄</span><span class="lbl">영→한</span></button>
 </div>
 
 <div class="flashcard" id="card" onclick="cardClick()">
@@ -1188,6 +1189,7 @@ let lastMode='all';
 let cardHistory=[]; // 이전 카드 인덱스 스택
 let recentSeen=[]; // 최근 본 단어 인덱스 (중복 방지용)
 let bothMode=localStorage.getItem('bothMode')==='1';
+let cardDir=localStorage.getItem('cardDir')||'e2k'; // e2k: 영어 먼저, k2e: 한글 먼저
 let rangeFrom=null,rangeTo=null;
 let quizMode=localStorage.getItem('quizMode')==='1';
 let quizDir=localStorage.getItem('quizDir')||'random'; // 'e2k'(영어 제시) | 'k2e'(한글 제시) | 'random'
@@ -1321,8 +1323,8 @@ if(i!==undefined && i>=0){
   if(recentSeen.length>5) recentSeen.shift(); // 최근 5개만 유지
 }
 currentIndex=i!==undefined?i:-1;
-document.getElementById('front').innerText=w.eng;
-document.getElementById('back').innerText=w.kor;
+document.getElementById('front').innerText=cardDir==='k2e'?w.kor:w.eng;
+document.getElementById('back').innerText=cardDir==='k2e'?w.eng:w.kor;
 let card=document.getElementById('card');
 card.classList.remove('revealed');
 showExample('');
@@ -1348,6 +1350,21 @@ function updateBothModeBtn(){
 let b=document.getElementById('bothModeBtn');
 if(!b) return;
 if(bothMode){b.style.background='linear-gradient(135deg,#56c596,#3eb489)';b.style.color='#fff';}
+else{b.style.background='';b.style.color='';}
+}
+function toggleCardDir(){
+cardDir=cardDir==='e2k'?'k2e':'e2k';
+localStorage.setItem('cardDir',cardDir);
+updateCardDirBtn();
+if(currentIndex>=0 && words[currentIndex]) showWord(words[currentIndex],currentIndex);
+showToast(cardDir==='k2e'?'한글 먼저 보기로 변경 🇰🇷':'영어 먼저 보기로 변경 🇺🇸');
+}
+function updateCardDirBtn(){
+let b=document.getElementById('cardDirBtn');
+if(!b) return;
+let lbl=b.querySelector('.lbl');
+if(lbl) lbl.textContent=cardDir==='k2e'?'한→영':'영→한';
+if(cardDir==='k2e'){b.style.background='linear-gradient(135deg,#f6a36b,#f08a4b)';b.style.color='#fff';}
 else{b.style.background='';b.style.color='';}
 }
 
@@ -2049,6 +2066,7 @@ updateDarkBtn();
 updateQuizModeBtns();
 updateSoundBtn();
 updateBothModeBtn();
+updateCardDirBtn();
 if(quizMode) document.getElementById('front').innerText='랜덤 단어 또는 오답노트를 눌러 시작하세요';
 
 // 모든 버튼에 공통 탭 효과음 (객관식 보기는 정답/오답 소리가 따로 있어 제외)
