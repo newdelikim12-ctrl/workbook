@@ -715,28 +715,6 @@ function renderRecentDecks(){
 }
 function saveDeckData(){ let d=decks.find(x=>x.id===activeDeckId); if(d){d.words=words;d.stats=stats;d.dupes=dupes;} saveDecks(); }
 function saveStats(){ saveDeckData(); }
-function dstr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function todayStr(){return dstr(new Date());}
-function yesterdayStr(){let d=new Date();d.setDate(d.getDate()-1);return dstr(d);}
-
-function registerActivity(){
-let t=todayStr();
-if(stats.lastDate!==t){
-stats.streak=(stats.lastDate===yesterdayStr())?((stats.streak||0)+1):1;
-stats.lastDate=t;
-stats.todayDate=t;
-stats.todayCount=0;
-}
-stats.todayCount=(stats.todayCount||0)+1;
-saveStats();
-}
-function updateStats(){
-let t=todayStr(),y=yesterdayStr();
-let streak=(stats.lastDate===t||stats.lastDate===y)?(stats.streak||0):0;
-let today=(stats.todayDate===t)?(stats.todayCount||0):0;
-document.getElementById('streakDays').innerText=streak;
-document.getElementById('todayLearned').innerText=today;
-}
 
 const praises=['잘했어요! 🎉','최고예요! ⭐','멋져요! 💪','완벽해요! ✨','대단해요! 🌟'];
 let toastTimer;
@@ -1490,14 +1468,10 @@ function nextCard(){
 if(currentIndex>=0 && words[currentIndex]){
 if(lastMode==='wrong'){
 words[currentIndex].wrongResult='correct';
-registerActivity();
-saveOnly();
-render();
+save();
 }else if(!words[currentIndex].mastered){
 words[currentIndex].mastered=true;
-registerActivity();
-saveOnly();
-render();
+save();
 }
 }
 // 같은 모드에서 다음 카드 선택
@@ -1680,7 +1654,6 @@ if(correct){
 words[i].lastResult='correct';
 if(lastMode==='wrong') words[i].wrongResult='correct'; // 오답노트에서 외움
 else words[i].mastered=true;                           // 일반: 학습 완료
-registerActivity();
 playSound('correct');
 showToast(praises[Math.floor(Math.random()*praises.length)]);
 }else{
@@ -1818,7 +1791,6 @@ playSound('delete');save();render();
 function wrongNoteCorrect(i){
 words[i].wrongResult='correct';
 words[i].mastered=true;
-registerActivity();
 save();
 playSound('add');
 showToast('잘했어요! 학습 완료로 이동했어요 🏆');
@@ -1853,12 +1825,11 @@ if(!items.length) return alert('오답노트에 단어가 없습니다');
 let label=result==='correct'?'외웠어요':'재도전';
 if(!confirm(items.length+"개를 모두 '"+label+"'(으)로 표시할까요?")) return;
 items.forEach(w=>{ w.wrongResult=result; });
-if(result==='correct') registerActivity();
 save();
 if(result==='correct') playSound('add');
 showToast(result==='correct'?'오답노트를 모두 외운 것으로 표시했어요 👏':'모두 다시 복습할 단어로 표시했어요 ✏️');
 }
-function toggleMaster(i){words[i].mastered=!words[i].mastered;if(words[i].mastered)registerActivity();save();}
+function toggleMaster(i){words[i].mastered=!words[i].mastered;save();}
 function bulkMaster(state){
 let q=searchVal('searchBox');
 let items=words.filter(w=>matchQ(w,q));
@@ -1866,7 +1837,6 @@ if(!items.length) return alert('단어가 없습니다');
 let label=state?'학습 완료':'학습 안 함';
 if(!confirm(items.length+"개를 모두 '"+label+"'(으)로 표시할까요?")) return;
 items.forEach(w=>{ w.mastered=state; });
-if(state) registerActivity();
 save();
 if(state) playSound('add');
 showToast(state?'전체 단어를 학습 완료로 표시했어요 🏆':'전체 단어를 학습 안 함으로 되돌렸어요');
