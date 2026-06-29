@@ -686,6 +686,10 @@ if (!decks.length) {
   activeDeckId = d.id;
   localStorage.setItem('decks', JSON.stringify(decks));
   localStorage.setItem('activeDeckId', activeDeckId);
+  // 덱으로 옮겼으니 옛 최상위 키 제거 (이후 저장은 모두 decks로 일원화)
+  localStorage.removeItem('words');
+  localStorage.removeItem('stats');
+  localStorage.removeItem('dupes');
 }
 // Load active deck into globals
 (function(){
@@ -1750,6 +1754,8 @@ let curWord=currentIndex>=0?words[currentIndex]:null;
 words=words.filter(w=>!set.has(w));
 currentIndex=curWord&&!set.has(curWord)?words.indexOf(curWord):-1;
 editIndex=-1;
+// 삭제로 단어 인덱스가 밀리므로 인덱스 기반 카드 기록 초기화
+cardHistory=[]; recentSeen=[];
 save();
 }
 function clearAllWords(){
@@ -1773,6 +1779,8 @@ let removed=words[i];
 words.splice(i,1);
 // 학습 중이던 단어가 삭제됐으면 해제, 아니면 새 위치로 인덱스 보정
 currentIndex=(curWord && curWord!==removed)?words.indexOf(curWord):-1;
+// 삭제로 단어 인덱스가 밀리므로 인덱스 기반 카드 기록 초기화
+cardHistory=[]; recentSeen=[];
 save();
 }
 function toggleWrongFlag(i){
