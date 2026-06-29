@@ -1513,6 +1513,11 @@ save();
 // 같은 모드에서 다음 카드 선택
 let arr=getDeck(lastMode);
 if(!arr.length){
+// 방금 본 마지막 단어를 기록에 남겨 뒤로가기로 다시 확인할 수 있게
+if(currentIndex>=0 && words[currentIndex]){
+  cardHistory.push(currentIndex);
+  if(cardHistory.length>50) cardHistory.shift();
+}
 currentIndex=-1;
 document.getElementById('front').innerText=lastMode==='wrong'?'🎉 오답노트 끝!':'🎉 모두 학습했어요!';
 document.getElementById('back').innerText='';
