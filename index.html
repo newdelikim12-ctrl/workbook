@@ -468,9 +468,9 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .ls-bulk{display:flex;gap:6px}
 .ls-bulk button{flex:1;min-width:0;padding:8px 4px;font-size:12px;white-space:nowrap;box-shadow:none}
 .ls-empty{text-align:center;color:var(--muted);padding:48px 16px;font-size:15px;line-height:1.7}
-.ls-scrolltop,.ls-scrollbottom{position:fixed;right:18px;z-index:50;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a78bff);color:#fff;border:none;font-size:18px;box-shadow:0 6px 18px rgba(124,156,255,.45);cursor:pointer;display:none;padding:0}
-.ls-scrolltop{bottom:144px}
-.ls-scrollbottom{bottom:90px}
+.ls-scrolltop,.ls-scrollbottom{position:fixed;right:10px;z-index:50;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a78bff);color:#fff;border:none;font-size:13px;box-shadow:0 3px 10px rgba(124,156,255,.4);cursor:pointer;display:none;padding:0;opacity:.85}
+.ls-scrolltop{bottom:52px}
+.ls-scrollbottom{bottom:12px}
 .ls-scrolltop.show,.ls-scrollbottom.show{display:block}
 /* 업데이트 배너 */
 #updateBanner{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-80px);z-index:9999;
@@ -762,7 +762,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-06-30.3'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-06-30.4'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -1452,6 +1452,7 @@ else{b.style.background='';b.style.color='';}
 }
 let meaningHidden=localStorage.getItem('meaningHidden')==='1';
 let lsFilter=localStorage.getItem('lsFilter')||'all'; // 목록학습 필터: all|unlearned|wrong|mastered
+let lsPeeked=new Set(); // 목록학습에서 개별로 뜻을 펼쳐둔 단어 인덱스(재렌더 후에도 유지)
 function applyMeaningHidden(){
 document.body.classList.toggle('hide-mean',meaningHidden);
 document.querySelectorAll('.mean-toggle').forEach(b=>{
@@ -2127,8 +2128,9 @@ function lsToggleHideAll(){
   let btn=document.getElementById('lsEyeBtn');
   if(!box) return;
   let nowHidden=box.classList.toggle('ls-hideMean');
-  // 가리기로 전환 시 펼쳐둔 단어(peek) 모두 닫기
-  if(nowHidden) box.querySelectorAll('.kor-mean.peek').forEach(s=>s.classList.remove('peek'));
+  // 전체 토글 시 개별로 펼쳐둔 기록 초기화
+  lsPeeked.clear();
+  box.querySelectorAll('.kor-mean.peek').forEach(s=>s.classList.remove('peek'));
   if(btn) btn.textContent=nowHidden?'👁 전체 뜻 보이기':'🙈 뜻 가리기';
 }
 function renderListStudy(){
@@ -2193,13 +2195,16 @@ function lsJumpTo(n){
   let y=target.getBoundingClientRect().top+window.scrollY-12;
   window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
 }
+function lsTogglePeek(el,i){
+  if(el.classList.toggle('peek')) lsPeeked.add(i); else lsPeeked.delete(i);
+}
 function lsRowHtml(w,i){
   let tint=w.mastered?'result-correct':(w.wrong&&w.wrongResult!=='correct')?'result-wrong':'';
   return `<li class="ls-row ${tint}" data-i="${i}" style="flex-direction:column;align-items:stretch;gap:8px;padding:14px 14px">
     <span style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700">
       <span style="min-width:30px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(124,156,255,.15);font-size:12px;font-weight:800;color:var(--accent);flex-shrink:0">${i+1}</span>
       <span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span>
-      <span class="kor-mean" onclick="event.stopPropagation();this.classList.toggle('peek')" style="margin-left:auto;text-align:right;font-weight:600">${escapeHtml(w.kor)}</span>
+      <span class="kor-mean${lsPeeked.has(i)?' peek':''}" onclick="event.stopPropagation();lsTogglePeek(this,${i})" style="margin-left:auto;text-align:right;font-weight:600">${escapeHtml(w.kor)}</span>
     </span>
     ${w.example?`<span class="ls-ex" style="font-size:13px;color:var(--muted);font-style:italic;line-height:1.5">${escapeHtml(w.example)}</span>`:''}
     <span class="btns" style="justify-content:flex-end;gap:6px">
