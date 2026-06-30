@@ -772,7 +772,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-01.1'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-01.2'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -2180,14 +2180,14 @@ function renderListStudy(){
     return;
   }
   box.innerHTML='<ul>'+listed.map(({w,i})=>lsRowHtml(w,i)).join('')+'</ul>';
-  // 백 단위 점프 바 구성 (현재 목록에 100번 이상이 있을 때만)
+  // 60 단위 점프 바 구성 (60·120·180·240·300·360…)
   let jumpBar=document.getElementById('lsJump');
   if(jumpBar){
     let maxNum=listed[listed.length-1].i+1;
-    if(maxNum>=100){
-      let marks=[1];
-      for(let h=100;h<=maxNum;h+=100) marks.push(h);
-      jumpBar.innerHTML=marks.map(n=>'<button onclick="lsJumpTo('+n+')">'+(n===1?'1':n)+'</button>').join('');
+    if(maxNum>=60){
+      let marks=[];
+      for(let h=60;h<=maxNum;h+=60) marks.push(h);
+      jumpBar.innerHTML=marks.map(n=>'<button onclick="lsJumpTo('+n+')">'+n+'</button>').join('');
       jumpBar.style.display='';
     }else{
       jumpBar.innerHTML=''; jumpBar.style.display='none';
@@ -2477,8 +2477,8 @@ document.addEventListener('touchend',function(e){
     let i=ORDER.indexOf(currentTab());
     if(i<0) i=0;
     let n=ORDER.length;
-    // 순환(wrap): ←왼쪽=이전(학습에서 왼쪽→단어장) / →오른쪽=다음(단어장에서 오른쪽→학습)
-    let ni=dx<0 ? (i-1+n)%n : (i+1)%n;
+    // 순환(wrap): ←왼쪽 스와이프=다음(학습→목록학습→단어장→학습) / →오른쪽=이전
+    let ni=dx<0 ? (i+1)%n : (i-1+n)%n;
     showTab(ORDER[ni]);
   }
 });
