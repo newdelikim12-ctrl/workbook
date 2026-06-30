@@ -405,7 +405,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 /* Bottom tab bar */
 #tabBar{
   display:flex;align-items:stretch;
-  background:var(--card-bg);
+  background:var(--container-bg);
   border:1.5px solid var(--input-border);
   border-radius:18px;
   margin:18px 16px 24px;
@@ -469,7 +469,8 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .ls-jump button{flex:0 0 auto;padding:6px 12px;border-radius:999px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:12px;font-weight:800;cursor:pointer;box-shadow:none;line-height:1}
 .ls-jump button:hover{filter:none;transform:none;box-shadow:none;background:var(--li-bg-hover)}
 .ls-jump button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
-.ls-bulk{display:flex;gap:6px}
+.ls-bulk{display:flex;gap:6px;flex-wrap:wrap}
+.ls-bulk button{flex:1 1 30%}
 .ls-bulk button{flex:1;min-width:0;padding:8px 4px;font-size:12px;white-space:nowrap;box-shadow:none}
 .ls-empty{text-align:center;color:var(--muted);padding:48px 16px;font-size:15px;line-height:1.7}
 .ls-scrolltop,.ls-scrollbottom{position:fixed;right:10px;z-index:50;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a78bff);color:#fff;border:none;font-size:13px;box-shadow:0 3px 10px rgba(124,156,255,.4);cursor:pointer;display:none;padding:0;opacity:.85}
@@ -766,7 +767,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-06-30.6'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-06-30.7'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -1895,8 +1896,8 @@ let curWord=currentIndex>=0?words[currentIndex]:null;
 words=words.filter(w=>!set.has(w));
 currentIndex=curWord&&!set.has(curWord)?words.indexOf(curWord):-1;
 editIndex=-1;
-// 삭제로 단어 인덱스가 밀리므로 인덱스 기반 카드 기록 초기화
-cardHistory=[]; recentSeen=[];
+// 삭제로 단어 인덱스가 밀리므로 인덱스 기반 기록 초기화
+cardHistory=[]; recentSeen=[]; lsPeeked.clear();
 save();
 }
 function clearAllWords(){
@@ -1923,8 +1924,8 @@ let removed=words[i];
 words.splice(i,1);
 // 학습 중이던 단어가 삭제됐으면 해제, 아니면 새 위치로 인덱스 보정
 currentIndex=(curWord && curWord!==removed)?words.indexOf(curWord):-1;
-// 삭제로 단어 인덱스가 밀리므로 인덱스 기반 카드 기록 초기화
-cardHistory=[]; recentSeen=[];
+// 삭제로 단어 인덱스가 밀리므로 인덱스 기반 기록 초기화
+cardHistory=[]; recentSeen=[]; lsPeeked.clear();
 save();
 }
 function toggleWrongFlag(i){
@@ -2038,9 +2039,10 @@ let data;
 try{data=JSON.parse(raw);}catch(e){return alert('백업 데이터 형식이 올바르지 않습니다');}
 if(!data||!Array.isArray(data.words)) return alert('백업 데이터에 단어가 없습니다');
 if(!confirm('현재 단어를 백업 데이터로 덮어쓸까요? (지금 단어는 사라집니다)')) return;
-words=data.words.map(w=>({eng:w.eng||'',kor:w.kor||'',example:w.example||'',wrong:!!w.wrong,mastered:!!w.mastered,lastResult:w.lastResult,wrongResult:w.wrongResult||null}));
-if(data.stats&&typeof data.stats==='object'){stats=data.stats;saveStats();}
-editIndex=-1;currentIndex=-1;
+words=data.words.map(w=>({eng:w.eng||'',kor:w.kor||'',example:w.example||'',wrong:!!w.wrong,mastered:!!w.mastered,lastResult:w.lastResult,wrongResult:w.wrongResult||null,src:w.src}));
+if(data.stats&&typeof data.stats==='object'){stats=data.stats;}
+dupes=[]; // 복원된 단어와 어긋난 옛 중복 기록 제거
+editIndex=-1;currentIndex=-1;cardHistory=[];recentSeen=[];lsPeeked.clear();
 save();
 showToast('백업을 복원했어요! ♻️');
 }
@@ -2226,6 +2228,11 @@ function switchDeck(id){
   words = d.words||[]; stats = d.stats||{}; dupes = d.dupes||[];
   currentIndex=-1; editIndex=-1; cardHistory=[]; recentSeen=[];
   rangeFrom=null; rangeTo=null;
+  lsPeeked.clear(); // 단어장이 바뀌면 펼쳐둔 뜻 기록 초기화(인덱스 무효화)
+  // 퀴즈/카드 UI 정리(다른 단어장의 퀴즈 화면·타이머가 남지 않도록)
+  clearTimeout(quizTimer); quizState=null; quizAnswered=false;
+  document.getElementById('quizPanel').style.display='none';
+  document.getElementById('cardHint').style.display='';
   document.getElementById('rangeFrom').value='';
   document.getElementById('rangeTo').value='';
   pushRecentDeck(id);
@@ -2361,8 +2368,11 @@ let onList=view.style.display!=='none';
 let scrollable=document.body.scrollHeight-window.innerHeight;
 let nearTop=window.scrollY<400;
 let nearBottom=window.scrollY>scrollable-400;
-top.classList.toggle('show', onList && scrollable>200 && !nearTop);
-bottom.classList.toggle('show', onList && scrollable>200 && !nearBottom);
+// 하단 탭바가 화면에 보이면 버튼이 겹치지 않도록 숨김
+let bar=document.getElementById('tabBar');
+let barVisible=bar && bar.getBoundingClientRect().top<window.innerHeight;
+top.classList.toggle('show', onList && scrollable>200 && !nearTop && !barVisible);
+bottom.classList.toggle('show', onList && scrollable>200 && !nearBottom && !barVisible);
 }
 window.addEventListener('scroll',updateLsScrollBtns);
 
