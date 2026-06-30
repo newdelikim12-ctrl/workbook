@@ -767,7 +767,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-06-30.7'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-06-30.8'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -2415,8 +2415,9 @@ document.addEventListener('touchend',function(e){
   if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){
     let i=ORDER.indexOf(currentTab());
     if(i<0) i=0;
-    let ni=dx<0? i+1 : i-1; // ←왼쪽:다음 / →오른쪽:이전
-    if(ni<0||ni>=ORDER.length) return; // 양 끝에서는 더 안 넘어감
+    let n=ORDER.length;
+    // 순환(wrap): ←왼쪽=이전(학습에서 왼쪽→단어장) / →오른쪽=다음(단어장에서 오른쪽→학습)
+    let ni=dx<0 ? (i-1+n)%n : (i+1)%n;
     showTab(ORDER[ni]);
   }
 });
