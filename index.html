@@ -249,6 +249,9 @@ li input{flex:1;min-width:90px;font-size:14px}
 .wl-row .wl-eng{flex:1 1 auto;min-width:0;text-align:left;word-break:break-word;color:var(--text-main)}
 .wl-row .wl-kor{flex:0 0 auto;max-width:46%;text-align:right;font-weight:600;color:var(--muted);word-break:keep-all}
 .wl-row .speakable{color:var(--text-main);border-bottom-color:rgba(124,156,255,.45)}
+/* 뜻 가리기(전역 toggleMeaning)가 메인 목록 뜻에도 적용되도록 */
+body.hide-mean .wl-kor{filter:blur(6px);cursor:pointer;user-select:none;background:rgba(124,156,255,.08);border-radius:6px;padding:0 6px}
+body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 
 @media (max-width:480px){
   .container{padding:24px 18px;border-radius:22px}
@@ -433,7 +436,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
   touch-action:pan-y;
 }
 .deck-card:active{transform:scale(.98)}
-.deck-card.deck-dragging{touch-action:none;opacity:.95;transform:scale(1.03);box-shadow:0 14px 32px rgba(124,156,255,.45);border-color:var(--accent);position:relative;z-index:10;cursor:grabbing}
+.deck-card.deck-dragging{touch-action:none;opacity:.97;box-shadow:0 16px 36px rgba(124,156,255,.5);border-color:var(--accent);position:relative;z-index:10;cursor:grabbing;transition:none}
 .deck-active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,156,255,.2)}
 .deck-card-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .deck-name{font-size:16px;font-weight:700;color:var(--text-title);font-family:'Jua',sans-serif;display:flex;align-items:center;min-width:0}
@@ -772,7 +775,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-01.2'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-01.3'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -2057,7 +2060,7 @@ function searchVal(id){return (document.getElementById(id)?.value||'').trim().to
 
 // 통일된 단어 행 카드 (전체단어/오답노트/학습완료 공용)
 function wordRowHtml(i,eng,kor,tint,btns){
-return `<li class="wl-row ${tint||''}" style="flex-direction:column;align-items:stretch;gap:8px"><span class="wl-top"><span class="wl-num">${i+1}</span><span class="wl-eng speakable" onclick="speakText('${speakAttr(eng)}')">${escapeHtml(eng)}</span><span class="wl-kor">${escapeHtml(kor)}</span></span><span class="btns" style="justify-content:flex-end;gap:6px">${btns}</span></li>`;
+return `<li class="wl-row ${tint||''}" style="flex-direction:column;align-items:stretch;gap:8px"><span class="wl-top"><span class="wl-num">${i+1}</span><span class="wl-eng speakable" onclick="speakText('${speakAttr(eng)}')">${escapeHtml(eng)}</span><span class="wl-kor" onclick="event.stopPropagation();this.classList.toggle('peek')">${escapeHtml(kor)}</span></span><span class="btns" style="justify-content:flex-end;gap:6px">${btns}</span></li>`;
 }
 function render(){
 let all=document.getElementById('allWordsList');
@@ -2342,6 +2345,7 @@ function deckCardClick(id){ if(deckDrag.suppress) return; switchDeck(id); }
 function deckEndDrag(commit){
   clearTimeout(deckDrag.timer);
   if(deckDrag.el){
+    deckDrag.el.style.transform='';
     deckDrag.el.classList.remove('deck-dragging');
     if(deckDrag.dragging && commit){
       let ids=[...document.querySelectorAll('#deckList .deck-card')].map(c=>c.dataset.id);
@@ -2359,28 +2363,38 @@ function deckEndDrag(commit){
   list.addEventListener('pointerdown',function(e){
     let card=e.target.closest('.deck-card');
     if(!card || e.target.closest('.deck-actions')) return;
-    deckDrag.el=card; deckDrag.pid=e.pointerId; deckDrag.sx=e.clientX; deckDrag.sy=e.clientY; deckDrag.dragging=false;
+    deckDrag.el=card; deckDrag.pid=e.pointerId; deckDrag.sx=e.clientX; deckDrag.sy=e.clientY; deckDrag.baseY=e.clientY; deckDrag.dragging=false;
     deckDrag.timer=setTimeout(function(){
       if(!deckDrag.el) return;
       deckDrag.dragging=true;
+      deckDrag.baseY=deckDrag.sy;
       card.classList.add('deck-dragging');
       try{ card.setPointerCapture(deckDrag.pid); }catch(_){}
-      if(navigator.vibrate) navigator.vibrate(15);
-    },300);
+      if(navigator.vibrate) navigator.vibrate(20);
+    },220);
   });
   list.addEventListener('pointermove',function(e){
     if(!deckDrag.el) return;
     if(!deckDrag.dragging){
-      // 드래그 시작 전 많이 움직이면 스크롤로 간주하고 취소
-      if(Math.abs(e.clientX-deckDrag.sx)>10||Math.abs(e.clientY-deckDrag.sy)>10){ clearTimeout(deckDrag.timer); deckDrag.el=null; }
+      // 드래그 시작 전 많이 움직이면 스크롤로 간주하고 취소(여유 16px)
+      if(Math.abs(e.clientX-deckDrag.sx)>16||Math.abs(e.clientY-deckDrag.sy)>16){ clearTimeout(deckDrag.timer); deckDrag.el=null; }
       return;
     }
     e.preventDefault();
     let y=e.clientY;
-    let others=[...list.querySelectorAll('.deck-card:not(.deck-dragging)')];
-    let after=null;
-    for(let c of others){ let r=c.getBoundingClientRect(); if(y<r.top+r.height/2){ after=c; break; } }
-    if(after) list.insertBefore(deckDrag.el,after); else list.appendChild(deckDrag.el);
+    // 카드가 손가락을 따라 움직이도록 (살짝 확대해 들린 느낌)
+    deckDrag.el.style.transform='translateY('+(y-deckDrag.baseY)+'px) scale(1.03)';
+    // 끌고 있는 카드의 중심이 이웃 카드 중심을 넘으면 자리 교체
+    let dr=deckDrag.el.getBoundingClientRect();
+    let dragMid=dr.top+dr.height/2;
+    let sibs=[...list.querySelectorAll('.deck-card:not(.deck-dragging)')];
+    for(let s of sibs){
+      let r=s.getBoundingClientRect();
+      let mid=r.top+r.height/2;
+      let elBefore=(deckDrag.el.compareDocumentPosition(s)&Node.DOCUMENT_POSITION_FOLLOWING)!==0; // el이 s보다 앞
+      if(elBefore && dragMid>mid){ list.insertBefore(s, deckDrag.el); deckDrag.baseY=y; deckDrag.el.style.transform='translateY(0px) scale(1.03)'; break; }
+      if(!elBefore && dragMid<mid){ list.insertBefore(deckDrag.el, s); deckDrag.baseY=y; deckDrag.el.style.transform='translateY(0px) scale(1.03)'; break; }
+    }
   });
   list.addEventListener('pointerup',function(){ deckEndDrag(true); });
   list.addEventListener('pointercancel',function(){ deckEndDrag(false); });
