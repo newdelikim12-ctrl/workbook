@@ -47,7 +47,7 @@ body.dark{
   --container-bg:#23262e;
   --text-main:#e3e4e9;
   --text-title:#a8b4ff;
-  --accent:#7c9cff;
+  --accent:#9bb2ff;
   --accent-soft:#5a6cc0;
   --h3-bg:#2d323c;
   --h3-bg-hover:#363c48;
@@ -240,12 +240,12 @@ li input{flex:1;min-width:90px;font-size:14px}
 #backupBox{height:92px;font-size:12px}
 
 /* 통일된 단어 행 카드 스타일 (전체단어/오답노트/학습완료) */
-.wl-row{margin:8px 0;background:var(--li-bg);border:1.5px solid var(--input-border);border-radius:14px;padding:12px 12px;transition:.15s}
+.wl-row{margin:8px 0;background:var(--li-bg);border:1.5px solid var(--input-border);border-radius:16px;padding:13px 13px;transition:.15s}
 .wl-row:hover{background:var(--li-bg);transform:none}
 .wl-row.result-correct{background:var(--result-correct-bg);border-color:var(--accent)}
 .wl-row.result-wrong{background:var(--result-wrong-bg);border-color:#ff6b9d}
 .wl-row .wl-top{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:700;color:var(--text-main)}
-.wl-row .wl-num{width:38px;height:24px;flex:0 0 38px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(124,156,255,.15);color:var(--accent);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.wl-row .wl-num{width:40px;height:26px;flex:0 0 40px;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;background:rgba(124,156,255,.15);color:var(--accent);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
 .wl-row .wl-eng{flex:1 1 auto;min-width:0;text-align:left;word-break:break-word;color:var(--text-main)}
 .wl-row .wl-kor{flex:0 0 auto;max-width:46%;text-align:right;font-weight:600;color:var(--text-main);word-break:keep-all}
 .wl-row .speakable{color:var(--text-main);border-bottom-color:rgba(124,156,255,.45)}
@@ -420,10 +420,10 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
   overflow:hidden;
 }
 .tab-btn{
-  flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;
-  gap:7px;padding:13px 0;
+  flex:1;min-width:0;display:flex;flex-direction:row;align-items:center;justify-content:center;
+  gap:6px;padding:13px 4px;
   background:none;border:none;border-radius:0;box-shadow:none;
-  font-size:14px;color:var(--muted);font-weight:600;cursor:pointer;
+  font-size:14px;color:var(--muted);font-weight:600;cursor:pointer;white-space:nowrap;
   transition:background .15s,color .15s;
 }
 .tab-btn .ico{font-size:18px;line-height:1}
@@ -445,7 +445,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .deck-active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,156,255,.2)}
 .deck-card-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .deck-name{font-size:16px;font-weight:700;color:var(--text-title);font-family:'Jua',sans-serif;display:flex;align-items:center;min-width:0}
-.deck-grip{color:var(--accent);font-size:22px;margin-right:10px;letter-spacing:-3px;flex-shrink:0;opacity:.85}
+.deck-grip{color:var(--accent);font-size:20px;margin-right:10px;flex-shrink:0;opacity:1}
 .deck-meta{font-size:13px;color:var(--muted);margin-top:4px}
 .deck-badge{margin-top:8px;font-size:12px;color:var(--accent);font-weight:700}
 .deck-actions{display:flex;gap:4px}
@@ -483,8 +483,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .ls-jump button:hover{filter:none;transform:none;box-shadow:none;background:var(--li-bg-hover)}
 .ls-jump button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
 .ls-bulk{display:flex;gap:6px;flex-wrap:wrap}
-.ls-bulk button{flex:1 1 30%}
-.ls-bulk button{flex:1;min-width:0;padding:8px 4px;font-size:12px;white-space:nowrap;box-shadow:none}
+.ls-bulk button{flex:1 1 30%;min-width:0;padding:8px 4px;font-size:12px;white-space:nowrap;box-shadow:none}
 .ls-empty{text-align:center;color:var(--muted);padding:48px 16px;font-size:15px;line-height:1.7}
 .ls-scrolltop,.ls-scrollbottom{position:fixed;right:10px;z-index:50;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a78bff);color:#fff;border:none;font-size:13px;box-shadow:0 3px 10px rgba(124,156,255,.4);cursor:pointer;display:none;padding:0;opacity:.85}
 .ls-scrolltop{bottom:52px}
@@ -600,9 +599,9 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button onclick="toggleDrawBoard()" id="drawBoardBtn" style="width:100%;margin-top:8px;padding:8px;font-size:13px;background:var(--h3-bg);color:var(--text-main);box-shadow:none;border-radius:12px;border:1.5px solid var(--input-border)">✏️ 칠판 열기</button>
 
 <div class="progress-wrap">
-<div class="progress-label" style="position:relative;display:flex;justify-content:center;align-items:center"><span style="transform:translateX(-20px);display:inline-block">📖 학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</span><button onclick="resetProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
+<div class="progress-label" style="position:relative;display:flex;justify-content:center;align-items:center"><span style="display:inline-block;padding:0 56px">📖 학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</span><button onclick="resetProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
 <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-<div class="progress-label" style="margin-top:12px;position:relative;display:flex;justify-content:center;align-items:center"><span style="transform:translateX(-20px);display:inline-block">❌ 오답 학습률: <b id="wrongProgressText">0 / 0</b> (<span id="wrongProgressPct">0%</span>)</span><button onclick="resetWrongProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
+<div class="progress-label" style="margin-top:12px;position:relative;display:flex;justify-content:center;align-items:center"><span style="display:inline-block;padding:0 56px">❌ 오답 학습률: <b id="wrongProgressText">0 / 0</b> (<span id="wrongProgressPct">0%</span>)</span><button onclick="resetWrongProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
 <div class="progress-bar"><div class="progress-fill" id="wrongProgressFill" style="background:linear-gradient(90deg,#ff8a8a,#ff6b9d,#ffb347)"></div></div>
 </div>
 
@@ -780,7 +779,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-01.8'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-01.9'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
