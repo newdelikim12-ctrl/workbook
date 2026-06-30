@@ -766,7 +766,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-06-30.5'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-06-30.6'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -2380,6 +2380,35 @@ if(quizMode){ if(quizState && quizAnswered) nextQuiz(); }
 else if(dx<0) nextCard();   // ← 왼쪽 스와이프: 다음 단어
 else prevCard();             // → 오른쪽 스와이프: 이전 단어
 }
+});
+})();
+
+// ===== 상단 좌우 스와이프로 탭 전환 =====
+(function(){
+const ORDER=['study','list','decks'];
+let tx=0,ty=0,valid=false;
+function currentTab(){ return localStorage.getItem('activeTab')||'study'; }
+document.addEventListener('touchstart',function(e){
+  let t=e.touches[0];
+  tx=t.clientX; ty=t.clientY;
+  // 화면 상단 영역에서 시작한 스와이프만 탭 전환으로 인식
+  // (가로 스크롤 요소·입력칸·버튼·카드 위에서 시작한 건 제외)
+  let el=e.target;
+  let blocked=el.closest&&el.closest('.ls-jump,input,textarea,button,#card,#board,.flashcard');
+  valid = ty<150 && !blocked;
+},{passive:true});
+document.addEventListener('touchend',function(e){
+  if(!valid) return;
+  valid=false;
+  let dx=e.changedTouches[0].clientX-tx;
+  let dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){
+    let i=ORDER.indexOf(currentTab());
+    if(i<0) i=0;
+    let ni=dx<0? i+1 : i-1; // ←왼쪽:다음 / →오른쪽:이전
+    if(ni<0||ni>=ORDER.length) return; // 양 끝에서는 더 안 넘어감
+    showTab(ORDER[ni]);
+  }
 });
 })();
 
