@@ -440,7 +440,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .container{padding-bottom:16px}
 /* ===== 목록학습 페이지 ===== */
 #listStudyView{max-width:720px;margin:18px auto 0;background:var(--container-bg);border-radius:28px;box-shadow:0 18px 50px var(--shadow);color:var(--text-main)}
-#lsHeader{position:sticky;top:0;z-index:5;background:var(--container-bg);border-bottom:1.5px solid var(--input-border);border-radius:28px 28px 0 0;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+#lsHeader{background:var(--container-bg);border-bottom:1.5px solid var(--input-border);border-radius:28px 28px 0 0;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
 #lsHeader .ls-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
 #lsHeader .ls-deckname{font-family:'Jua',sans-serif;font-size:18px;color:var(--text-title);display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #lsHeader .ls-prog{font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap}
@@ -762,7 +762,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-06-30.2'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-06-30.3'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -2189,9 +2189,8 @@ function lsJumpTo(n){
   for(let r of rows){ if((+r.dataset.i)+1>=n){ target=r; break; } }
   if(!target) target=rows[rows.length-1];
   if(!target) return;
-  let header=document.getElementById('lsHeader');
-  let off=(header?header.offsetHeight:0)+8;
-  let y=target.getBoundingClientRect().top+window.scrollY-off;
+  // 헤더가 고정이 아니므로 상단에서 살짝만 띄움
+  let y=target.getBoundingClientRect().top+window.scrollY-12;
   window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
 }
 function lsRowHtml(w,i){
