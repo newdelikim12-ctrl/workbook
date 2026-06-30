@@ -451,6 +451,10 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .ls-row.result-correct{border-color:var(--accent)}
 .ls-row.result-wrong{border-color:#ff6b9d}
 .ls-row .speakable{color:var(--text-main)}
+.ls-row .ls-top{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;flex:none}
+.ls-row .ls-num{width:40px;height:26px;flex:0 0 40px;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;background:rgba(124,156,255,.15);color:var(--accent);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.ls-row .ls-eng{flex:1 1 auto;min-width:0;text-align:left;word-break:break-word}
+.ls-row .kor-mean{flex:0 0 auto;max-width:46%;text-align:right;font-weight:600;word-break:keep-all}
 /* 목록학습의 뜻은 전역 body.hide-mean이 아니라 로컬 ls-hideMean만 따르도록 분리 */
 #lsList .kor-mean{filter:none;background:transparent;padding:0}
 #lsList.ls-hideMean .kor-mean{filter:blur(6px);cursor:pointer;user-select:none;background:rgba(124,156,255,.07);border-radius:6px;padding:0 6px}
@@ -762,7 +766,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-06-30.4'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-06-30.5'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -2201,10 +2205,10 @@ function lsTogglePeek(el,i){
 function lsRowHtml(w,i){
   let tint=w.mastered?'result-correct':(w.wrong&&w.wrongResult!=='correct')?'result-wrong':'';
   return `<li class="ls-row ${tint}" data-i="${i}" style="flex-direction:column;align-items:stretch;gap:8px;padding:14px 14px">
-    <span style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700">
-      <span style="min-width:30px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(124,156,255,.15);font-size:12px;font-weight:800;color:var(--accent);flex-shrink:0">${i+1}</span>
-      <span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span>
-      <span class="kor-mean${lsPeeked.has(i)?' peek':''}" onclick="event.stopPropagation();lsTogglePeek(this,${i})" style="margin-left:auto;text-align:right;font-weight:600">${escapeHtml(w.kor)}</span>
+    <span class="ls-top">
+      <span class="ls-num">${i+1}</span>
+      <span class="ls-eng speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span>
+      <span class="kor-mean${lsPeeked.has(i)?' peek':''}" onclick="event.stopPropagation();lsTogglePeek(this,${i})">${escapeHtml(w.kor)}</span>
     </span>
     ${w.example?`<span class="ls-ex" style="font-size:13px;color:var(--muted);font-style:italic;line-height:1.5">${escapeHtml(w.example)}</span>`:''}
     <span class="btns" style="justify-content:flex-end;gap:6px">
