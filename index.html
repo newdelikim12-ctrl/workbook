@@ -436,6 +436,29 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .deck-actions{display:flex;gap:4px}
 /* Add bottom padding to study view so content isn't hidden behind tab bar */
 .container{padding-bottom:16px}
+/* ===== 목록학습 페이지 ===== */
+#listStudyView{max-width:720px;margin:18px auto 0;background:var(--container-bg);border-radius:28px;box-shadow:0 18px 50px var(--shadow);color:var(--text-main)}
+#lsHeader{position:sticky;top:0;z-index:5;background:var(--container-bg);border-bottom:1.5px solid var(--input-border);border-radius:28px 28px 0 0;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+#lsHeader .ls-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#lsHeader .ls-deckname{font-family:'Jua',sans-serif;font-size:18px;color:var(--text-title);display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#lsHeader .ls-prog{font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap}
+#lsList{padding:8px 16px 22px}
+#lsList ul{list-style:none;margin:0;padding:0}
+.ls-row{margin:10px 0;background:var(--li-bg);border:1.5px solid var(--input-border);border-radius:16px;transition:.15s}
+.ls-row:hover{transform:none;background:var(--li-bg)}
+.ls-row.result-correct{border-color:var(--accent)}
+.ls-row.result-wrong{border-color:#ff6b9d}
+.ls-row .speakable{color:var(--text-main)}
+#lsList.ls-hideMean .kor-mean{filter:blur(6px);cursor:pointer;user-select:none;background:rgba(124,156,255,.07);border-radius:6px;padding:0 6px}
+#lsList.ls-hideMean .kor-mean.peek{filter:none;background:transparent}
+.ls-chips{display:flex;gap:6px}
+.ls-chip{flex:1;min-width:0;padding:8px 4px;border-radius:12px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;text-align:center;white-space:nowrap;box-shadow:none;line-height:1.3}
+.ls-chip:hover{filter:none;transform:none;box-shadow:none;background:var(--li-bg-hover)}
+.ls-chip.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
+.ls-chip .ls-c{display:block;font-size:14px;font-weight:800}
+.ls-empty{text-align:center;color:var(--muted);padding:48px 16px;font-size:15px;line-height:1.7}
+.ls-scrolltop{position:fixed;right:18px;bottom:90px;z-index:50;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a78bff);color:#fff;border:none;font-size:18px;box-shadow:0 6px 18px rgba(124,156,255,.45);cursor:pointer;display:none;padding:0}
+.ls-scrolltop.show{display:block}
 </style>
 </head>
 <body>
@@ -676,8 +699,33 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
   <button onclick="createDeck()" style="width:100%;margin-top:12px;padding:14px;font-size:15px;border-radius:16px">＋ 새 단어장 만들기</button>
 </div>
 
+<div id="listStudyView" style="display:none">
+  <div id="lsHeader">
+    <div class="ls-title">
+      <span class="ls-deckname">📜 <span id="lsDeckName">목록학습</span></span>
+      <span class="ls-prog" id="lsProg">0 / 0</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="lsProgFill"></div></div>
+    <div class="input-clear">
+      <input type="text" id="lsSearch" placeholder="🔍 단어·뜻·번호 검색" oninput="renderListStudy()">
+      <button class="clear-x" onclick="clearInput('lsSearch');renderListStudy()" aria-label="지우기">✕</button>
+    </div>
+    <div class="ls-chips">
+      <button class="ls-chip on" id="lsChipAll" onclick="lsSetFilter('all')">📚 전체<span class="ls-c" id="lsCntAll">0</span></button>
+      <button class="ls-chip" id="lsChipUnlearned" onclick="lsSetFilter('unlearned')">🆕 안외움<span class="ls-c" id="lsCntUnlearned">0</span></button>
+      <button class="ls-chip" id="lsChipWrong" onclick="lsSetFilter('wrong')">❌ 오답<span class="ls-c" id="lsCntWrong">0</span></button>
+      <button class="ls-chip" id="lsChipMastered" onclick="lsSetFilter('mastered')">✅ 완료<span class="ls-c" id="lsCntMastered">0</span></button>
+    </div>
+    <button class="small" id="lsEyeBtn" style="width:100%" onclick="lsToggleHideAll()">👁 전체 뜻 보이기</button>
+  </div>
+  <div id="lsList" class="ls-hideMean"></div>
+</div>
+<button class="ls-scrolltop" id="lsScrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="맨 위로">▲</button>
+
 <div id="tabBar">
   <button id="tabStudy" class="tab-btn tab-active" onclick="showTab('study')"><span class="ico">📖</span>학습</button>
+  <div class="tab-divider"></div>
+  <button id="tabList" class="tab-btn" onclick="showTab('list')"><span class="ico">📜</span>목록학습</button>
   <div class="tab-divider"></div>
   <button id="tabDecks" class="tab-btn" onclick="showTab('decks')"><span class="ico">📚</span>단어장</button>
 </div>
@@ -1373,6 +1421,7 @@ if(bothMode){b.style.background='linear-gradient(135deg,#56c596,#3eb489)';b.styl
 else{b.style.background='';b.style.color='';}
 }
 let meaningHidden=localStorage.getItem('meaningHidden')==='1';
+let lsFilter=localStorage.getItem('lsFilter')||'all'; // 목록학습 필터: all|unlearned|wrong|mastered
 function applyMeaningHidden(){
 document.body.classList.toggle('hide-mean',meaningHidden);
 document.querySelectorAll('.mean-toggle').forEach(b=>{
@@ -2009,8 +2058,84 @@ document.getElementById('cntWrong').innerText='('+words.filter(w=>w.wrong).lengt
 document.getElementById('cntMastered').innerText='('+mastered+')';
 document.getElementById('cntDupes').innerText='('+dupes.length+')';
 renderDupes();
+renderListStudy();
 }
 function getActiveDeck(){ return decks.find(x=>x.id===activeDeckId); }
+
+// ===== 목록학습 페이지 =====
+function lsSetFilter(name){
+  lsFilter=name;
+  localStorage.setItem('lsFilter',lsFilter);
+  renderListStudy();
+}
+function lsToggleHideAll(){
+  let box=document.getElementById('lsList');
+  let btn=document.getElementById('lsEyeBtn');
+  if(!box) return;
+  let nowHidden=box.classList.toggle('ls-hideMean');
+  // 가리기로 전환 시 펼쳐둔 단어(peek) 모두 닫기
+  if(nowHidden) box.querySelectorAll('.kor-mean.peek').forEach(s=>s.classList.remove('peek'));
+  if(btn) btn.textContent=nowHidden?'👁 전체 뜻 보이기':'🙈 뜻 가리기';
+}
+function renderListStudy(){
+  let view=document.getElementById('listStudyView');
+  let box=document.getElementById('lsList');
+  if(!view||!box) return;
+  // 다른 탭에 있을 땐 작업 생략(목록학습 진입 시 showTab에서 호출)
+  if(view.style.display==='none') return;
+  // 카운트
+  let total=words.length;
+  let cntMastered=words.filter(w=>w.mastered).length;
+  let cntWrong=words.filter(w=>w.wrong&&w.wrongResult!=='correct').length;
+  let cntUnlearned=words.filter(w=>!w.mastered).length;
+  document.getElementById('lsCntAll').textContent=total;
+  document.getElementById('lsCntUnlearned').textContent=cntUnlearned;
+  document.getElementById('lsCntWrong').textContent=cntWrong;
+  document.getElementById('lsCntMastered').textContent=cntMastered;
+  let pct=total?Math.round(cntMastered/total*100):0;
+  document.getElementById('lsProg').textContent=cntMastered+' / '+total+' ('+pct+'%)';
+  document.getElementById('lsProgFill').style.width=pct+'%';
+  let dk=getActiveDeck();
+  document.getElementById('lsDeckName').textContent=dk?dk.name:'목록학습';
+  // 필터 칩 활성표시
+  let chips={all:'lsChipAll',unlearned:'lsChipUnlearned',wrong:'lsChipWrong',mastered:'lsChipMastered'};
+  Object.keys(chips).forEach(k=>{
+    let el=document.getElementById(chips[k]);
+    if(el) el.classList.toggle('on',k===lsFilter);
+  });
+  // 목록 구성
+  let q=searchVal('lsSearch');
+  let listed=words.map((w,i)=>({w,i})).filter(({w,i})=>{
+    if(lsFilter==='unlearned' && w.mastered) return false;
+    if(lsFilter==='wrong' && !(w.wrong&&w.wrongResult!=='correct')) return false;
+    if(lsFilter==='mastered' && !w.mastered) return false;
+    return matchQ(w,q,i);
+  });
+  let prevScroll=window.scrollY;
+  if(!listed.length){
+    box.innerHTML='<div class="ls-empty">'+(total?'조건에 맞는 단어가 없어요 🔍':'먼저 단어를 추가하거나 시트를 불러와 주세요 📥')+'</div>';
+    return;
+  }
+  box.innerHTML='<ul>'+listed.map(({w,i})=>lsRowHtml(w,i)).join('')+'</ul>';
+  // 표시 변경으로 스크롤이 튀지 않도록 복원
+  window.scrollTo(0,prevScroll);
+}
+function lsRowHtml(w,i){
+  let tint=w.mastered?'result-correct':(w.wrong&&w.wrongResult!=='correct')?'result-wrong':'';
+  return `<li class="ls-row ${tint}" style="flex-direction:column;align-items:stretch;gap:8px;padding:14px 14px">
+    <span style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700">
+      <span style="min-width:30px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(124,156,255,.15);font-size:12px;font-weight:800;color:var(--accent);flex-shrink:0">${i+1}</span>
+      <span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span>
+      <span class="kor-mean" onclick="event.stopPropagation();this.classList.toggle('peek')" style="margin-left:auto;text-align:right;font-weight:600">${escapeHtml(w.kor)}</span>
+    </span>
+    ${w.example?`<span class="ls-ex" style="font-size:13px;color:var(--muted);font-style:italic;line-height:1.5">${escapeHtml(w.example)}</span>`:''}
+    <span class="btns" style="justify-content:flex-end;gap:6px">
+      <button onclick="toggleWrongFlag(${i})">${w.wrong?'❌ 오답해제':'⭕ 오답'}</button>
+      <button onclick="toggleMaster(${i})">${w.mastered?'✅ 학습취소':'⬜ 학습완료'}</button>
+      ${(w.wrong&&w.wrongResult!=='correct')?`<button style="white-space:nowrap" onclick="wrongNoteCorrect(${i})">🏆 외웠어요</button>`:''}
+    </span>
+  </li>`;
+}
 
 function switchDeck(id){
   saveDeckData();
@@ -2066,15 +2191,22 @@ function deleteDeck(id){
 function showTab(tab){
   let study=document.getElementById('studyView');
   let panel=document.getElementById('deckPanel');
+  let listV=document.getElementById('listStudyView');
   let tabStudy=document.getElementById('tabStudy');
   let tabDecks=document.getElementById('tabDecks');
-  if(tab==='study'){
-    study.style.display=''; panel.style.display='none';
-    tabStudy.classList.add('tab-active'); tabDecks.classList.remove('tab-active');
-  } else {
-    study.style.display='none'; panel.style.display='';
-    tabStudy.classList.remove('tab-active'); tabDecks.classList.add('tab-active');
+  let tabList=document.getElementById('tabList');
+  // 모든 뷰 숨기고 탭 비활성화
+  study.style.display='none'; panel.style.display='none'; listV.style.display='none';
+  tabStudy.classList.remove('tab-active'); tabDecks.classList.remove('tab-active'); tabList.classList.remove('tab-active');
+  if(tab==='decks'){
+    panel.style.display=''; tabDecks.classList.add('tab-active');
     renderDeckPanel();
+  }else if(tab==='list'){
+    listV.style.display=''; tabList.classList.add('tab-active');
+    renderListStudy();
+    window.scrollTo(0,0);
+  }else{
+    study.style.display=''; tabStudy.classList.add('tab-active');
   }
 }
 
@@ -2129,6 +2261,15 @@ else if(autoPlay && currentIndex>=0) scheduleAutoPlay();
 ['eng','kor'].forEach(id=>{
 let el=document.getElementById(id);
 if(el) el.addEventListener('keydown',e=>{if(e.key==='Enter')addWord();});
+});
+
+// 목록학습 페이지에서 스크롤 시 '맨 위로' 버튼 표시
+window.addEventListener('scroll',function(){
+let btn=document.getElementById('lsScrollTop');
+let view=document.getElementById('listStudyView');
+if(!btn||!view) return;
+let onList=view.style.display!=='none';
+btn.classList.toggle('show', onList && window.scrollY>400);
 });
 
 (function(){
