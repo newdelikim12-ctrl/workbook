@@ -289,6 +289,10 @@ li input{flex:1;min-width:90px;font-size:14px}
   scrollbar-width:thin;scrollbar-color:var(--accent-soft) transparent;
   -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
 }
+/* 한글 뜻 가리기 토글 */
+.kor-mean{transition:filter .15s,opacity .15s;border-radius:5px;padding:0 2px}
+body.hide-mean .kor-mean{filter:blur(6px);cursor:pointer;user-select:none;background:rgba(255,255,255,.06)}
+body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 /* 목록의 영어 단어 탭하면 발음 */
 .speakable{
   cursor:pointer;border-bottom:1.5px dotted rgba(255,255,255,.45);
@@ -563,6 +567,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 <button class="danger small" onclick="clearAllWords()">🗑 전체 삭제</button>
 </div>
+<div class="row" style="margin-top:8px"><button class="small mean-toggle" style="flex:1" onclick="toggleMeaning()">🙈 뜻 가리기</button></div>
 <div id="allWordsList"></div>
 <div class="list-scroll-btns">
   <button onclick="document.getElementById('allWordsList').scrollBy({top:-200,behavior:'smooth'})">▲ 위</button>
@@ -584,6 +589,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 <button class="danger small" onclick="clearWrongs()">🗑 전체 삭제</button>
 </div>
+<div class="row" style="margin-top:8px"><button class="small mean-toggle" style="flex:1" onclick="toggleMeaning()">🙈 뜻 가리기</button></div>
 <div id="wrongsList"></div>
 <div class="list-scroll-btns">
   <button onclick="document.getElementById('wrongsList').scrollBy({top:-200,behavior:'smooth'})">▲ 위</button>
@@ -601,6 +607,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 </div>
 <button class="danger small" onclick="clearMastered()">↩️ 전체 학습취소</button>
 </div>
+<div class="row" style="margin-top:8px"><button class="small mean-toggle" style="flex:1" onclick="toggleMeaning()">🙈 뜻 가리기</button></div>
 <div id="masteredList"></div>
 <div class="list-scroll-btns">
   <button onclick="document.getElementById('masteredList').scrollBy({top:-200,behavior:'smooth'})">▲ 위</button>
@@ -1365,6 +1372,19 @@ if(!b) return;
 if(bothMode){b.style.background='linear-gradient(135deg,#56c596,#3eb489)';b.style.color='#fff';}
 else{b.style.background='';b.style.color='';}
 }
+let meaningHidden=localStorage.getItem('meaningHidden')==='1';
+function applyMeaningHidden(){
+document.body.classList.toggle('hide-mean',meaningHidden);
+document.querySelectorAll('.mean-toggle').forEach(b=>{
+b.textContent=meaningHidden?'👁 뜻 보이기':'🙈 뜻 가리기';
+});
+}
+function toggleMeaning(){
+meaningHidden=!meaningHidden;
+localStorage.setItem('meaningHidden',meaningHidden?'1':'0');
+applyMeaningHidden();
+showToast(meaningHidden?'뜻을 가렸어요. 단어를 탭하면 잠깐 보여요 🙈':'뜻을 다시 보여줘요 👁');
+}
 function toggleCardDir(){
 cardDir=cardDir==='e2k'?'k2e':'e2k';
 localStorage.setItem('cardDir',cardDir);
@@ -1950,7 +1970,7 @@ let num=`<span style="min-width:26px;height:22px;display:inline-flex;align-items
 if(i===editIndex){
 return `<li style="flex-direction:column;gap:6px"><div style="display:flex;gap:6px;width:100%">${num}<input id="editEng" value="${escapeHtml(w.eng)}" style="flex:1;min-width:0"><input id="editKor" value="${escapeHtml(w.kor)}" style="flex:1;min-width:0"></div><input id="editEx" placeholder="예문 (선택사항)" value="${escapeHtml(w.example||'')}" style="width:100%;box-sizing:border-box"><span class="btns" style="justify-content:center"><button onclick="saveEdit(${i})">💾 저장</button><button onclick="cancelEdit()">↩️ 취소</button></span></li>`;
 }
-return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff">${num}<span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${escapeHtml(w.kor)}</span></span><span class="btns" style="justify-content:center;gap:6px">
+return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff">${num}<span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span> <span class="kor-mean" onclick="event.stopPropagation();this.classList.toggle('peek')" style="color:rgba(255,255,255,.75);font-weight:500">— ${escapeHtml(w.kor)}</span></span><span class="btns" style="justify-content:center;gap:6px">
 <button onclick="toggleWrongFlag(${i})">${w.wrong?'❌':'⭕'}</button>
 <button onclick="toggleMaster(${i})">${w.mastered?'✅':'⬜'}</button>
 <button onclick="startEdit(${i})">✏️</button>
@@ -1962,12 +1982,12 @@ return `<li class="${w.lastResult==='correct'?'result-correct':w.lastResult==='w
 let wq=searchVal('wrongSearch');
 document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,wq,x.i)).map(({w,i})=>{
 let num=`<span style="min-width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.13);font-size:11px;font-weight:800;color:rgba(255,255,255,.7);flex-shrink:0">${i+1}</span>`;
-return `<li class="${w.wrongResult==='correct'?'result-correct':w.wrongResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff">${num}<span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${escapeHtml(w.kor)}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="flex:1;white-space:nowrap" onclick="wrongNoteCorrect(${i})">⭕ 외웠어요</button><button style="flex:1;white-space:nowrap" onclick="wrongNoteAgain(${i})">❌ 재도전</button><button style="flex:0 0 auto;white-space:nowrap" onclick="removeWrongFlag(${i})">🗑</button></span></li>`;
+return `<li class="${w.wrongResult==='correct'?'result-correct':w.wrongResult==='wrong'?'result-wrong':''}" style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff">${num}<span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span> <span class="kor-mean" onclick="event.stopPropagation();this.classList.toggle('peek')" style="color:rgba(255,255,255,.75);font-weight:500">— ${escapeHtml(w.kor)}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="flex:1;white-space:nowrap" onclick="wrongNoteCorrect(${i})">⭕ 외웠어요</button><button style="flex:1;white-space:nowrap" onclick="wrongNoteAgain(${i})">❌ 재도전</button><button style="flex:0 0 auto;white-space:nowrap" onclick="removeWrongFlag(${i})">🗑</button></span></li>`;
 }).join('')+'</ul>';
 let mq=searchVal('masteredSearch');
 document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq,x.i)).map(({w,i})=>{
 let num=`<span style="min-width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.13);font-size:11px;font-weight:800;color:rgba(255,255,255,.7);flex-shrink:0">${i+1}</span>`;
-return `<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff">${num}<span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span> <span style="color:rgba(255,255,255,.75);font-weight:500">— ${escapeHtml(w.kor)}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="white-space:nowrap" onclick="toggleMaster(${i})">↩️ 학습취소</button><button onclick="removeMasteredFlag(${i})">🗑</button></span></li>`;
+return `<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff">${num}<span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span> <span class="kor-mean" onclick="event.stopPropagation();this.classList.toggle('peek')" style="color:rgba(255,255,255,.75);font-weight:500">— ${escapeHtml(w.kor)}</span></span><span class="btns" style="justify-content:center;gap:6px"><button style="white-space:nowrap" onclick="toggleMaster(${i})">↩️ 학습취소</button><button onclick="removeMasteredFlag(${i})">🗑</button></span></li>`;
 }).join('')+'</ul>';
 let total=words.length;
 let mastered=words.filter(w=>w.mastered).length;
@@ -2087,6 +2107,7 @@ updateQuizModeBtns();
 updateSoundBtn();
 updateBothModeBtn();
 updateCardDirBtn();
+applyMeaningHidden();
 if(quizMode) document.getElementById('front').innerText='랜덤 단어 또는 오답노트를 눌러 시작하세요';
 
 // 모든 버튼에 공통 탭 효과음 (객관식 보기는 정답/오답 소리가 따로 있어 제외)
