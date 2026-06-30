@@ -1829,6 +1829,9 @@ items.forEach(w=>{w.wrong=false;w.wrongResult=null;});
 save();
 }
 function del(i){
+let w=words[i];
+if(!w) return;
+if(!confirm('"'+w.eng+' — '+w.kor+'" 단어를 정말 삭제할까요?')) return;
 playSound('delete');
 if(editIndex===i)editIndex=-1;
 let curWord=currentIndex>=0?words[currentIndex]:null;
