@@ -432,15 +432,17 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 /* Deck panel cards */
 .deck-card{
   background:var(--li-bg);border:1.5px solid var(--input-border);
-  border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .18s;
+  border-radius:18px;padding:18px 16px;margin-bottom:12px;cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .18s;
   touch-action:pan-y;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
 }
+.deck-card *{ -webkit-user-select:none;user-select:none;-webkit-touch-callout:none; }
 .deck-card:active{transform:scale(.98)}
 .deck-card.deck-dragging{touch-action:none;opacity:.97;box-shadow:0 16px 36px rgba(124,156,255,.5);border-color:var(--accent);position:relative;z-index:10;cursor:grabbing;transition:none}
 .deck-active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,156,255,.2)}
 .deck-card-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .deck-name{font-size:16px;font-weight:700;color:var(--text-title);font-family:'Jua',sans-serif;display:flex;align-items:center;min-width:0}
-.deck-grip{color:var(--muted);font-size:18px;margin-right:8px;letter-spacing:-3px;flex-shrink:0;opacity:.7}
+.deck-grip{color:var(--accent);font-size:22px;margin-right:10px;letter-spacing:-3px;flex-shrink:0;opacity:.85}
 .deck-meta{font-size:13px;color:var(--muted);margin-top:4px}
 .deck-badge{margin-top:8px;font-size:12px;color:var(--accent);font-weight:700}
 .deck-actions{display:flex;gap:4px}
@@ -775,7 +777,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-01.3'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-01.4'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -2360,6 +2362,9 @@ function deckEndDrag(commit){
 (function(){
   let list=document.getElementById('deckList');
   if(!list) return;
+  // 길게 누를 때 글자 선택/검색 메뉴가 뜨지 않도록 차단
+  list.addEventListener('contextmenu',function(e){ if(e.target.closest('.deck-card')) e.preventDefault(); });
+  list.addEventListener('selectstart',function(e){ if(e.target.closest('.deck-card')) e.preventDefault(); });
   list.addEventListener('pointerdown',function(e){
     let card=e.target.closest('.deck-card');
     if(!card || e.target.closest('.deck-actions')) return;
