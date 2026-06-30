@@ -456,6 +456,11 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .ls-chip:hover{filter:none;transform:none;box-shadow:none;background:var(--li-bg-hover)}
 .ls-chip.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
 .ls-chip .ls-c{display:block;font-size:14px;font-weight:800}
+.ls-jump{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+.ls-jump::-webkit-scrollbar{display:none}
+.ls-jump button{flex:0 0 auto;padding:6px 12px;border-radius:999px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:12px;font-weight:800;cursor:pointer;box-shadow:none;line-height:1}
+.ls-jump button:hover{filter:none;transform:none;box-shadow:none;background:var(--li-bg-hover)}
+.ls-jump button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
 .ls-empty{text-align:center;color:var(--muted);padding:48px 16px;font-size:15px;line-height:1.7}
 .ls-scrolltop,.ls-scrollbottom{position:fixed;right:18px;z-index:50;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a78bff);color:#fff;border:none;font-size:18px;box-shadow:0 6px 18px rgba(124,156,255,.45);cursor:pointer;display:none;padding:0}
 .ls-scrolltop{bottom:144px}
@@ -718,6 +723,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
       <button class="ls-chip" id="lsChipWrong" onclick="lsSetFilter('wrong')">❌ 오답<span class="ls-c" id="lsCntWrong">0</span></button>
       <button class="ls-chip" id="lsChipMastered" onclick="lsSetFilter('mastered')">✅ 완료<span class="ls-c" id="lsCntMastered">0</span></button>
     </div>
+    <div class="ls-jump" id="lsJump"></div>
     <button class="small" id="lsEyeBtn" style="width:100%" onclick="lsToggleHideAll()">👁 전체 뜻 보이기</button>
   </div>
   <div id="lsList" class="ls-hideMean"></div>
@@ -2115,17 +2121,43 @@ function renderListStudy(){
     return matchQ(w,q,i);
   });
   let prevScroll=window.scrollY;
+  let jb=document.getElementById('lsJump');
   if(!listed.length){
     box.innerHTML='<div class="ls-empty">'+(total?'조건에 맞는 단어가 없어요 🔍':'먼저 단어를 추가하거나 시트를 불러와 주세요 📥')+'</div>';
+    if(jb){ jb.innerHTML=''; jb.style.display='none'; }
     return;
   }
   box.innerHTML='<ul>'+listed.map(({w,i})=>lsRowHtml(w,i)).join('')+'</ul>';
+  // 백 단위 점프 바 구성 (현재 목록에 100번 이상이 있을 때만)
+  let jumpBar=document.getElementById('lsJump');
+  if(jumpBar){
+    let maxNum=listed[listed.length-1].i+1;
+    if(maxNum>=100){
+      let marks=[1];
+      for(let h=100;h<=maxNum;h+=100) marks.push(h);
+      jumpBar.innerHTML=marks.map(n=>'<button onclick="lsJumpTo('+n+')">'+(n===1?'1':n)+'</button>').join('');
+      jumpBar.style.display='';
+    }else{
+      jumpBar.innerHTML=''; jumpBar.style.display='none';
+    }
+  }
   // 표시 변경으로 스크롤이 튀지 않도록 복원
   window.scrollTo(0,prevScroll);
 }
+function lsJumpTo(n){
+  let rows=document.querySelectorAll('#lsList .ls-row');
+  let target=null;
+  for(let r of rows){ if((+r.dataset.i)+1>=n){ target=r; break; } }
+  if(!target) target=rows[rows.length-1];
+  if(!target) return;
+  let header=document.getElementById('lsHeader');
+  let off=(header?header.offsetHeight:0)+8;
+  let y=target.getBoundingClientRect().top+window.scrollY-off;
+  window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+}
 function lsRowHtml(w,i){
   let tint=w.mastered?'result-correct':(w.wrong&&w.wrongResult!=='correct')?'result-wrong':'';
-  return `<li class="ls-row ${tint}" style="flex-direction:column;align-items:stretch;gap:8px;padding:14px 14px">
+  return `<li class="ls-row ${tint}" data-i="${i}" style="flex-direction:column;align-items:stretch;gap:8px;padding:14px 14px">
     <span style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700">
       <span style="min-width:30px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(124,156,255,.15);font-size:12px;font-weight:800;color:var(--accent);flex-shrink:0">${i+1}</span>
       <span class="speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span>
