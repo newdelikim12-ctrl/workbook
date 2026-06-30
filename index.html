@@ -457,8 +457,10 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .ls-chip.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
 .ls-chip .ls-c{display:block;font-size:14px;font-weight:800}
 .ls-empty{text-align:center;color:var(--muted);padding:48px 16px;font-size:15px;line-height:1.7}
-.ls-scrolltop{position:fixed;right:18px;bottom:90px;z-index:50;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a78bff);color:#fff;border:none;font-size:18px;box-shadow:0 6px 18px rgba(124,156,255,.45);cursor:pointer;display:none;padding:0}
-.ls-scrolltop.show{display:block}
+.ls-scrolltop,.ls-scrollbottom{position:fixed;right:18px;z-index:50;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a78bff);color:#fff;border:none;font-size:18px;box-shadow:0 6px 18px rgba(124,156,255,.45);cursor:pointer;display:none;padding:0}
+.ls-scrolltop{bottom:144px}
+.ls-scrollbottom{bottom:90px}
+.ls-scrolltop.show,.ls-scrollbottom.show{display:block}
 </style>
 </head>
 <body>
@@ -721,6 +723,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
   <div id="lsList" class="ls-hideMean"></div>
 </div>
 <button class="ls-scrolltop" id="lsScrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="맨 위로">▲</button>
+<button class="ls-scrollbottom" id="lsScrollBottom" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})" aria-label="맨 아래로">▼</button>
 
 <div id="tabBar">
   <button id="tabStudy" class="tab-btn tab-active" onclick="showTab('study')"><span class="ico">📖</span>학습</button>
@@ -2205,6 +2208,7 @@ function showTab(tab){
     listV.style.display=''; tabList.classList.add('tab-active');
     renderListStudy();
     window.scrollTo(0,0);
+    setTimeout(updateLsScrollBtns,0);
   }else{
     study.style.display=''; tabStudy.classList.add('tab-active');
   }
@@ -2263,14 +2267,20 @@ let el=document.getElementById(id);
 if(el) el.addEventListener('keydown',e=>{if(e.key==='Enter')addWord();});
 });
 
-// 목록학습 페이지에서 스크롤 시 '맨 위로' 버튼 표시
-window.addEventListener('scroll',function(){
-let btn=document.getElementById('lsScrollTop');
+// 목록학습 페이지에서 스크롤 시 '맨 위로/맨 아래로' 버튼 표시
+function updateLsScrollBtns(){
+let top=document.getElementById('lsScrollTop');
+let bottom=document.getElementById('lsScrollBottom');
 let view=document.getElementById('listStudyView');
-if(!btn||!view) return;
+if(!top||!bottom||!view) return;
 let onList=view.style.display!=='none';
-btn.classList.toggle('show', onList && window.scrollY>400);
-});
+let scrollable=document.body.scrollHeight-window.innerHeight;
+let nearTop=window.scrollY<400;
+let nearBottom=window.scrollY>scrollable-400;
+top.classList.toggle('show', onList && scrollable>200 && !nearTop);
+bottom.classList.toggle('show', onList && scrollable>200 && !nearBottom);
+}
+window.addEventListener('scroll',updateLsScrollBtns);
 
 (function(){
 let card=document.getElementById('card');
