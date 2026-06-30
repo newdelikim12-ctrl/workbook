@@ -470,6 +470,14 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .ls-scrolltop{bottom:144px}
 .ls-scrollbottom{bottom:90px}
 .ls-scrolltop.show,.ls-scrollbottom.show{display:block}
+/* 업데이트 배너 */
+#updateBanner{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-80px);z-index:9999;
+  padding:11px 20px;border-radius:999px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),#a78bff);color:#fff;
+  font-size:14px;font-weight:700;letter-spacing:.01em;white-space:nowrap;
+  box-shadow:0 8px 24px rgba(124,156,255,.5);opacity:0;pointer-events:none;
+  transition:transform .3s cubic-bezier(.2,.8,.3,1),opacity .3s}
+#updateBanner.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
 </style>
 </head>
 <body>
@@ -749,8 +757,10 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 </div>
 
 <div id="toast" class="toast"></div>
+<button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
+const APP_VERSION='2026-06-30.1'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -2425,14 +2435,41 @@ if('serviceWorker' in navigator){
         var newSW=reg.installing;
         newSW.addEventListener('statechange',function(){
           if(newSW.state==='installed'&&navigator.serviceWorker.controller){
-            showToast('새 버전이 있어요! 🔄 잠시 후 자동 업데이트됩니다');
-            setTimeout(function(){ location.reload(true); },2000);
+            // 서비스워커가 바뀐 경우에도 업데이트 배너로 안내
+            if(typeof showUpdateBanner==='function') showUpdateBanner();
           }
         });
       });
     }).catch(function(){});
   });
 }
+
+// ===== 버전 기반 업데이트 확인 =====
+var _updateReady=false, _lastCheck=0;
+function showUpdateBanner(){
+  _updateReady=true;
+  var b=document.getElementById('updateBanner');
+  if(b) b.classList.add('show');
+}
+function applyUpdate(){
+  // 캐시 우회를 위해 서비스워커도 갱신 후 강력 새로고침
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.getRegistration().then(function(reg){ if(reg) reg.update(); }).catch(function(){});
+  }
+  location.reload();
+}
+function checkForUpdate(force){
+  var now=Date.now();
+  if(!force && now-_lastCheck<30000) return; // 30초에 한 번만
+  _lastCheck=now;
+  if(_updateReady) return; // 이미 안내 중
+  fetch('index.html?_v='+now,{cache:'no-store'}).then(function(r){return r.text();}).then(function(html){
+    var m=html.match(/APP_VERSION='([^']+)'/);
+    if(m && m[1] && m[1]!==APP_VERSION) showUpdateBanner();
+  }).catch(function(){});
+}
+window.addEventListener('load',function(){ setTimeout(function(){checkForUpdate(true);},1500); });
+document.addEventListener('visibilitychange',function(){ if(!document.hidden) checkForUpdate(false); });
 </script>
 </body>
 </html>
