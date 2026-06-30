@@ -432,6 +432,12 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 #tabBar .tab-divider{
   width:1.5px;background:var(--input-border);align-self:stretch;
 }
+/* 학습 탭 상단 단어장 선택 바 */
+#recentDecksBar{scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#recentDecksBar::-webkit-scrollbar{display:none}
+.deckbar-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;box-shadow:none;white-space:nowrap;transition:background .15s,color .15s}
+.deckbar-chip:hover{background:var(--li-bg-hover);filter:none;transform:none;box-shadow:none}
+.deckbar-chip.on{background:linear-gradient(135deg,var(--accent),#b48cff);color:#fff;border-color:transparent;box-shadow:0 3px 12px rgba(124,156,255,.45)}
 /* Deck panel cards */
 .deck-card{
   background:var(--li-bg);border:1.5px solid var(--input-border);
@@ -507,7 +513,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button class="small" onclick="toggleDark()" id="darkBtn">🌙 다크모드</button>
 </div>
 <h2>민복이와 도형이의 영어 단어 연습장</h2>
-<div id="recentDecksBar" style="display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:8px;margin-bottom:2px;min-height:32px"></div>
+<div id="recentDecksBar" style="display:flex;flex-wrap:nowrap;gap:8px;margin-top:8px;margin-bottom:2px;min-height:36px;overflow-x:auto;padding:3px 2px 6px;scroll-behavior:smooth"></div>
 
 <div class="row">
 <div class="input-clear">
@@ -758,7 +764,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
     <div class="ls-bulk">
       <button class="small" onclick="lsBulk('master')">✅ 전체 학습완료</button>
       <button class="small" onclick="lsBulk('unmaster')">⬜ 전체 학습취소</button>
-      <button class="small" onclick="lsBulk('clearWrong')">🧹 전체 오답해제</button>
+      <button class="small" id="lsBulkClearWrong" onclick="lsBulk('clearWrong')" style="display:none">🧹 전체 오답해제</button>
     </div>
     <button class="small" id="lsEyeBtn" style="width:100%" onclick="lsToggleHideAll()">👁 전체 뜻 보이기</button>
   </div>
@@ -779,7 +785,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-01.9'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-02.1'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -819,13 +825,14 @@ function pushRecentDeck(id){
 function renderRecentDecks(){
   let bar=document.getElementById('recentDecksBar');
   if(!bar) return;
-  let html=recentDeckIds.map(id=>{
-    let d=decks.find(x=>x.id===id);
-    if(!d) return '';
-    let active=id===activeDeckId;
-    return '<button onclick="switchDeck(\''+escapeHtml(id)+'\')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:999px;border:none;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.01em;transition:.15s;box-shadow:0 2px 8px rgba(124,156,255,.25);'+(active?'background:linear-gradient(135deg,var(--accent),#b48cff);color:#fff;box-shadow:0 3px 12px rgba(124,156,255,.45)':'background:var(--li-bg);color:var(--muted);border:1.5px solid var(--input-border)')+'">📚 '+escapeHtml(d.name)+'</button>';
+  // 모든 단어장을 가로로 나열, 현재 단어장 강조 (좌우로 넘기며 탭해서 선택)
+  bar.innerHTML=decks.map(d=>{
+    let active=d.id===activeDeckId;
+    return '<button class="deckbar-chip'+(active?' on':'')+'" data-id="'+escapeHtml(d.id)+'" onclick="switchDeck(\''+escapeHtml(d.id)+'\')">📚 '+escapeHtml(d.name)+'</button>';
   }).join('');
-  bar.innerHTML=html||'';
+  // 현재 단어장이 보이도록 가로 스크롤 이동
+  let on=bar.querySelector('.deckbar-chip.on');
+  if(on) try{ on.scrollIntoView({inline:'center',block:'nearest'}); }catch(_){ }
 }
 function saveDeckData(){ let d=decks.find(x=>x.id===activeDeckId); if(d){d.words=words;d.stats=stats;d.dupes=dupes;} saveDecks(); }
 function saveStats(){ saveDeckData(); }
@@ -1582,12 +1589,12 @@ if(nb) nb.innerText=lastMode==='wrong'?'➡️ 다음 단어':'➡️ 다음 단
 
 function getDeck(mode){
 let arr=words.map((w,i)=>({w,i,num:i+1}));
-// 오답노트는 범위 설정과 무관하게 전체에서 출제
+// 범위 지정 시 오답노트·일반 학습 모두 범위 내에서만 출제
+if(rangeFrom) arr=arr.filter(x=>x.num>=rangeFrom);
+if(rangeTo) arr=arr.filter(x=>x.num<=rangeTo);
 if(mode==='wrong'){
 return arr.filter(x=>x.w.wrong && x.w.wrongResult!=='correct');
 }
-if(rangeFrom) arr=arr.filter(x=>x.num>=rangeFrom);
-if(rangeTo) arr=arr.filter(x=>x.num<=rangeTo);
 return arr.filter(x=>!x.w.mastered);
 }
 
@@ -2199,6 +2206,9 @@ function renderListStudy(){
     let el=document.getElementById(chips[k]);
     if(el) el.classList.toggle('on',k===lsFilter);
   });
+  // 전체 오답해제는 오답 필터에서만 표시
+  let cwBtn=document.getElementById('lsBulkClearWrong');
+  if(cwBtn) cwBtn.style.display=(lsFilter==='wrong')?'':'none';
   // 목록 구성
   let listed=lsCurrentList();
   let prevScroll=window.scrollY;
@@ -2238,8 +2248,8 @@ function lsJumpTo(n){
 function lsTogglePeek(el,i){
   if(el.classList.toggle('peek')){
     lsPeeked.add(i);
-    // 흐린 뜻을 확인하면 자동 학습완료 (가린다고 해제되진 않음)
-    if(words[i] && !words[i].mastered){ words[i].mastered=true; save(); }
+    // '전체' 필터에서만 뜻 확인 시 자동 학습완료 (안외움 등에서는 완료로 가지 않음)
+    if(lsFilter==='all' && words[i] && !words[i].mastered){ words[i].mastered=true; save(); }
   } else {
     lsPeeked.delete(i);
   }
@@ -2517,7 +2527,7 @@ document.addEventListener('touchstart',function(e){
   // 화면 상단 영역에서 시작한 스와이프만 탭 전환으로 인식
   // (가로 스크롤 요소·입력칸·버튼·카드 위에서 시작한 건 제외)
   let el=e.target;
-  let blocked=el.closest&&el.closest('.ls-jump,input,textarea,button,#card,#board,.flashcard');
+  let blocked=el.closest&&el.closest('.ls-jump,#recentDecksBar,input,textarea,button,#card,#board,.flashcard');
   valid = ty<150 && !blocked;
 },{passive:true});
 document.addEventListener('touchend',function(e){
