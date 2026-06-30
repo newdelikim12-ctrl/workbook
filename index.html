@@ -461,6 +461,8 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .ls-jump button{flex:0 0 auto;padding:6px 12px;border-radius:999px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:12px;font-weight:800;cursor:pointer;box-shadow:none;line-height:1}
 .ls-jump button:hover{filter:none;transform:none;box-shadow:none;background:var(--li-bg-hover)}
 .ls-jump button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
+.ls-bulk{display:flex;gap:6px}
+.ls-bulk button{flex:1;min-width:0;padding:8px 4px;font-size:12px;white-space:nowrap;box-shadow:none}
 .ls-empty{text-align:center;color:var(--muted);padding:48px 16px;font-size:15px;line-height:1.7}
 .ls-scrolltop,.ls-scrollbottom{position:fixed;right:18px;z-index:50;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a78bff);color:#fff;border:none;font-size:18px;box-shadow:0 6px 18px rgba(124,156,255,.45);cursor:pointer;display:none;padding:0}
 .ls-scrolltop{bottom:144px}
@@ -724,6 +726,11 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
       <button class="ls-chip" id="lsChipMastered" onclick="lsSetFilter('mastered')">✅ 완료<span class="ls-c" id="lsCntMastered">0</span></button>
     </div>
     <div class="ls-jump" id="lsJump"></div>
+    <div class="ls-bulk">
+      <button class="small" onclick="lsBulk('master')">✅ 전체 학습완료</button>
+      <button class="small" onclick="lsBulk('unmaster')">⬜ 전체 학습취소</button>
+      <button class="small" onclick="lsBulk('clearWrong')">🧹 전체 오답해제</button>
+    </div>
     <button class="small" id="lsEyeBtn" style="width:100%" onclick="lsToggleHideAll()">👁 전체 뜻 보이기</button>
   </div>
   <div id="lsList" class="ls-hideMean"></div>
@@ -2072,6 +2079,30 @@ renderListStudy();
 function getActiveDeck(){ return decks.find(x=>x.id===activeDeckId); }
 
 // ===== 목록학습 페이지 =====
+function lsCurrentList(){
+  let q=searchVal('lsSearch');
+  return words.map((w,i)=>({w,i})).filter(({w,i})=>{
+    if(lsFilter==='unlearned' && w.mastered) return false;
+    if(lsFilter==='wrong' && !(w.wrong&&w.wrongResult!=='correct')) return false;
+    if(lsFilter==='mastered' && !w.mastered) return false;
+    return matchQ(w,q,i);
+  });
+}
+function lsBulk(action){
+  let items=lsCurrentList();
+  if(!items.length) return alert('적용할 단어가 없어요');
+  let labels={master:'학습 완료',unmaster:'학습 취소',clearWrong:'오답 해제'};
+  if(!confirm('현재 목록의 '+items.length+'개 단어를 모두 \''+labels[action]+'\' 처리할까요?')) return;
+  items.forEach(({w})=>{
+    if(action==='master') w.mastered=true;
+    else if(action==='unmaster') w.mastered=false;
+    else if(action==='clearWrong'){ w.wrong=false; w.wrongResult=null; }
+  });
+  save();
+  playSound(action==='clearWrong'?'delete':action==='master'?'add':'toggle');
+  let done={master:'학습 완료로 표시했어요 🏆',unmaster:'학습 취소했어요 ↩️',clearWrong:'오답노트에서 해제했어요 🧹'};
+  showToast(items.length+'개를 '+done[action]);
+}
 function lsSetFilter(name){
   lsFilter=name;
   localStorage.setItem('lsFilter',lsFilter);
@@ -2113,13 +2144,7 @@ function renderListStudy(){
     if(el) el.classList.toggle('on',k===lsFilter);
   });
   // 목록 구성
-  let q=searchVal('lsSearch');
-  let listed=words.map((w,i)=>({w,i})).filter(({w,i})=>{
-    if(lsFilter==='unlearned' && w.mastered) return false;
-    if(lsFilter==='wrong' && !(w.wrong&&w.wrongResult!=='correct')) return false;
-    if(lsFilter==='mastered' && !w.mastered) return false;
-    return matchQ(w,q,i);
-  });
+  let listed=lsCurrentList();
   let prevScroll=window.scrollY;
   let jb=document.getElementById('lsJump');
   if(!listed.length){
