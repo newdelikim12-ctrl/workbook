@@ -72,7 +72,9 @@ body{
   background-attachment:fixed;
   margin:0;padding:24px 16px;min-height:100vh;
   transition:background .4s ease;
+  overscroll-behavior-y:contain; /* 당겨서 새로고침 제스처 억제 */
 }
+html{overscroll-behavior-y:contain}
 .container{
   max-width:720px;margin:auto;background:var(--container-bg);padding:32px 28px;
   border-radius:28px;box-shadow:0 18px 50px var(--shadow);
@@ -456,7 +458,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .ls-chip:hover{filter:none;transform:none;box-shadow:none;background:var(--li-bg-hover)}
 .ls-chip.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
 .ls-chip .ls-c{display:block;font-size:14px;font-weight:800}
-.ls-jump{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+.ls-jump{display:flex;gap:6px;justify-content:safe center;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
 .ls-jump::-webkit-scrollbar{display:none}
 .ls-jump button{flex:0 0 auto;padding:6px 12px;border-radius:999px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:12px;font-weight:800;cursor:pointer;box-shadow:none;line-height:1}
 .ls-jump button:hover{filter:none;transform:none;box-shadow:none;background:var(--li-bg-hover)}
@@ -2267,8 +2269,10 @@ function showTab(tab){
     window.scrollTo(0,0);
     setTimeout(updateLsScrollBtns,0);
   }else{
+    tab='study';
     study.style.display=''; tabStudy.classList.add('tab-active');
   }
+  try{ localStorage.setItem('activeTab',tab); }catch(e){}
 }
 
 function renderDeckPanel(){
@@ -2304,6 +2308,9 @@ updateSoundBtn();
 updateBothModeBtn();
 updateCardDirBtn();
 applyMeaningHidden();
+// 새로고침(당겨서 새로고침 등) 후에도 마지막으로 보던 탭 복원
+let savedTab=localStorage.getItem('activeTab');
+if(savedTab==='list'||savedTab==='decks') showTab(savedTab);
 if(quizMode) document.getElementById('front').innerText='랜덤 단어 또는 오답노트를 눌러 시작하세요';
 
 // 모든 버튼에 공통 탭 효과음 (객관식 보기는 정답/오답 소리가 따로 있어 제외)
