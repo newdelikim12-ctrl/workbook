@@ -72,9 +72,9 @@ body{
   background-attachment:fixed;
   margin:0;padding:24px 16px;min-height:100vh;
   transition:background .4s ease;
-  overscroll-behavior-y:contain; /* 당겨서 새로고침 제스처 억제 */
 }
-html{overscroll-behavior-y:contain}
+/* 목록학습·단어장 탭에서만 당겨서 새로고침 억제(학습 탭은 새로고침 허용) */
+html.lock-refresh,body.lock-refresh{overscroll-behavior-y:contain}
 .container{
   max-width:720px;margin:auto;background:var(--container-bg);padding:32px 28px;
   border-radius:28px;box-shadow:0 18px 50px var(--shadow);
@@ -777,7 +777,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-01.4'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-01.5'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -2315,6 +2315,10 @@ function showTab(tab){
     tab='study';
     study.style.display=''; tabStudy.classList.add('tab-active');
   }
+  // 학습 탭에서만 당겨서 새로고침 허용
+  let lock=(tab!=='study');
+  document.documentElement.classList.toggle('lock-refresh',lock);
+  document.body.classList.toggle('lock-refresh',lock);
   try{ localStorage.setItem('activeTab',tab); }catch(e){}
 }
 
