@@ -433,7 +433,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .deck-card{
   background:var(--li-bg);border:1.5px solid var(--input-border);
   border-radius:18px;padding:18px 16px;margin-bottom:12px;cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .18s;
-  touch-action:none; /* 카드 위 터치는 스크롤이 아니라 탭/드래그로 처리 */
+  touch-action:pan-y; /* 평소엔 세로 스크롤 허용(드래그 중에만 JS로 스크롤 차단) */
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
 }
 .deck-card *{ -webkit-user-select:none;user-select:none;-webkit-touch-callout:none; }
@@ -777,7 +777,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-01.6'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-01.7'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -2369,6 +2369,8 @@ function deckEndDrag(commit){
   // 길게 누를 때 글자 선택/검색 메뉴가 뜨지 않도록 차단
   list.addEventListener('contextmenu',function(e){ if(e.target.closest('.deck-card')) e.preventDefault(); });
   list.addEventListener('selectstart',function(e){ if(e.target.closest('.deck-card')) e.preventDefault(); });
+  // 드래그 중일 때만 페이지 스크롤 차단(평소엔 정상 스크롤)
+  document.addEventListener('touchmove',function(e){ if(deckDrag.dragging) e.preventDefault(); },{passive:false});
   list.addEventListener('pointerdown',function(e){
     let card=e.target.closest('.deck-card');
     if(!card || e.target.closest('.deck-actions')) return;
