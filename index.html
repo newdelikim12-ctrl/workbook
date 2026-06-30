@@ -427,12 +427,15 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 /* Deck panel cards */
 .deck-card{
   background:var(--li-bg);border:1.5px solid var(--input-border);
-  border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer;transition:.18s;
+  border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .18s;
+  touch-action:pan-y;
 }
 .deck-card:active{transform:scale(.98)}
+.deck-card.deck-dragging{touch-action:none;opacity:.95;transform:scale(1.03);box-shadow:0 14px 32px rgba(124,156,255,.45);border-color:var(--accent);position:relative;z-index:10;cursor:grabbing}
 .deck-active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,156,255,.2)}
 .deck-card-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.deck-name{font-size:16px;font-weight:700;color:var(--text-title);font-family:'Jua',sans-serif}
+.deck-name{font-size:16px;font-weight:700;color:var(--text-title);font-family:'Jua',sans-serif;display:flex;align-items:center;min-width:0}
+.deck-grip{color:var(--muted);font-size:18px;margin-right:8px;letter-spacing:-3px;flex-shrink:0;opacity:.7}
 .deck-meta{font-size:13px;color:var(--muted);margin-top:4px}
 .deck-badge{margin-top:8px;font-size:12px;color:var(--accent);font-weight:700}
 .deck-actions{display:flex;gap:4px}
@@ -767,7 +770,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-06-30.8'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-06-30.9'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -2310,9 +2313,9 @@ function renderDeckPanel(){
     let mastered=d.words?d.words.filter(w=>w.mastered).length:0;
     let pct=cnt?Math.round(mastered/cnt*100):0;
     let isActive=d.id===activeDeckId;
-    return `<div class="deck-card${isActive?' deck-active':''}" onclick="switchDeck('${d.id}')">
+    return `<div class="deck-card${isActive?' deck-active':''}" data-id="${d.id}" onclick="deckCardClick('${d.id}')">
       <div class="deck-card-header">
-        <span class="deck-name">${escapeHtml(d.name)}</span>
+        <span class="deck-name"><span class="deck-grip">⠿</span>${escapeHtml(d.name)}</span>
         <span class="deck-actions" onclick="event.stopPropagation()">
           <button class="small" onclick="renameDeck('${d.id}')" style="padding:4px 10px;font-size:12px;box-shadow:none">✏️</button>
           <button class="small danger" onclick="deleteDeck('${d.id}')" style="padding:4px 10px;font-size:12px;box-shadow:none">🗑</button>
@@ -2324,6 +2327,56 @@ function renderDeckPanel(){
     </div>`;
   }).join('');
 }
+
+// ===== 단어장 길게눌러 드래그로 순서 변경 =====
+let deckDrag={el:null,timer:null,pid:null,sx:0,sy:0,dragging:false,suppress:false};
+function deckCardClick(id){ if(deckDrag.suppress) return; switchDeck(id); }
+function deckEndDrag(commit){
+  clearTimeout(deckDrag.timer);
+  if(deckDrag.el){
+    deckDrag.el.classList.remove('deck-dragging');
+    if(deckDrag.dragging && commit){
+      let ids=[...document.querySelectorAll('#deckList .deck-card')].map(c=>c.dataset.id);
+      decks.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id));
+      saveDecks(); renderDeckPanel(); renderRecentDecks();
+      deckDrag.suppress=true; setTimeout(()=>{deckDrag.suppress=false;},350);
+      showToast('단어장 순서를 바꿨어요 ↕️');
+    }
+  }
+  deckDrag.el=null; deckDrag.dragging=false; deckDrag.pid=null;
+}
+(function(){
+  let list=document.getElementById('deckList');
+  if(!list) return;
+  list.addEventListener('pointerdown',function(e){
+    let card=e.target.closest('.deck-card');
+    if(!card || e.target.closest('.deck-actions')) return;
+    deckDrag.el=card; deckDrag.pid=e.pointerId; deckDrag.sx=e.clientX; deckDrag.sy=e.clientY; deckDrag.dragging=false;
+    deckDrag.timer=setTimeout(function(){
+      if(!deckDrag.el) return;
+      deckDrag.dragging=true;
+      card.classList.add('deck-dragging');
+      try{ card.setPointerCapture(deckDrag.pid); }catch(_){}
+      if(navigator.vibrate) navigator.vibrate(15);
+    },300);
+  });
+  list.addEventListener('pointermove',function(e){
+    if(!deckDrag.el) return;
+    if(!deckDrag.dragging){
+      // 드래그 시작 전 많이 움직이면 스크롤로 간주하고 취소
+      if(Math.abs(e.clientX-deckDrag.sx)>10||Math.abs(e.clientY-deckDrag.sy)>10){ clearTimeout(deckDrag.timer); deckDrag.el=null; }
+      return;
+    }
+    e.preventDefault();
+    let y=e.clientY;
+    let others=[...list.querySelectorAll('.deck-card:not(.deck-dragging)')];
+    let after=null;
+    for(let c of others){ let r=c.getBoundingClientRect(); if(y<r.top+r.height/2){ after=c; break; } }
+    if(after) list.insertBefore(deckDrag.el,after); else list.appendChild(deckDrag.el);
+  });
+  list.addEventListener('pointerup',function(){ deckEndDrag(true); });
+  list.addEventListener('pointercancel',function(){ deckEndDrag(false); });
+})();
 
 render();
 renderDeckPanel();
