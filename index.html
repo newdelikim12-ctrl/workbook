@@ -451,6 +451,8 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .ls-row.result-correct{border-color:var(--accent)}
 .ls-row.result-wrong{border-color:#ff6b9d}
 .ls-row .speakable{color:var(--text-main)}
+/* 목록학습의 뜻은 전역 body.hide-mean이 아니라 로컬 ls-hideMean만 따르도록 분리 */
+#lsList .kor-mean{filter:none;background:transparent;padding:0}
 #lsList.ls-hideMean .kor-mean{filter:blur(6px);cursor:pointer;user-select:none;background:rgba(124,156,255,.07);border-radius:6px;padding:0 6px}
 #lsList.ls-hideMean .kor-mean.peek{filter:none;background:transparent}
 .ls-chips{display:flex;gap:6px}
@@ -760,7 +762,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-06-30.1'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-06-30.2'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
