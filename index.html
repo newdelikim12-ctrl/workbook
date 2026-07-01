@@ -433,8 +433,8 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
   width:1.5px;background:var(--input-border);align-self:stretch;
 }
 /* 학습 탭 상단 단어장 선택 바 */
-#recentDecksBar{scrollbar-width:none;-webkit-overflow-scrolling:touch}
-#recentDecksBar::-webkit-scrollbar{display:none}
+#recentDecksBar,#lsDeckBar{scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#recentDecksBar::-webkit-scrollbar,#lsDeckBar::-webkit-scrollbar{display:none}
 .deckbar-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;box-shadow:none;white-space:nowrap;transition:background .15s,color .15s}
 .deckbar-chip:hover{background:var(--li-bg-hover);filter:none;transform:none;box-shadow:none}
 .deckbar-chip.on{background:linear-gradient(135deg,var(--accent),#b48cff);color:#fff;border-color:transparent;box-shadow:0 3px 12px rgba(124,156,255,.45)}
@@ -745,6 +745,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 
 <div id="listStudyView" style="display:none">
   <div id="lsHeader">
+    <div id="lsDeckBar" style="display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;padding:0 2px 6px;scroll-behavior:smooth"></div>
     <div class="ls-title">
       <span class="ls-deckname">📜 <span id="lsDeckName">목록학습</span></span>
       <span class="ls-prog" id="lsProg">0 / 0</span>
@@ -785,7 +786,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-02.2'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-02.3'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -823,16 +824,18 @@ function pushRecentDeck(id){
   if(recentDeckIds.length>3) recentDeckIds=recentDeckIds.slice(0,3);
 }
 function renderRecentDecks(){
-  let bar=document.getElementById('recentDecksBar');
-  if(!bar) return;
   // 모든 단어장을 가로로 나열, 현재 단어장 강조 (좌우로 넘기며 탭해서 선택)
-  bar.innerHTML=decks.map(d=>{
+  let html=decks.map(d=>{
     let active=d.id===activeDeckId;
     return '<button class="deckbar-chip'+(active?' on':'')+'" data-id="'+escapeHtml(d.id)+'" onclick="switchDeck(\''+escapeHtml(d.id)+'\')">📚 '+escapeHtml(d.name)+'</button>';
   }).join('');
-  // 현재 단어장이 보이도록 가로 스크롤 이동
-  let on=bar.querySelector('.deckbar-chip.on');
-  if(on) try{ on.scrollIntoView({inline:'center',block:'nearest'}); }catch(_){ }
+  ['recentDecksBar','lsDeckBar'].forEach(id=>{
+    let bar=document.getElementById(id);
+    if(!bar) return;
+    bar.innerHTML=html;
+    let on=bar.querySelector('.deckbar-chip.on');
+    if(on) try{ on.scrollIntoView({inline:'center',block:'nearest'}); }catch(_){ }
+  });
 }
 function saveDeckData(){ let d=decks.find(x=>x.id===activeDeckId); if(d){d.words=words;d.stats=stats;d.dupes=dupes;} saveDecks(); }
 function saveStats(){ saveDeckData(); }
@@ -2273,7 +2276,7 @@ function lsRowHtml(w,i){
   </li>`;
 }
 
-function switchDeck(id){
+function switchDeck(id,targetTab){
   saveDeckData();
   activeDeckId = id;
   let d = decks.find(x=>x.id===id) || decks[0];
@@ -2297,7 +2300,8 @@ function switchDeck(id){
   document.getElementById('back').innerText='카드를 클릭하면 뜻이 표시됩니다';
   card.classList.remove('revealed');
   showCardActions();
-  showTab('study');
+  // 단어장 바에서 고르면 현재 탭 유지, 단어장 관리에서 고르면 학습으로 이동
+  showTab(targetTab || localStorage.getItem('activeTab') || 'study');
   showToast('📚 '+d.name);
 }
 
@@ -2306,7 +2310,7 @@ function createDeck(){
   if(!name||!name.trim()) return;
   let d={id:'deck_'+Date.now(),name:name.trim(),words:[],stats:{},dupes:[]};
   decks.push(d);
-  switchDeck(d.id);
+  switchDeck(d.id,'study');
 }
 
 function renameDeck(id){
@@ -2316,6 +2320,7 @@ function renameDeck(id){
   d.name=name.trim();
   saveDecks();
   renderDeckPanel();
+  renderRecentDecks();
   showToast('이름을 변경했어요');
 }
 
@@ -2325,7 +2330,7 @@ function deleteDeck(id){
   if(!confirm((d?d.name:'단어장')+'을(를) 삭제할까요? 안에 있는 단어도 모두 사라져요')) return;
   decks=decks.filter(x=>x.id!==id);
   if(activeDeckId===id) switchDeck(decks[0].id);
-  else { saveDecks(); renderDeckPanel(); }
+  else { saveDecks(); renderDeckPanel(); renderRecentDecks(); }
   showToast('단어장을 삭제했어요');
 }
 
@@ -2383,7 +2388,7 @@ function renderDeckPanel(){
 
 // ===== 단어장 길게눌러 드래그로 순서 변경 =====
 let deckDrag={el:null,timer:null,pid:null,sx:0,sy:0,dragging:false,suppress:false};
-function deckCardClick(id){ if(deckDrag.suppress) return; switchDeck(id); }
+function deckCardClick(id){ if(deckDrag.suppress) return; switchDeck(id,'study'); }
 function deckEndDrag(commit){
   clearTimeout(deckDrag.timer);
   if(deckDrag.el){
