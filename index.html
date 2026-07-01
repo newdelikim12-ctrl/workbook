@@ -786,7 +786,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-02.3'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-02.4'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -1049,14 +1049,15 @@ if(p.length<2) return;
 let eng=p[0].trim();
 let kor=(p[1]||'').trim();
 let example=(p[2]||'').trim();
-// 첫 번째 줄이 명백한 헤더(예: 영어/단어/뜻/한글/meaning 등)면 건너뜀
-if(idx===0){
-let h1=eng.toLowerCase(), h2=(p[1]||'').trim().toLowerCase();
-let headerWords=['영어','단어','english','word','뜻','한글','의미','meaning','korean'];
-if(headerWords.includes(h1) || headerWords.includes(h2)) return;
-}
 if(eng==='' || !kor) return;
-let engL=eng.toLowerCase();
+let engL=eng.toLowerCase(), korL=kor.toLowerCase();
+// 헤더 행 걸러내기(제목이 먼저 오면 헤더가 0번째가 아닐 수 있어 모든 행에서 검사)
+// 영어열·뜻열 둘 다 머릿말일 때만 헤더로 간주 → "word/단어" 같은 실제 단어는 유지
+let engHeaders=['영어','단어','english','word','vocabulary','vocab','no','번호','index','단어장'];
+let korHeaders=['뜻','한글','의미','meaning','korean','definition','해석'];
+if(engHeaders.includes(engL) && korHeaders.includes(korL)) return;
+// 시트명이 그대로 단어로 들어오는 제목 행 걸러내기
+if(engL===label.trim().toLowerCase()) return;
 let ex=words.find(w=>w.eng.toLowerCase()===engL);
 if(ex){
 if(seen.has(engL)){
@@ -1096,7 +1097,14 @@ e.n++;
 saveDupes();
 }
 function removeDupe(i){ dupes.splice(i,1); saveDupes(); render(); }
-function clearDupes(){ if(!dupes.length) return; if(!confirm('중복 단어 기록을 모두 지울까요?')) return; dupes=[]; saveDupes(); render(); showToast('중복 기록을 지웠어요'); }
+function clearDupes(){
+  let hasSrc=words.some(w=>w.src);
+  if(!dupes.length && !hasSrc) return showToast('초기화할 기록이 없어요');
+  if(!confirm('중복 기록과 시트 출처 기록을 초기화할까요?\n\n삭제한 세부 시트 때문에 잘못 잡히는 중복을 없애고, 다음에 시트를 불러올 때 새로 판단하게 합니다. (단어·학습기록은 그대로 유지)')) return;
+  dupes=[];
+  words.forEach(w=>{ delete w.src; }); // 출처 기록 초기화 → 삭제된 시트와의 과거 중복 해소
+  saveDupes(); render(); showToast('중복·출처 기록을 초기화했어요 🔄');
+}
 function renderDupes(){
 let box=document.getElementById('dupesList'); if(!box) return;
 let sq=(document.getElementById('dupesSearch')||{}).value||'';
