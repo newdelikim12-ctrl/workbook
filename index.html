@@ -16,6 +16,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 *{box-sizing:border-box}
+.ic{width:1.1em;height:1.1em;vertical-align:-.18em;flex-shrink:0}
+.ico .ic{width:1em;height:1em;vertical-align:-.12em}
 :root{
   --bg-grad-1:#eceef2;
   --bg-grad-2:#e7e9ee;
@@ -518,8 +520,8 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <div id="studyView">
 <div class="container">
 <div class="row" style="justify-content:flex-end;margin-bottom:14px">
-<button class="small" onclick="toggleSound()" id="soundBtn">🔊 소리 켜짐</button>
-<button class="small" onclick="toggleDark()" id="darkBtn">🌙 다크모드</button>
+<button class="small" onclick="toggleSound()" id="soundBtn">소리 켜짐</button>
+<button class="small" onclick="toggleDark()" id="darkBtn">다크모드</button>
 </div>
 <h2>민복이와 도형이의 영어 단어 연습장</h2>
 <div id="recentDecksBar" style="display:flex;flex-wrap:nowrap;gap:8px;margin-top:8px;margin-bottom:2px;min-height:36px;overflow-x:auto;padding:3px 2px 6px;scroll-behavior:smooth"></div>
@@ -552,13 +554,13 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 </div>
 
 <div class="modes">
-<button onclick="randomMode('all')"><span class="ico">🎲</span><span class="lbl">랜덤 단어</span></button>
-<button onclick="randomMode('wrong')"><span class="ico">❌</span><span class="lbl">오답노트</span></button>
-<button onclick="toggleBothMode()" id="bothModeBtn"><span class="ico">👁</span><span class="lbl">영+한 보기</span></button>
+<button onclick="randomMode('all')"><span class="ico"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></span><span class="lbl">랜덤 단어</span></button>
+<button onclick="randomMode('wrong')"><span class="ico"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span><span class="lbl">오답노트</span></button>
+<button onclick="toggleBothMode()" id="bothModeBtn"><span class="ico"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><span class="lbl">영+한 보기</span></button>
 </div>
 
 <div class="flashcard" id="card" onclick="cardClick()">
-<button id="cardDirBtn" onclick="event.stopPropagation();toggleCardDir()" title="영어/한글 먼저 보기 전환">🔄 <span class="lbl">영→한</span></button>
+<button id="cardDirBtn" onclick="event.stopPropagation();toggleCardDir()" title="영어/한글 먼저 보기 전환"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> <span class="lbl">영→한</span></button>
 <div id="front">단어를 선택하세요</div>
 <div id="back">뜻</div>
 <div id="cardExample" style="display:none;margin-top:10px;font-size:13px;font-style:italic;color:rgba(255,255,255,.65);line-height:1.5;text-align:center"></div>
@@ -614,23 +616,23 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button onclick="toggleDrawBoard()" id="drawBoardBtn" style="width:100%;margin-top:8px;padding:8px;font-size:13px;background:var(--h3-bg);color:var(--text-main);box-shadow:none;border-radius:12px;border:1.5px solid var(--input-border)">✏️ 칠판 열기</button>
 
 <div class="progress-wrap">
-<div class="progress-label" style="position:relative;display:flex;justify-content:center;align-items:center"><span style="display:inline-block;padding:0 56px">📖 학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</span><button onclick="resetProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
+<div class="progress-label" style="position:relative;display:flex;justify-content:center;align-items:center"><span style="display:inline-block;padding:0 56px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> 학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</span><button onclick="resetProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
 <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-<div class="progress-label" style="margin-top:12px;position:relative;display:flex;justify-content:center;align-items:center"><span style="display:inline-block;padding:0 56px">❌ 오답 학습률: <b id="wrongProgressText">0 / 0</b> (<span id="wrongProgressPct">0%</span>)</span><button onclick="resetWrongProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
+<div class="progress-label" style="margin-top:12px;position:relative;display:flex;justify-content:center;align-items:center"><span style="display:inline-block;padding:0 56px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> 오답 학습률: <b id="wrongProgressText">0 / 0</b> (<span id="wrongProgressPct">0%</span>)</span><button onclick="resetWrongProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
 <div class="progress-bar"><div class="progress-fill" id="wrongProgressFill" style="background:linear-gradient(90deg,#a85f6b,#c08a80)"></div></div>
 </div>
 
 <div class="quiz-toggle-row">
 <span class="label">🧩 객관식 퀴즈 모드</span>
 <div class="quiz-modes">
-<button class="qmode" data-m="off" onclick="setQuizMode('off')">📖 카드</button>
+<button class="qmode" data-m="off" onclick="setQuizMode('off')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> 카드</button>
 <button class="qmode" data-m="e2k" onclick="setQuizMode('e2k')">영어</button>
 <button class="qmode" data-m="k2e" onclick="setQuizMode('k2e')">한글</button>
-<button class="qmode" data-m="random" onclick="setQuizMode('random')">🎲 랜덤</button>
+<button class="qmode" data-m="random" onclick="setQuizMode('random')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> 랜덤</button>
 </div>
 </div>
 
-<h3 onclick="toggle('allWords',this)"><span>📖 전체 단어 <b id="cntAll" class="cnt"></b></span></h3>
+<h3 onclick="toggle('allWords',this)"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> 전체 단어 <b id="cntAll" class="cnt"></b></span></h3>
 <div id="allWords" class="section-content">
 <div class="row" style="margin-top:10px">
 <button class="small" style="flex:1;min-width:120px" onclick="bulkMaster(true)">✅ 전부 학습 완료</button>
@@ -643,7 +645,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 </div>
 <button class="danger small" onclick="clearAllWords()">🗑 전체 삭제</button>
 </div>
-<div class="row" style="margin-top:8px"><button class="small mean-toggle" style="flex:1" onclick="toggleMeaning()">🙈 뜻 가리기</button></div>
+<div class="row" style="margin-top:8px"><button class="small mean-toggle" style="flex:1" onclick="toggleMeaning()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> 뜻 가리기</button></div>
 <div id="allWordsList"></div>
 <div class="list-scroll-btns">
   <button onclick="document.getElementById('allWordsList').scrollBy({top:-200,behavior:'smooth'})">▲ 위</button>
@@ -652,7 +654,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button class="fold-btn" onclick="closeSection('allWords')">∧ 접기</button>
 </div>
 
-<h3 onclick="toggle('wrongs',this)"><span>❌ 오답노트 <b id="cntWrong" class="cnt"></b></span></h3>
+<h3 onclick="toggle('wrongs',this)"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> 오답노트 <b id="cntWrong" class="cnt"></b></span></h3>
 <div id="wrongs" class="section-content">
 <div class="row" style="margin-top:10px">
 <button class="small" style="flex:1;min-width:120px" onclick="bulkWrong('correct')">⭕ 전부 외웠어요</button>
@@ -665,7 +667,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 </div>
 <button class="danger small" onclick="clearWrongs()">🗑 전체 삭제</button>
 </div>
-<div class="row" style="margin-top:8px"><button class="small mean-toggle" style="flex:1" onclick="toggleMeaning()">🙈 뜻 가리기</button></div>
+<div class="row" style="margin-top:8px"><button class="small mean-toggle" style="flex:1" onclick="toggleMeaning()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> 뜻 가리기</button></div>
 <div id="wrongsList"></div>
 <div class="list-scroll-btns">
   <button onclick="document.getElementById('wrongsList').scrollBy({top:-200,behavior:'smooth'})">▲ 위</button>
@@ -674,7 +676,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button class="fold-btn" onclick="closeSection('wrongs')">∧ 접기</button>
 </div>
 
-<h3 onclick="toggle('mastered',this)"><span>✅ 학습 완료 <b id="cntMastered" class="cnt"></b></span></h3>
+<h3 onclick="toggle('mastered',this)"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 학습 완료 <b id="cntMastered" class="cnt"></b></span></h3>
 <div id="mastered" class="section-content">
 <div class="row" style="margin-top:10px">
 <div class="input-clear">
@@ -683,7 +685,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 </div>
 <button class="danger small" onclick="clearMastered()">↩️ 전체 학습취소</button>
 </div>
-<div class="row" style="margin-top:8px"><button class="small mean-toggle" style="flex:1" onclick="toggleMeaning()">🙈 뜻 가리기</button></div>
+<div class="row" style="margin-top:8px"><button class="small mean-toggle" style="flex:1" onclick="toggleMeaning()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> 뜻 가리기</button></div>
 <div id="masteredList"></div>
 <div class="list-scroll-btns">
   <button onclick="document.getElementById('masteredList').scrollBy({top:-200,behavior:'smooth'})">▲ 위</button>
@@ -692,7 +694,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button class="fold-btn" onclick="closeSection('mastered')">∧ 접기</button>
 </div>
 
-<h3 onclick="toggle('dupeBox',this)"><span>🔁 중복 단어 <b id="cntDupes" class="cnt"></b></span></h3>
+<h3 onclick="toggle('dupeBox',this)"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> 중복 단어 <b id="cntDupes" class="cnt"></b></span></h3>
 <div id="dupeBox" class="section-content">
 <p style="color:var(--muted);font-size:13px;margin:10px 0 6px">여러 시트에 겹쳐서 불러와진 영단어예요. 시트에서 하나만 남기고 지우면 깔끔해요.</p>
 <div class="row" style="margin-top:8px">
@@ -710,7 +712,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button class="fold-btn" onclick="closeSection('dupeBox')">∧ 접기</button>
 </div>
 
-<h3 onclick="toggle('addWord',this);ensureBulkRows()"><span>➕ 단어 추가</span></h3>
+<h3 onclick="toggle('addWord',this);ensureBulkRows()"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 단어 추가</span></h3>
 <div id="addWord" class="section-content">
 <div style="margin-top:12px">
   <div style="color:var(--text-title);font-weight:800;font-size:13px;margin-bottom:8px">단일 추가</div>
@@ -733,7 +735,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 </div>
 </div>
 
-<h3 onclick="toggle('backup',this)"><span>💾 데이터 백업</span></h3>
+<h3 onclick="toggle('backup',this)"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> 데이터 백업</span></h3>
 <div id="backup" class="section-content">
 <p style="color:var(--muted);font-size:13px;margin:10px 0 6px">단어는 이 브라우저에만 저장됩니다. 기록을 지우거나 기기를 바꾸기 전에 백업하세요.</p>
 <div class="row">
@@ -747,7 +749,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 </div>
 
 <div id="deckPanel" style="display:none;padding:16px 16px 16px;max-width:480px;margin:0 auto">
-  <h2 style="font-weight:800;font-size:20px;letter-spacing:-.3px;margin-bottom:16px">📚 내 단어장</h2>
+  <h2 style="font-weight:800;font-size:20px;letter-spacing:-.3px;margin-bottom:16px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> 내 단어장</h2>
   <div id="deckList"></div>
   <button onclick="createDeck()" style="width:100%;margin-top:12px;padding:14px;font-size:15px;border-radius:16px">＋ 새 단어장 만들기</button>
 </div>
@@ -756,7 +758,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
   <div id="lsHeader">
     <div id="lsDeckBar" style="display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;padding:0 2px 6px;scroll-behavior:smooth"></div>
     <div class="ls-title">
-      <span class="ls-deckname">📜 <span id="lsDeckName">목록학습</span></span>
+      <span class="ls-deckname"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> <span id="lsDeckName">목록학습</span></span>
       <span class="ls-prog" id="lsProg">0 / 0</span>
     </div>
     <div class="progress-bar"><div class="progress-fill" id="lsProgFill"></div></div>
@@ -765,10 +767,10 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
       <button class="clear-x" onclick="clearInput('lsSearch');renderListStudy()" aria-label="지우기">✕</button>
     </div>
     <div class="ls-chips">
-      <button class="ls-chip on" id="lsChipAll" onclick="lsSetFilter('all')">📚 전체<span class="ls-c" id="lsCntAll">0</span></button>
-      <button class="ls-chip" id="lsChipUnlearned" onclick="lsSetFilter('unlearned')">🆕 안외움<span class="ls-c" id="lsCntUnlearned">0</span></button>
-      <button class="ls-chip" id="lsChipWrong" onclick="lsSetFilter('wrong')">❌ 오답<span class="ls-c" id="lsCntWrong">0</span></button>
-      <button class="ls-chip" id="lsChipMastered" onclick="lsSetFilter('mastered')">✅ 완료<span class="ls-c" id="lsCntMastered">0</span></button>
+      <button class="ls-chip on" id="lsChipAll" onclick="lsSetFilter('all')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> 전체<span class="ls-c" id="lsCntAll">0</span></button>
+      <button class="ls-chip" id="lsChipUnlearned" onclick="lsSetFilter('unlearned')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg> 안외움<span class="ls-c" id="lsCntUnlearned">0</span></button>
+      <button class="ls-chip" id="lsChipWrong" onclick="lsSetFilter('wrong')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> 오답<span class="ls-c" id="lsCntWrong">0</span></button>
+      <button class="ls-chip" id="lsChipMastered" onclick="lsSetFilter('mastered')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 완료<span class="ls-c" id="lsCntMastered">0</span></button>
     </div>
     <div class="ls-jump" id="lsJump"></div>
     <div class="ls-bulk">
@@ -776,7 +778,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
       <button class="small" onclick="lsBulk('unmaster')">⬜ 전체 학습취소</button>
       <button class="small" id="lsBulkClearWrong" onclick="lsBulk('clearWrong')" style="display:none">🧹 전체 오답해제</button>
     </div>
-    <button class="small" id="lsEyeBtn" style="width:100%" onclick="lsToggleHideAll()">👁 전체 뜻 보이기</button>
+    <button class="small" id="lsEyeBtn" style="width:100%" onclick="lsToggleHideAll()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 전체 뜻 보이기</button>
   </div>
   <div id="lsList" class="ls-hideMean"></div>
 </div>
@@ -784,18 +786,20 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button class="ls-scrollbottom" id="lsScrollBottom" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})" aria-label="맨 아래로">▼</button>
 
 <div id="tabBar">
-  <button id="tabStudy" class="tab-btn tab-active" onclick="showTab('study')"><span class="ico">📖</span>학습</button>
+  <button id="tabStudy" class="tab-btn tab-active" onclick="showTab('study')"><span class="ico"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>학습</button>
   <div class="tab-divider"></div>
-  <button id="tabList" class="tab-btn" onclick="showTab('list')"><span class="ico">📜</span>목록학습</button>
+  <button id="tabList" class="tab-btn" onclick="showTab('list')"><span class="ico"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>목록학습</button>
   <div class="tab-divider"></div>
-  <button id="tabDecks" class="tab-btn" onclick="showTab('decks')"><span class="ico">📚</span>단어장</button>
+  <button id="tabDecks" class="tab-btn" onclick="showTab('decks')"><span class="ico"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span>단어장</button>
 </div>
 
 <div id="toast" class="toast"></div>
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-02.9'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-02.10'; // 배포할 때마다 올려주세요
+const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
+function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -836,7 +840,7 @@ function renderRecentDecks(){
   // 모든 단어장을 가로로 나열, 현재 단어장 강조 (좌우로 넘기며 탭해서 선택)
   let html=decks.map(d=>{
     let active=d.id===activeDeckId;
-    return '<button class="deckbar-chip'+(active?' on':'')+'" data-id="'+escapeHtml(d.id)+'" onclick="switchDeck(\''+escapeHtml(d.id)+'\')">📚 '+escapeHtml(d.name)+'</button>';
+    return '<button class="deckbar-chip'+(active?' on':'')+'" data-id="'+escapeHtml(d.id)+'" onclick="switchDeck(\''+escapeHtml(d.id)+'\')">'+icon('layers')+' '+escapeHtml(d.name)+'</button>';
   }).join('');
   ['recentDecksBar','lsDeckBar'].forEach(id=>{
     let bar=document.getElementById(id);
@@ -918,7 +922,7 @@ case 'toggle':   tone(500,0,0.06,'square',0.07); break;
 }
 function updateSoundBtn(){
 let b=document.getElementById('soundBtn');
-if(b) b.innerText=soundOn?'🔊 소리 켜짐':'🔇 소리 꺼짐';
+if(b) b.innerHTML=soundOn?icon('vol')+' 소리 켜짐':icon('volx')+' 소리 꺼짐';
 }
 function toggleSound(){
 soundOn=!soundOn;
@@ -939,7 +943,7 @@ applyTheme(document.body.classList.contains('dark'));
 updateDarkBtn();
 }
 function updateDarkBtn(){
-document.getElementById('darkBtn').innerText=document.body.classList.contains('dark')?'☀️ 라이트모드':'🌙 다크모드';
+document.getElementById('darkBtn').innerHTML=document.body.classList.contains('dark')?icon('sun')+' 라이트모드':icon('moon')+' 다크모드';
 }
 if(localStorage.getItem('darkMode')==='1') document.body.classList.add('dark');
 applyTheme(document.body.classList.contains('dark'));
@@ -1524,7 +1528,7 @@ let lsPeeked=new Set(); // 목록학습에서 개별로 뜻을 펼쳐둔 단어 
 function applyMeaningHidden(){
 document.body.classList.toggle('hide-mean',meaningHidden);
 document.querySelectorAll('.mean-toggle').forEach(b=>{
-b.textContent=meaningHidden?'👁 뜻 보이기':'🙈 뜻 가리기';
+b.innerHTML=meaningHidden?icon('eye')+' 뜻 보이기':icon('eyeoff')+' 뜻 가리기';
 });
 }
 function toggleMeaning(){
@@ -2224,7 +2228,7 @@ function lsToggleHideAll(){
   // 전체 토글 시 개별로 펼쳐둔 기록 초기화
   lsPeeked.clear();
   box.querySelectorAll('.kor-mean.peek').forEach(s=>s.classList.remove('peek'));
-  if(btn) btn.textContent=nowHidden?'👁 전체 뜻 보이기':'🙈 뜻 가리기';
+  if(btn) btn.innerHTML=nowHidden?icon('eye')+' 전체 뜻 보이기':icon('eyeoff')+' 뜻 가리기';
 }
 function renderListStudy(){
   let view=document.getElementById('listStudyView');
