@@ -132,16 +132,16 @@ textarea{width:100%;height:92px;resize:vertical;font-family:inherit;line-height:
 
 button{
   padding:11px 18px;border:none;border-radius:14px;
-  background:linear-gradient(135deg,#5266d8,#4353b8);
+  background:linear-gradient(135deg,#5b6796,#4c5680);
   color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:.18s;
   font-family:'Pretendard Variable',Pretendard,-apple-system,'Malgun Gothic',sans-serif;
-  box-shadow:0 4px 12px rgba(82,102,216,.25);
+  box-shadow:0 4px 12px rgba(76,86,128,.2);
 }
-button:hover{filter:brightness(1.05);transform:translateY(-2px);box-shadow:0 7px 18px rgba(82,102,216,.3)}
-@media (hover:none){button:hover{transform:none;box-shadow:0 4px 12px rgba(82,102,216,.25);filter:none}}
-button:active{transform:translateY(0);box-shadow:0 3px 8px rgba(82,102,216,.25)}
-button.danger{background:linear-gradient(135deg,#d4576a,#b8465a);box-shadow:0 4px 12px rgba(184,70,90,.28)}
-button.danger:hover{box-shadow:0 7px 18px rgba(184,70,90,.35)}
+button:hover{filter:brightness(1.05);transform:translateY(-2px);box-shadow:0 7px 18px rgba(76,86,128,.22)}
+@media (hover:none){button:hover{transform:none;box-shadow:0 4px 12px rgba(76,86,128,.2);filter:none}}
+button:active{transform:translateY(0);box-shadow:0 3px 8px rgba(76,86,128,.2)}
+button.danger{background:linear-gradient(135deg,#a85f6b,#92505c);box-shadow:0 4px 12px rgba(146,80,92,.22)}
+button.danger:hover{box-shadow:0 7px 18px rgba(146,80,92,.28)}
 button.small{padding:8px 12px;font-size:13px;border-radius:11px}
 
 input[type=file]{
@@ -161,7 +161,7 @@ input[type=file]::file-selector-button{
   margin-top:18px;
   min-height:225px;
   cursor:pointer;
-  background:linear-gradient(135deg,var(--card-grad-1) 0%,var(--card-grad-2) 60%,#414960 100%);
+  background:linear-gradient(150deg,#232833 0%,#2b3140 55%,#3a4258 100%);
   border-radius:24px;
   display:flex;
   flex-direction:column;
@@ -170,7 +170,7 @@ input[type=file]::file-selector-button{
   padding:42px;
   text-align:center;
   color:#fff;
-  box-shadow:0 12px 32px rgba(34,38,46,.35);
+  box-shadow:0 18px 44px rgba(20,24,32,.45);
   transition:.25s cubic-bezier(.2,.8,.3,1);
   position:relative;
   overflow:hidden;
@@ -223,7 +223,7 @@ input[type=file]::file-selector-button{
 }
 .progress-fill{
   height:100%;border-radius:8px;
-  background:linear-gradient(90deg,#5266d8,#7484e4);
+  background:linear-gradient(90deg,#5b6796,#7f8ab5);
   width:0%;transition:width .45s cubic-bezier(.2,.8,.3,1);
 }
 
@@ -257,7 +257,7 @@ li input{flex:1;min-width:90px;font-size:14px}
 .wl-row .wl-num{width:40px;height:26px;flex:0 0 40px;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;background:rgba(82,102,216,.12);color:var(--accent);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
 .wl-row .wl-eng{flex:1 1 auto;min-width:0;text-align:left;word-break:break-word;color:var(--text-main)}
 .wl-row .wl-kor{flex:0 0 auto;max-width:46%;text-align:right;font-weight:600;color:var(--text-main);word-break:keep-all}
-.wl-row .speakable{color:var(--text-main);border-bottom-color:rgba(82,102,216,.35)}
+.wl-row .speakable{color:var(--text-main);border-bottom-color:rgba(76,86,128,.25)}
 /* 뜻 가리기(전역 toggleMeaning)가 메인 목록 뜻에도 적용되도록 */
 body.hide-mean .wl-kor{filter:blur(6px);cursor:pointer;user-select:none;background:rgba(82,102,216,.08);border-radius:6px;padding:0 6px}
 body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
@@ -398,8 +398,8 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 }
 .quiz-opt.correct .num{background:rgba(255,255,255,.25);color:#fff}
 .quiz-opt.wrong{
-  background:linear-gradient(135deg,#d4576a,#b8465a);color:#fff;border-color:transparent;
-  box-shadow:0 6px 18px rgba(184,70,90,.35);
+  background:linear-gradient(135deg,#a85f6b,#92505c);color:#fff;border-color:transparent;
+  box-shadow:0 6px 18px rgba(146,80,92,.28);
 }
 .quiz-opt.wrong .num{background:rgba(255,255,255,.25);color:#fff}
 .quiz-opt.dim{opacity:.45}
@@ -446,7 +446,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 #recentDecksBar::-webkit-scrollbar,#lsDeckBar::-webkit-scrollbar{display:none}
 .deckbar-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;box-shadow:none;white-space:nowrap;transition:background .15s,color .15s}
 .deckbar-chip:hover{background:var(--li-bg-hover);filter:none;transform:none;box-shadow:none}
-.deckbar-chip.on{background:linear-gradient(135deg,#5266d8,#4353b8);color:#fff;border-color:transparent;box-shadow:0 3px 12px rgba(82,102,216,.35)}
+.deckbar-chip.on{background:linear-gradient(135deg,#5b6796,#4c5680);color:#fff;border-color:transparent;box-shadow:0 3px 12px rgba(76,86,128,.25)}
 /* Deck panel cards */
 .deck-card{
   background:var(--li-bg);border:1.5px solid var(--input-border);
@@ -456,7 +456,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 }
 .deck-card *{ -webkit-user-select:none;user-select:none;-webkit-touch-callout:none; }
 .deck-card:active{transform:scale(.98)}
-.deck-card.deck-dragging{touch-action:none;opacity:.97;box-shadow:0 16px 36px rgba(82,102,216,.4);border-color:var(--accent);position:relative;z-index:10;cursor:grabbing;transition:none}
+.deck-card.deck-dragging{touch-action:none;opacity:.97;box-shadow:0 16px 36px rgba(76,86,128,.3);border-color:var(--accent);position:relative;z-index:10;cursor:grabbing;transition:none}
 .deck-active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(82,102,216,.18)}
 .deck-card-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .deck-name{font-size:16px;font-weight:700;color:var(--text-title);font-weight:800;display:flex;align-items:center;min-width:0}
@@ -500,16 +500,16 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .ls-bulk{display:flex;gap:6px;flex-wrap:wrap}
 .ls-bulk button{flex:1 1 30%;min-width:0;padding:8px 4px;font-size:12px;white-space:nowrap;box-shadow:none}
 .ls-empty{text-align:center;color:var(--muted);padding:48px 16px;font-size:15px;line-height:1.7}
-.ls-scrolltop,.ls-scrollbottom{position:fixed;right:10px;z-index:50;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#5266d8,#4353b8);color:#fff;border:none;font-size:13px;box-shadow:0 3px 10px rgba(82,102,216,.3);cursor:pointer;display:none;padding:0;opacity:.85}
+.ls-scrolltop,.ls-scrollbottom{position:fixed;right:10px;z-index:50;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#5b6796,#4c5680);color:#fff;border:none;font-size:13px;box-shadow:0 3px 10px rgba(76,86,128,.22);cursor:pointer;display:none;padding:0;opacity:.85}
 .ls-scrolltop{bottom:52px}
 .ls-scrollbottom{bottom:12px}
 .ls-scrolltop.show,.ls-scrollbottom.show{display:block}
 /* 업데이트 배너 */
 #updateBanner{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-80px);z-index:9999;
   padding:11px 20px;border-radius:999px;border:none;cursor:pointer;
-  background:linear-gradient(135deg,#5266d8,#4353b8);color:#fff;
+  background:linear-gradient(135deg,#5b6796,#4c5680);color:#fff;
   font-size:14px;font-weight:700;letter-spacing:.01em;white-space:nowrap;
-  box-shadow:0 8px 24px rgba(82,102,216,.4);opacity:0;pointer-events:none;
+  box-shadow:0 8px 24px rgba(76,86,128,.3);opacity:0;pointer-events:none;
   transition:transform .3s cubic-bezier(.2,.8,.3,1),opacity .3s}
 #updateBanner.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
 </style>
@@ -617,7 +617,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <div class="progress-label" style="position:relative;display:flex;justify-content:center;align-items:center"><span style="display:inline-block;padding:0 56px">📖 학습 진도율: <b id="progressText">0 / 0</b> (<span id="progressPct">0%</span>)</span><button onclick="resetProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
 <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 <div class="progress-label" style="margin-top:12px;position:relative;display:flex;justify-content:center;align-items:center"><span style="display:inline-block;padding:0 56px">❌ 오답 학습률: <b id="wrongProgressText">0 / 0</b> (<span id="wrongProgressPct">0%</span>)</span><button onclick="resetWrongProgress()" class="small" style="box-shadow:none;padding:4px 16px;position:absolute;right:0;top:50%;transform:translateY(-50%)">리셋</button></div>
-<div class="progress-bar"><div class="progress-fill" id="wrongProgressFill" style="background:linear-gradient(90deg,#d4576a,#e08a76)"></div></div>
+<div class="progress-bar"><div class="progress-fill" id="wrongProgressFill" style="background:linear-gradient(90deg,#a85f6b,#c08a80)"></div></div>
 </div>
 
 <div class="quiz-toggle-row">
@@ -795,7 +795,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-02.8'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-02.9'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -1266,7 +1266,7 @@ html+='<div style="color:var(--text-title);font-weight:800;font-size:13px;margin
 html+='<div style="display:flex;flex-wrap:wrap;gap:8px">';
 html+=detectedTabs.map(function(t,i){
 let active=urlGid&&urlGid===t.gid;
-return '<button class="small" onclick="importSheetTab('+i+')" style="'+(active?'background:linear-gradient(135deg,#5266d8,#4353b8);color:#fff;':'')+'">📄 '+escapeHtml(t.name)+'</button>';
+return '<button class="small" onclick="importSheetTab('+i+')" style="'+(active?'background:linear-gradient(135deg,#5b6796,#4c5680);color:#fff;':'')+'">📄 '+escapeHtml(t.name)+'</button>';
 }).join('');
 html+='</div>';
 }else{
@@ -1620,9 +1620,9 @@ let w=words[currentIndex];
 let wb=document.getElementById('cardWrongBtn');
 if(w.wrong){
 wb.textContent='✅ 오답해제';
-wb.style.background='linear-gradient(135deg,#d4576a,#b8465a)';
+wb.style.background='linear-gradient(135deg,#a85f6b,#92505c)';
 wb.style.color='#fff';
-wb.style.boxShadow='0 4px 12px rgba(184,70,90,.35)';
+wb.style.boxShadow='0 4px 12px rgba(146,80,92,.28)';
 }else{
 wb.textContent='❌ 오답등록';
 wb.style.background='';
