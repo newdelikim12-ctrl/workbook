@@ -813,7 +813,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-02.15'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-02.16'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -1541,6 +1541,7 @@ else{b.style.background='';b.style.color='';}
 let meaningHidden=localStorage.getItem('meaningHidden')==='1';
 let lsFilter=localStorage.getItem('lsFilter')||'all'; // 목록학습 필터: all|unlearned|wrong|mastered
 let lsPeeked=new Set(); // 목록학습에서 개별로 뜻을 펼쳐둔 단어 인덱스(재렌더 후에도 유지)
+let lsEditIndex=-1; // 목록학습(전체 필터)에서 수정 중인 단어 인덱스
 function applyMeaningHidden(){
 document.body.classList.toggle('hide-mean',meaningHidden);
 document.querySelectorAll('.mean-toggle').forEach(b=>{
@@ -2310,6 +2311,7 @@ function lsBulk(action){
 }
 function lsSetFilter(name){
   lsFilter=name;
+  lsEditIndex=-1;
   localStorage.setItem('lsFilter',lsFilter);
   renderListStudy();
 }
@@ -2388,6 +2390,19 @@ function lsJumpTo(n){
   let y=target.getBoundingClientRect().top+window.scrollY-12;
   window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
 }
+function lsStartEdit(i){ lsEditIndex=i; renderListStudy(); }
+function lsCancelEdit(){ lsEditIndex=-1; renderListStudy(); }
+function lsSaveEdit(i){
+  let e=(document.getElementById('lsEditEng')?.value||'').trim();
+  let k=(document.getElementById('lsEditKor')?.value||'').trim();
+  let ex=(document.getElementById('lsEditEx')?.value||'').trim();
+  if(!e||!k) return alert('영어와 뜻을 모두 입력하세요');
+  if(words.some((w,j)=>j!==i && w.eng.toLowerCase()===e.toLowerCase())) return alert('이미 있는 단어예요');
+  words[i].eng=e; words[i].kor=k; words[i].example=ex;
+  lsEditIndex=-1;
+  save();
+  showToast('단어를 수정했어요 ✏️');
+}
 function lsTogglePeek(el,i){
   if(el.classList.toggle('peek')){
     lsPeeked.add(i);
@@ -2399,6 +2414,13 @@ function lsTogglePeek(el,i){
 }
 function lsRowHtml(w,i){
   let tint=w.mastered?'result-correct':(w.wrong&&w.wrongResult!=='correct')?'result-wrong':'';
+  if(lsFilter==='all' && i===lsEditIndex){
+    return `<li class="ls-row" data-i="${i}" style="flex-direction:column;align-items:stretch;gap:8px;padding:14px 14px">
+      <div style="display:flex;gap:6px;align-items:center"><span class="ls-num">${i+1}</span><input id="lsEditEng" value="${escapeHtml(w.eng)}" style="flex:1;min-width:0"><input id="lsEditKor" value="${escapeHtml(w.kor)}" style="flex:1;min-width:0"></div>
+      <input id="lsEditEx" placeholder="예문 (선택사항)" value="${escapeHtml(w.example||'')}" style="width:100%;box-sizing:border-box">
+      <span class="btns" style="justify-content:center;gap:6px"><button onclick="lsSaveEdit(${i})">💾 저장</button><button onclick="lsCancelEdit()">↩️ 취소</button></span>
+    </li>`;
+  }
   return `<li class="ls-row ${tint}" data-i="${i}" style="flex-direction:column;align-items:stretch;gap:8px;padding:14px 14px">
     <span class="ls-top">
       <span class="ls-num">${i+1}</span>
@@ -2407,6 +2429,7 @@ function lsRowHtml(w,i){
     </span>
     ${w.example?`<span class="ls-ex" style="font-size:13px;color:var(--muted);font-style:italic;line-height:1.5">${escapeHtml(w.example)}</span>`:''}
     <span class="btns" style="justify-content:flex-end;gap:6px">
+      ${lsFilter==='all'?`<button onclick="lsStartEdit(${i})">✏️</button>`:''}
       <button onclick="toggleWrongFlag(${i})">${w.wrong?'❌ 오답해제':'⭕ 오답'}</button>
       <button onclick="toggleMaster(${i})">${w.mastered?'✅ 학습취소':'⬜ 학습완료'}</button>
       ${(w.wrong&&w.wrongResult!=='correct')?`<button style="white-space:nowrap" onclick="wrongNoteCorrect(${i})">🏆 외웠어요</button>`:''}
@@ -2421,7 +2444,7 @@ function switchDeck(id,targetTab){
   words = d.words||[]; stats = d.stats||{}; dupes = d.dupes||[];
   currentIndex=-1; editIndex=-1; cardHistory=[]; recentSeen=[];
   rangeFrom=null; rangeTo=null;
-  lsPeeked.clear(); // 단어장이 바뀌면 펼쳐둔 뜻 기록 초기화(인덱스 무효화)
+  lsPeeked.clear(); lsEditIndex=-1; // 단어장이 바뀌면 펼쳐둔 뜻·수정 상태 초기화(인덱스 무효화)
   // 퀴즈/카드 UI 정리(다른 단어장의 퀴즈 화면·타이머가 남지 않도록)
   clearTimeout(quizTimer); quizState=null; quizAnswered=false;
   document.getElementById('quizPanel').style.display='none';
