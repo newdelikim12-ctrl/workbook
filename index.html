@@ -786,7 +786,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-02.4'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-02.5'; // 배포할 때마다 올려주세요
 let words=JSON.parse(localStorage.getItem('words')||'[]');
 let stats=JSON.parse(localStorage.getItem('stats')||'{}');
 let editIndex=-1;
@@ -1066,6 +1066,8 @@ flag(engL,ex.eng,[label]);
 }else if(ex.src && ex.src!==label){
 // 다른 시트에 이미 있던 단어 → 시트 간 중복
 flag(engL,ex.eng,[ex.src,label]);
+// 출처를 현재 시트로 갱신 → 삭제/이름변경된 옛 시트가 계속 중복으로 잡히지 않게
+ex.src=label;
 }else if(!ex.src){
 // 출처를 모르던 기존 단어 → 이번 시트를 출처로 채택(같은 시트 재불러오기 오탐 방지)
 ex.src=label;
