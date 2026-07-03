@@ -817,7 +817,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-03.4'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-03.5'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -1783,15 +1783,30 @@ async function cardSynLookup(){
   try{
     let data=_synCache.get(word);
     if(!data){
-      let [sy,an]=await Promise.allSettled([
+      let [sy,an,dic]=await Promise.allSettled([
         fetch('https://api.datamuse.com/words?rel_syn='+encodeURIComponent(word)+'&max=6').then(r=>r.json()),
-        fetch('https://api.datamuse.com/words?rel_ant='+encodeURIComponent(word)+'&max=6').then(r=>r.json())
+        fetch('https://api.datamuse.com/words?rel_ant='+encodeURIComponent(word)+'&max=6').then(r=>r.json()),
+        fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(word)).then(r=>r.ok?r.json():null)
       ]);
       data={syn:(sy.status==='fulfilled'&&Array.isArray(sy.value))?sy.value.map(x=>x.word):[],
-            ant:(an.status==='fulfilled'&&Array.isArray(an.value))?an.value.map(x=>x.word):[]};
-      if(data.syn.length||data.ant.length) _synCache.set(word,data);
+            ant:(an.status==='fulfilled'&&Array.isArray(an.value))?an.value.map(x=>x.word):[],rel:[]};
+      // 폴백1: Free Dictionary의 synonyms/antonyms 보충
+      if(dic.status==='fulfilled'&&Array.isArray(dic.value)){
+        (dic.value[0].meanings||[]).forEach(m=>{
+          (m.synonyms||[]).forEach(w2=>{ if(data.syn.length<6&&!data.syn.includes(w2)) data.syn.push(w2); });
+          (m.antonyms||[]).forEach(w2=>{ if(data.ant.length<6&&!data.ant.includes(w2)) data.ant.push(w2); });
+        });
+      }
+      // 폴백2: 그래도 없으면 의미상 비슷한 관련어(ml)
+      if(!data.syn.length&&!data.ant.length){
+        try{
+          let ml=await fetch('https://api.datamuse.com/words?ml='+encodeURIComponent(word)+'&max=8').then(r=>r.json());
+          if(Array.isArray(ml)) data.rel=ml.map(x=>x.word).slice(0,8);
+        }catch(e){}
+      }
+      if(data.syn.length||data.ant.length||data.rel.length) _synCache.set(word,data);
     }
-    if(!data.syn.length&&!data.ant.length){
+    if(!data.syn.length&&!data.ant.length&&!(data.rel&&data.rel.length)){
       el.innerHTML='<span style="font-size:12px;color:rgba(255,255,255,.7)">유의어·반의어를 찾지 못했어요 😥</span> <a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:12px;color:#cdd7ff;text-decoration:underline">네이버 사전</a>';
       return;
     }
@@ -1799,6 +1814,7 @@ async function cardSynLookup(){
     let h='<div style="font-style:normal;text-align:center">';
     if(data.syn.length) h+='<div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:2px">유의어</div><div>'+data.syn.map(chip).join('')+'</div>';
     if(data.ant.length) h+='<div style="font-size:11px;color:rgba(255,255,255,.6);margin:6px 0 2px">반의어</div><div>'+data.ant.map(chip).join('')+'</div>';
+    if(data.rel&&data.rel.length&&!data.syn.length&&!data.ant.length) h+='<div style="font-size:11px;color:rgba(255,255,255,.6);margin:6px 0 2px">관련어</div><div>'+data.rel.map(chip).join('')+'</div>';
     h+='<div style="margin-top:8px"><button onclick="event.stopPropagation();showExample(words[currentIndex]?words[currentIndex].example||\'\':\'\')" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);border:none;box-shadow:none;padding:4px 12px;border-radius:999px;font-size:11px">닫기</button></div></div>';
     el.innerHTML=h;
   }catch(e){
@@ -1808,6 +1824,38 @@ async function cardSynLookup(){
 
 // ===== 예문 찾기 (Free Dictionary + Tatoeba) =====
 let _exCache=new Map(); // word -> [{en,ko}]
+// CORS 프록시 경유 JSON 가져오기 (네이버 사전 등 직접 호출이 막힌 곳용)
+async function fetchViaProxy(url){
+  let ps=['https://corsproxy.io/?url='+encodeURIComponent(url),'https://api.allorigins.win/raw?url='+encodeURIComponent(url)];
+  for(let u of ps){
+    try{ let r=await fetch(u); if(r.ok){ let t=await r.text(); return JSON.parse(t); } }catch(e){}
+  }
+  return null;
+}
+function _stripTags(x){ return String(x||'').replace(/<[^>]*>/g,'').trim(); }
+// 네이버 사전 예문 (영어 예문 + 한글 번역)
+async function naverExamples(word){
+  let out=[];
+  try{
+    let j=await fetchViaProxy('https://en.dict.naver.com/api3/enko/search?query='+encodeURIComponent(word)+'&range=example&page=1');
+    let items=j&&j.searchResultMap&&j.searchResultMap.searchResultListMap&&j.searchResultMap.searchResultListMap.EXAMPLE&&j.searchResultMap.searchResultListMap.EXAMPLE.items||[];
+    items.slice(0,6).forEach(it=>{
+      let en=_stripTags(it.expExample1), ko=_stripTags(it.expExample2);
+      if(en&&en.length<160) out.push({en:en,ko:ko});
+    });
+  }catch(e){}
+  return out;
+}
+// 간단 어간 추출 (plagues→plague, running→run 등 시도용)
+function _stems(word){
+  let c=[];
+  if(/ies$/.test(word)) c.push(word.replace(/ies$/,'y'));
+  if(/es$/.test(word)) c.push(word.slice(0,-2));
+  if(/s$/.test(word)&&!/ss$/.test(word)) c.push(word.slice(0,-1));
+  if(/ing$/.test(word)&&word.length>5){ c.push(word.slice(0,-3)); c.push(word.slice(0,-3)+'e'); }
+  if(/ed$/.test(word)&&word.length>4){ c.push(word.slice(0,-2)); c.push(word.slice(0,-1)); }
+  return [...new Set(c)].filter(x=>x.length>2&&x!==word);
+}
 function _tatParse(j,out){
   if(!j||!Array.isArray(j.results)) return;
   j.results.slice(0,10).forEach(r=>{
@@ -1816,16 +1864,18 @@ function _tatParse(j,out){
     if(r.text && r.text.length<140 && !out.some(x=>x.en===r.text)) out.push({en:r.text,ko:ko});
   });
 }
-async function getExamples(word){
+async function getExamples(word,_retried){
   if(_exCache.has(word)) return _exCache.get(word);
   let out=[];
-  // 1차: Tatoeba 정확일치 + 사전 예문 동시
-  let [dic,tat]=await Promise.allSettled([
+  // 1차: 네이버 사전(한글 번역 예문) + Tatoeba 정확일치 + 사전 예문 동시
+  let [nv,dic,tat]=await Promise.allSettled([
+    naverExamples(word),
     fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(word)).then(r=>r.ok?r.json():null),
     fetch('https://tatoeba.org/eng/api_v0/search?from=eng&to=kor&query='+encodeURIComponent('='+word)).then(r=>r.ok?r.json():null)
   ]);
+  if(nv.status==='fulfilled'&&Array.isArray(nv.value)) nv.value.forEach(x=>{ if(!out.some(y=>y.en===x.en)) out.push(x); });
   if(tat.status==='fulfilled') _tatParse(tat.value,out);
-  // 2차: 정확일치가 빈약하면 변화형 포함 일반 검색(plagued/plagues 등)
+  // 2차: 빈약하면 변화형 포함 일반 검색
   if(out.length<2){
     try{
       let t2=await fetch('https://tatoeba.org/eng/api_v0/search?from=eng&to=kor&query='+encodeURIComponent(word)).then(r=>r.ok?r.json():null);
@@ -1837,6 +1887,13 @@ async function getExamples(word){
     (dic.value[0].meanings||[]).forEach(m=>(m.definitions||[]).forEach(d=>{
       if(d.example && d.example.length<140 && !out.some(x=>x.en===d.example)) out.push({en:d.example,ko:''});
     }));
+  }
+  // 3차: 그래도 없으면 어간(단수형·원형)으로 한 번 더
+  if(!out.length && !_retried){
+    for(let st of _stems(word)){
+      let r=await getExamples(st,true);
+      if(r.length){ out=r; break; }
+    }
   }
   out=out.slice(0,5);
   if(out.length) _exCache.set(word,out); // 빈 결과는 캐시하지 않음(다음에 재시도)
