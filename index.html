@@ -512,6 +512,9 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 .gs-deck{flex-shrink:0;font-size:11px;font-weight:700;color:var(--accent);background:rgba(82,102,216,.10);border-radius:999px;padding:2px 8px;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis}
 .gs-none{color:var(--muted);font-size:13px;padding:10px;text-align:center}
 .dict-card{margin:6px;padding:12px 14px;border:1.5px solid var(--input-border);border-radius:12px;background:var(--container-bg)}
+.gs-links{display:flex;gap:6px;padding:4px 6px 6px}
+.gs-links a{flex:1;text-align:center;font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;padding:7px 4px;border:1.5px solid var(--input-border);border-radius:10px;background:var(--container-bg);white-space:nowrap}
+.gs-links a:active{background:var(--h3-bg)}
 .ls-scrolltop,.ls-scrollbottom{position:fixed;right:10px;z-index:50;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#5b6796,#4c5680);color:#fff;border:none;font-size:13px;box-shadow:0 3px 10px rgba(76,86,128,.22);cursor:pointer;display:none;padding:0;opacity:.85}
 .ls-scrolltop{bottom:52px}
 .ls-scrollbottom{bottom:12px}
@@ -814,7 +817,7 @@ body.hide-mean .kor-mean.peek{filter:none;background:transparent}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-02.19'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-02.20'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -2185,7 +2188,12 @@ if(w.eng.toLowerCase().includes(q)||w.kor.toLowerCase().includes(q)) out.push({w
 });
 });
 box.style.display='';
-let dictBtn=/^[a-z][a-z\s'-]*$/i.test(q)?('<div style="padding:6px"><button class="small" style="width:100%" onclick="dictLookup()">📖 사전에서 찾기</button></div>'):'';
+let extRow='<div class="gs-links">'
++'<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(q)+'" target="_blank" rel="noopener">네이버 사전</a>'
++'<a href="https://papago.naver.com/?sk=en&tk=ko&st='+encodeURIComponent(q)+'" target="_blank" rel="noopener">파파고</a>'
++'<a href="https://www.google.com/search?q='+encodeURIComponent(q+' 뜻')+'" target="_blank" rel="noopener">구글 검색</a>'
++'</div>';
+let dictBtn=(/^[a-z][a-z\s'-]*$/i.test(q)?('<div style="padding:6px"><button class="small" style="width:100%" onclick="dictLookup()">📖 사전에서 찾기</button></div>'):'')+extRow;
 if(!out.length){ box.innerHTML='<div class="gs-none">모든 단어장에서 찾지 못했어요 🔍</div>'+dictBtn; return; }
 box.innerHTML=out.map(({w,deck})=>
 '<div class="gs-row"><span class="gs-deck">'+escapeHtml(deck)+'</span><span class="gs-eng speakable" onclick="speakText(\''+speakAttr(w.eng)+'\')">'+escapeHtml(w.eng)+'</span><span class="gs-kor">'+escapeHtml(w.kor)+'</span></div>'
@@ -2229,6 +2237,11 @@ if(kor) h+='<div style="margin-top:6px;font-size:16px;font-weight:700;color:var(
 if(def) h+='<div style="margin-top:6px;font-size:13px;color:var(--muted);line-height:1.5">'+(pos?('<i>'+escapeHtml(pos)+'</i> · '):'')+escapeHtml(def)+'</div>';
 if(exam) h+='<div style="margin-top:4px;font-size:13px;color:var(--muted);font-style:italic">"'+escapeHtml(exam)+'"</div>';
 h+='<button class="small" style="width:100%;margin-top:10px" onclick="dictAddWord()">➕ 현재 단어장에 추가</button>';
+h+='<div class="gs-links" style="margin-top:8px">'
++'<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener">네이버 사전</a>'
++'<a href="https://papago.naver.com/?sk=en&tk=ko&st='+encodeURIComponent(word)+'" target="_blank" rel="noopener">파파고</a>'
++'<a href="https://www.google.com/search?q='+encodeURIComponent(word+' 뜻')+'" target="_blank" rel="noopener">구글 검색</a>'
++'</div>';
 h+='<div style="margin-top:6px;font-size:11px;color:var(--muted);text-align:center">무료 사전이라 번역이 어색할 수 있어요 · 뜻은 추가 후 수정 가능</div>';
 h+='</div>';
 area.innerHTML=h;
