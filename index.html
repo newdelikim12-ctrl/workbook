@@ -818,7 +818,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-03.12'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-04.1'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -1757,6 +1757,36 @@ let msg=!quizMode?'플래시카드 모드로 바꿨어요 📖'
 showToast(msg);
 }
 
+
+// ===== 어근 분석 (내장 사전: 접두사/어근/접미사 + 한글 뜻) =====
+const _PRE={ab:'떨어져',ad:'향하여',ante:'앞',anti:'반대',auto:'스스로',bene:'좋은',bi:'둘',circum:'둘레',com:'함께',con:'함께',contra:'반대',counter:'반대',de:'아래로·반대',dia:'가로질러',dis:'반대·떨어져',en:'안에·되게 함',epi:'위에',ex:'밖으로',extra:'밖의',fore:'앞',hyper:'과도한',hypo:'아래',il:'아닌',im:'아닌·안에',inter:'사이',intro:'안으로',intra:'안의',ir:'아닌',macro:'큰',micro:'작은',mis:'잘못',mono:'하나',multi:'많은',non:'아닌',ob:'맞서',omni:'모두',out:'밖·능가',over:'지나치게',per:'완전히',peri:'둘레',post:'후에',pre:'전에',pro:'앞으로',re:'다시·뒤로',retro:'뒤로',semi:'절반',sub:'아래',super:'위에·넘어',sur:'위에',sym:'함께',syn:'함께',tele:'멀리',trans:'가로질러',tri:'셋',ultra:'극단의',un:'아닌',under:'아래·부족',uni:'하나',in:'아닌·안에'};
+const _ROOT={spect:'보다',spec:'보다',spic:'보다',dict:'말하다',duct:'이끌다',duc:'이끌다',port:'나르다',scrib:'쓰다',script:'쓰다',struct:'세우다',tract:'끌다',fract:'부수다',frag:'부수다',rupt:'깨다',ject:'던지다',junct:'연결하다',flect:'구부리다',flex:'구부리다',press:'누르다',puls:'밀다',pel:'밀다',pend:'매달다',pens:'매달다·무게 달다',tend:'뻗다',tens:'뻗다',strict:'묶다',string:'묶다',tact:'만지다',tang:'만지다',cept:'잡다·받다',capt:'잡다',ceive:'받다',cap:'잡다',ced:'가다·양보하다',cess:'가다',grad:'걸어가다',gress:'걸어가다',curs:'달리다',cours:'달리다',cur:'달리다·돌보다',ven:'오다',vent:'오다',mot:'움직이다',mov:'움직이다',mob:'움직이다',migr:'이동하다',mit:'보내다',miss:'보내다',pos:'놓다',pon:'놓다',sta:'서다',stat:'서다',sist:'서다',sid:'앉다',sess:'앉다',ten:'잡다·유지하다',tain:'잡다·유지하다',tent:'유지하다',hab:'가지다',hib:'가지다',fer:'나르다',lat:'나르다',aud:'듣다',phon:'소리',son:'소리',vis:'보다',vid:'보다',luc:'빛',lum:'빛',photo:'빛',graph:'쓰다·그리다',gram:'쓰다',log:'말·학문',loqu:'말하다',ora:'말하다',claim:'외치다',clam:'외치다',voc:'부르다',vok:'부르다',nom:'이름',nym:'이름',cred:'믿다',fid:'믿다',ver:'진실',sci:'알다',cogn:'알다',gno:'알다',memor:'기억',ment:'마음',path:'느낌·고통',pass:'느끼다·고통',sent:'느끼다',sens:'느끼다',cord:'마음·심장',anim:'마음·생명',vit:'살다',viv:'살다',bio:'생명',nat:'태어나다',gen:'낳다·종족',mort:'죽음',cid:'죽이다·자르다',cis:'자르다',sect:'자르다',fin:'끝',term:'끝·경계',prim:'첫째',nov:'새로운',ann:'해(년)',chron:'시간',temp:'시간',geo:'땅',terr:'땅',mar:'바다',nav:'배',hydr:'물',aqua:'물',astr:'별',stell:'별',sol:'홀로·태양',lun:'달',ped:'발',pod:'발',man:'손',manu:'손',corp:'몸',cardi:'심장',dent:'이빨',oper:'일하다',labor:'일하다',fac:'만들다',fact:'만들다',fect:'만들다',fic:'만들다',form:'형태',fort:'강한',val:'가치·힘',pot:'힘',dyn:'힘',reg:'다스리다',rect:'곧은·바른',jud:'판단하다',jur:'법',leg:'법·읽다',lect:'모으다·읽다',liber:'자유',serv:'지키다·섬기다',sequ:'따르다',secu:'따르다',solv:'풀다',solut:'풀다',clud:'닫다',clus:'닫다',vac:'비어있는',plen:'가득한',equ:'같은',med:'중간',magn:'큰',min:'작은',micr:'작은',numer:'수',loc:'장소',dom:'집·지배',urb:'도시',popul:'사람들',dem:'민중',phil:'사랑',am:'사랑',vers:'돌리다',vert:'돌리다',rot:'돌다',vol:'의지·구르다',spir:'숨쉬다',spond:'약속하다',spons:'약속하다',grat:'기쁜·감사',mand:'명령하다',ordin:'순서',sign:'표시',trud:'밀다',trus:'밀다',via:'길',quir:'구하다·묻다',quest:'구하다·묻다',don:'주다',trib:'주다·할당하다'};
+const _SUF={tion:'~하는 것(명사)',sion:'~하는 것(명사)',ation:'~하는 것(명사)',ment:'~하는 것(명사)',ness:'성질(명사)',ity:'성질(명사)',ship:'상태·자격',hood:'상태',ism:'~주의',ist:'~하는 사람',er:'~하는 사람·것',or:'~하는 사람·것',ee:'~받는 사람',able:'~할 수 있는',ible:'~할 수 있는',ful:'~가득한',less:'~없는',ous:'~가득한(형용사)',ive:'~성질의',al:'~의(형용사)',ic:'~의(형용사)',ical:'~의(형용사)',ish:'~비슷한',ary:'~의·장소',ory:'~의·장소',ize:'~화하다',ify:'~하게 하다',ate:'~하다·시키다',en:'~하게 만들다',ly:'~하게(부사)',ward:'~방향으로',ology:'~학문'};
+const _ROOTKEYS=Object.keys(_ROOT).sort((a,b)=>b.length-a.length);
+const _PREKEYS=Object.keys(_PRE).sort((a,b)=>b.length-a.length);
+const _SUFKEYS=Object.keys(_SUF).sort((a,b)=>b.length-a.length);
+function analyzeRoots(word){
+  let w=String(word||'').toLowerCase().replace(/[^a-z]/g,'');
+  if(w.length<4) return [];
+  let parts=[],core=w;
+  for(let k of _PREKEYS){ if(core.startsWith(k)&&core.length-k.length>=3){ parts.push({t:'pre',p:k,g:_PRE[k]}); core=core.slice(k.length); break; } }
+  let suf=null;
+  for(let k of _SUFKEYS){ if(core.endsWith(k)&&core.length-k.length>=3){ suf={t:'suf',p:k,g:_SUF[k]}; core=core.slice(0,core.length-k.length); break; } }
+  let rootHit=null;
+  for(let k of _ROOTKEYS){ let idx=core.indexOf(k); if(idx>=0){ rootHit={t:'root',p:k,g:_ROOT[k]}; break; } }
+  if(rootHit) parts.push(rootHit);
+  if(suf) parts.push(suf);
+  // 어근이 하나도 안 잡히면(접두/접미만) 노이즈라 표시하지 않음
+  if(!rootHit) return [];
+  return parts;
+}
+function rootsHtml(word){
+  let parts=analyzeRoots(word);
+  if(!parts.length) return '';
+  let seg=parts.map(x=>'<b style="color:#ffe9a8">'+escapeHtml(x.p)+'</b><span style="opacity:.75">('+escapeHtml(x.g)+')</span>').join(' + ');
+  return '<div style="margin-top:8px;font-size:12.5px;font-style:normal;color:rgba(255,255,255,.85)">🧩 '+seg+'</div>';
+}
+
 function showExample(text){
   let el=document.getElementById('cardExample');
   if(!el) return;
@@ -1764,12 +1794,13 @@ function showExample(text){
   let studying=revealed && currentIndex>=0 && words[currentIndex];
   let pill='background:rgba(255,255,255,.14);color:rgba(255,255,255,.85);border:none;box-shadow:none;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600';
   let synBtn=studying?('<button onclick="event.stopPropagation();cardSynLookup()" style="'+pill+'">'+icon('branch')+' 유의·반의</button>'):'';
+  let roots=studying?rootsHtml(words[currentIndex].eng):'';
   if(text){
-    el.innerHTML='<div style="font-style:italic">"'+escapeHtml(text)+'"</div>'+(synBtn?('<div style="margin-top:8px;font-style:normal">'+synBtn+'</div>'):'');
+    el.innerHTML='<div style="font-style:italic">"'+escapeHtml(text)+'"</div>'+roots+(synBtn?('<div style="margin-top:8px;font-style:normal">'+synBtn+'</div>'):'');
     el.style.display='block';return;
   }
   if(studying){
-    el.innerHTML='<div style="display:flex;gap:8px;justify-content:center;font-style:normal"><button onclick="event.stopPropagation();cardExampleLookup()" style="'+pill+'">'+icon('msg')+' 예문 찾기</button>'+synBtn+'</div>';
+    el.innerHTML=roots+'<div style="display:flex;gap:8px;justify-content:center;font-style:normal;margin-top:'+(roots?'8px':'0')+'"><button onclick="event.stopPropagation();cardExampleLookup()" style="'+pill+'">'+icon('msg')+' 예문 찾기</button>'+synBtn+'</div>';
     el.style.display='block';
   } else el.style.display='none';
 }
