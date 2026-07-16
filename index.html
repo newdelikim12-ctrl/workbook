@@ -862,7 +862,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-14.1'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-14.2'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -1891,7 +1891,7 @@ function compoundParts(w){
   return [];
 }
 // 숙어(구동사) 구성 단어 뜻 — 여러 단어 숙어에서만 사용
-const _PHR={go:'가다',come:'오다',get:'얻다·되다',take:'잡다·취하다',make:'만들다',put:'놓다',turn:'돌다·돌리다',look:'보다',give:'주다',keep:'유지하다',hold:'잡다',bring:'가져오다',call:'부르다',carry:'나르다',catch:'잡다',cut:'자르다',do:'하다',drop:'떨어뜨리다',fall:'떨어지다',fill:'채우다',find:'찾다',hand:'건네다·손',hang:'걸다',let:'~하게 하다',pass:'지나가다·건네다',pay:'지불하다',pick:'고르다·줍다',pull:'당기다',push:'밀다',run:'달리다',see:'보다',set:'놓다·정하다',show:'보여주다',stand:'서다·견디다',stay:'머무르다',throw:'던지다',try:'시도하다',walk:'걷다',work:'일하다·작동하다',break:'부수다',check:'확인하다',watch:'지켜보다',stick:'붙다·고수하다',live:'살다',move:'움직이다',stop:'멈추다',start:'시작하다',end:'끝나다',wear:'입다',blow:'불다',burn:'타다',
+const _PHR={be:'이다·있다',go:'가다',come:'오다',get:'얻다·되다',take:'잡다·취하다',make:'만들다',put:'놓다',turn:'돌다·돌리다',look:'보다',give:'주다',keep:'유지하다',hold:'잡다',bring:'가져오다',call:'부르다',carry:'나르다',catch:'잡다',cut:'자르다',do:'하다',drop:'떨어뜨리다',fall:'떨어지다',fill:'채우다',find:'찾다',hand:'건네다·손',hang:'걸다',let:'~하게 하다',pass:'지나가다·건네다',pay:'지불하다',pick:'고르다·줍다',pull:'당기다',push:'밀다',run:'달리다',see:'보다',set:'놓다·정하다',show:'보여주다',stand:'서다·견디다',stay:'머무르다',throw:'던지다',try:'시도하다',walk:'걷다',work:'일하다·작동하다',break:'부수다',check:'확인하다',watch:'지켜보다',stick:'붙다·고수하다',live:'살다',move:'움직이다',stop:'멈추다',start:'시작하다',end:'끝나다',wear:'입다',blow:'불다',burn:'타다',
 up:'위로',down:'아래로',out:'밖으로',off:'떨어져·벗어나',on:'~위에·계속',in:'안에',into:'~안으로',away:'멀리·떨어져',back:'뒤로·다시',over:'~위로·넘어',through:'~을 통과하여',about:'~에 대해·주위에',around:'주위에',across:'~을 가로질러',along:'~을 따라',after:'~후에·뒤쫓아',against:'~에 맞서',ahead:'앞에',apart:'떨어져',aside:'옆으로',by:'~옆에·~까지',for:'~을 위해',from:'~로부터',of:'~의',to:'~로·~에게',with:'~와 함께',without:'~없이',behind:'뒤에',below:'아래에',beyond:'~을 넘어',near:'가까이',past:'지나서',under:'아래에',upon:'~위에',onto:'~위로',toward:'~을 향해',towards:'~을 향해',forward:'앞으로',at:'~에서'};
 function rootsHtml(word){
   // 숙어는 단어별로 쪼개 각각 분석 (make progress → progress, go over → go+over)
@@ -1907,12 +1907,12 @@ function rootsHtml(word){
       let cp=compoundParts(t);
       if(cp.length) parts=cp;
     }
-    if(!parts.length){
-      if(!multi) continue;
-      // 숙어의 나머지 단어: 사전(번역)으로 뜻을 비동기로 채움 (derive from → derive(유래하다))
+    if(multi && !simple && (!parts.length||!parts.some(x=>x.t==='root'))){
+      // 숙어에서 어근이 없거나 접두사만 잡힌 단어: 원형(concerned→concern)·번역으로 뜻을 비동기 채움
       entries.push({t,seg:'<b style="color:#ffe9a8">'+escapeHtml(t)+'</b><span style="opacity:.75" class="phr-fill" data-w="'+escapeHtml(t)+'">(…)</span>',simple:true});
       continue;
     }
+    if(!parts.length) continue;
     let seg=parts.map(x=>'<b style="color:#ffe9a8">'+escapeHtml(x.p)+'</b><span style="opacity:.75">('+escapeHtml(x.g)+')</span>').join(' + ');
     entries.push({t,seg,simple});
   }
@@ -2011,8 +2011,17 @@ function morphHtml(word){
 // 숙어에서 분석 안 된 단어들의 뜻을 번역으로 채움
 function phraseGlossFill(){
   document.querySelectorAll('#cardExample .phr-fill').forEach(sp=>{
-    let w=sp.dataset.w; if(!w) return;
-    _quickKor(w).then(k=>{ sp.textContent=k?('('+k+')'):''; }).catch(()=>{ sp.textContent=''; });
+    let w=sp.dataset.w; if(!w||sp.dataset.done) return; sp.dataset.done='1';
+    (async()=>{
+      try{
+        let b=await findBaseWord(w); // 원형 찾기 (concerned→concern, 단어장 뜻 우선)
+        if(b&&b.eng&&b.eng.toLowerCase()!==w){
+          sp.innerHTML=' → <b style="color:#ffe9a8">'+escapeHtml(b.eng)+'</b>'+(b.kor?('<span style="opacity:.75">('+escapeHtml(b.kor)+')</span>'):'');
+          return;
+        }
+      }catch(e){}
+      try{ let k=await _quickKor(w); sp.textContent=k?('('+k+')'):''; }catch(e){ sp.textContent=''; }
+    })();
   });
 }
 function baseWordFill(word){
