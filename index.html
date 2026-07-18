@@ -569,7 +569,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 
 <div style="margin-top:10px">
 <div class="input-clear">
-<input type="text" id="gSearch" placeholder="🔍 모든 단어장에서 검색" oninput="renderGlobalSearch()" autocomplete="off">
+<input type="text" id="gSearch" placeholder="🔍 모든 단어장에서 검색" oninput="gsDeb()" autocomplete="off">
 <button class="clear-x" onclick="clearInput('gSearch');renderGlobalSearch()" aria-label="지우기">✕</button>
 </div>
 <div id="gSearchResults" style="display:none"></div>
@@ -685,7 +685,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 </div>
 <div class="row" style="margin-top:8px">
 <div class="input-clear">
-<input type="text" id="searchBox" placeholder="🔍 단어 또는 뜻 검색" oninput="render()">
+<input type="text" id="searchBox" placeholder="🔍 단어 또는 뜻 검색" oninput="renderDeb()">
 <button class="clear-x" onclick="clearInput('searchBox',true)" aria-label="지우기">✕</button>
 </div>
 <button class="danger small" onclick="clearAllWords()">🗑 전체 삭제</button>
@@ -707,7 +707,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 </div>
 <div class="row" style="margin-top:8px">
 <div class="input-clear">
-<input type="text" id="wrongSearch" placeholder="🔍 오답노트 검색" oninput="render()">
+<input type="text" id="wrongSearch" placeholder="🔍 오답노트 검색" oninput="renderDeb()">
 <button class="clear-x" onclick="clearInput('wrongSearch',true)" aria-label="지우기">✕</button>
 </div>
 <button class="danger small" onclick="clearWrongs()">🗑 전체 삭제</button>
@@ -725,7 +725,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 <div id="mastered" class="section-content">
 <div class="row" style="margin-top:10px">
 <div class="input-clear">
-<input type="text" id="masteredSearch" placeholder="🔍 학습 완료 검색" oninput="render()">
+<input type="text" id="masteredSearch" placeholder="🔍 학습 완료 검색" oninput="renderDeb()">
 <button class="clear-x" onclick="clearInput('masteredSearch',true)" aria-label="지우기">✕</button>
 </div>
 <button class="danger small" onclick="clearMastered()">↩️ 전체 학습취소</button>
@@ -744,7 +744,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 <p style="color:var(--muted);font-size:13px;margin:10px 0 6px">여러 시트에 겹쳐서 불러와진 영단어예요. 시트에서 하나만 남기고 지우면 깔끔해요.</p>
 <div class="row" style="margin-top:8px">
 <div class="input-clear">
-<input type="text" id="dupesSearch" placeholder="🔍 중복 단어 검색" oninput="render()">
+<input type="text" id="dupesSearch" placeholder="🔍 중복 단어 검색" oninput="renderDeb()">
 <button class="clear-x" onclick="clearInput('dupesSearch',true)" aria-label="지우기">✕</button>
 </div>
 <button class="danger small" onclick="clearDupes()">🗑 비우기</button>
@@ -808,7 +808,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
     </div>
     <div class="progress-bar"><div class="progress-fill" id="lsProgFill"></div></div>
     <div class="input-clear">
-      <input type="text" id="lsSearch" placeholder="🔍 단어·뜻·번호 검색" oninput="renderListStudy()">
+      <input type="text" id="lsSearch" placeholder="🔍 단어·뜻·번호 검색" oninput="lsDeb()">
       <button class="clear-x" onclick="clearInput('lsSearch');renderListStudy()" aria-label="지우기">✕</button>
     </div>
     <div class="ls-chips">
@@ -842,7 +842,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 <div id="lsSearchPanel" style="display:none">
   <div style="display:flex;gap:6px;align-items:center">
     <div class="input-clear" style="flex:1;min-width:0">
-      <input type="text" id="lsGSearch" placeholder="🔍 모든 단어장에서 검색" oninput="renderLsSearch()" autocomplete="off" style="width:100%">
+      <input type="text" id="lsGSearch" placeholder="🔍 모든 단어장에서 검색" oninput="lsGsDeb()" autocomplete="off" style="width:100%">
       <button class="clear-x" onclick="clearInput('lsGSearch');renderLsSearch()" aria-label="지우기">✕</button>
     </div>
     <button class="small" style="flex:0 0 auto;box-shadow:none;padding:8px 12px" onclick="lsToggleSearch(false)">닫기</button>
@@ -862,7 +862,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-14.2'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-14.3'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -928,6 +928,8 @@ t.classList.add('show');
 clearTimeout(toastTimer);
 toastTimer=setTimeout(()=>t.classList.remove('show'),1500);
 }
+function _debounce(fn,ms){ let t; return function(){ clearTimeout(t); t=setTimeout(fn,ms||140); }; }
+const renderDeb=_debounce(()=>render()), lsDeb=_debounce(()=>renderListStudy()), gsDeb=_debounce(()=>renderGlobalSearch()), lsGsDeb=_debounce(()=>renderLsSearch());
 function clearInput(id,doRender){
 let el=document.getElementById(id);
 if(!el) return;
@@ -1145,6 +1147,7 @@ sheets.forEach(s=>{ if(s) e.sheets.add(s); });
 }
 // 따옴표 안 줄바꿈(여러 줄 셀)을 올바르게 처리하는 전체 파서 사용
 let rows=parseCsv(text);
+let wordMap=new Map(); words.forEach(w=>{let k=(w.eng||'').toLowerCase(); if(!wordMap.has(k)) wordMap.set(k,w);});
 rows.forEach((p,idx)=>{
 if(p.length<2) return;
 let eng=p[0].trim();
@@ -1159,7 +1162,7 @@ let korHeaders=['뜻','한글','의미','meaning','korean','definition','해석'
 if(engHeaders.includes(engL) && korHeaders.includes(korL)) return;
 // 시트명이 그대로 단어로 들어오는 제목 행 걸러내기
 if(engL===label.trim().toLowerCase()) return;
-let ex=words.find(w=>w.eng.toLowerCase()===engL);
+let ex=wordMap.get(engL);
 if(ex){
 if(seen.has(engL)){
 // 같은 시트 안에서 또 등장 → 시트 내부 중복(발견된 행 번호 함께 기록)
@@ -1179,7 +1182,8 @@ if(example && ex.example!==example) ex.example=example;
 seen.set(engL,idx+1);
 return;
 }
-words.push({eng,kor,example:example||'',wrong:false,mastered:false,wrongResult:null,src:label});
+let nw={eng,kor,example:example||'',wrong:false,mastered:false,wrongResult:null,src:label};
+words.push(nw); wordMap.set(engL,nw);
 added++;
 seen.set(engL,idx+1);
 });
@@ -1215,7 +1219,9 @@ let sq=(document.getElementById('dupesSearch')||{}).value||'';
 let list=sq?dupes.filter(d=>d.eng.toLowerCase().includes(sq.toLowerCase())):dupes;
 if(!dupes.length){ box.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px">아직 중복으로 감지된 단어가 없어요. 시트를 불러오면 겹치는 영단어가 여기에 기록돼요.</div>'; return; }
 if(!list.length){ box.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px">검색 결과가 없어요.</div>'; return; }
-box.innerHTML='<ul>'+list.map(d=>{let i=dupes.indexOf(d);let wi=words.findIndex(w=>w.eng.toLowerCase()===d.eng.toLowerCase());let num=wi>=0?`<span style="min-width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.13);font-size:11px;font-weight:800;color:rgba(255,255,255,.7);flex-shrink:0">${wi+1}</span>`:'';return(
+let wIdx=new Map(); words.forEach((w,i2)=>{let k=w.eng.toLowerCase(); if(!wIdx.has(k)) wIdx.set(k,i2);});
+let dIdx=new Map(); dupes.forEach((d,i2)=>dIdx.set(d,i2));
+box.innerHTML='<ul>'+list.map(d=>{let i=dIdx.get(d);let wi=wIdx.has(d.eng.toLowerCase())?wIdx.get(d.eng.toLowerCase()):-1;let num=wi>=0?`<span style="min-width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.13);font-size:11px;font-weight:800;color:rgba(255,255,255,.7);flex-shrink:0">${wi+1}</span>`:'';return(
 '<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="display:flex;align-items:center;gap:6px">'+num+'<b style="font-size:15px;font-weight:700;color:#fff">'+escapeHtml(d.eng)+'</b></span>'
 +'<span style="color:rgba(255,255,255,.65);font-size:12px;display:block;margin-top:2px">'
 +(d.sheets.length?('📄 '+d.sheets.map(escapeHtml).join(' · ')):'시트 정보 없음')
@@ -1710,7 +1716,7 @@ wb.style.color='';
 wb.style.boxShadow='';
 }
 let nb=document.getElementById('cardNextBtn');
-if(nb) nb.innerText=lastMode==='wrong'?'➡️ 다음 단어':'➡️ 다음 단어';
+if(nb) nb.innerText='➡️ 다음 단어';
 }
 
 function getDeck(mode){
@@ -2081,12 +2087,12 @@ async function cardSynLookup(){
         dm('ml='+encodeURIComponent('opposite of '+word))
       ]);
       data={syn:(sy.length?sy:ml.filter(w2=>w2!==word)).slice(0,3),
-            ant:(an.length?an:op.filter(w2=>w2!==word&&!sy.includes(w2))).slice(0,3),rel:[]};
+            ant:(an.length?an:op.filter(w2=>w2!==word&&!sy.includes(w2))).slice(0,3)};
       if(data.syn.length||data.ant.length) _synCache.set(word,data);
     }
     // 찾는 동안 카드가 바뀌었으면 엉뚱한 카드 위에 덮어쓰지 않기
     if(currentIndex<0||!words[currentIndex]||words[currentIndex].eng.toLowerCase()!==word) return;
-    if(!data.syn.length&&!data.ant.length&&!(data.rel&&data.rel.length)){
+    if(!data.syn.length&&!data.ant.length){
       el.innerHTML='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:13px;color:#cdd7ff;text-decoration:underline;font-style:normal">네이버 사전에서 보기</a>';
       return;
     }
@@ -2094,7 +2100,6 @@ async function cardSynLookup(){
     let h='<div style="font-style:normal;text-align:center">';
     if(data.syn.length) h+='<div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:2px">유의어</div><div>'+data.syn.map(chip).join('')+'</div>';
     if(data.ant.length) h+='<div style="font-size:11px;color:rgba(255,255,255,.6);margin:6px 0 2px">반의어</div><div>'+data.ant.map(chip).join('')+'</div>';
-    if(data.rel&&data.rel.length&&!data.syn.length&&!data.ant.length) h+='<div style="font-size:11px;color:rgba(255,255,255,.6);margin:6px 0 2px">관련어</div><div>'+data.rel.map(chip).join('')+'</div>';
     h+='<div style="margin-top:8px"><button onclick="event.stopPropagation();showExample(words[currentIndex]?words[currentIndex].example||\'\':\'\')" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);border:none;box-shadow:none;padding:4px 12px;border-radius:999px;font-size:11px">닫기</button></div></div>';
     el.innerHTML=h;
   }catch(e){
@@ -3215,14 +3220,14 @@ function renderDeckPanel(){
 }
 
 // ===== 단어장 길게눌러 드래그로 순서 변경 =====
-let deckDrag={el:null,timer:null,pid:null,sx:0,sy:0,dragging:false,suppress:false};
+let deckDrag={el:null,timer:null,pid:null,sx:0,sy:0,dragging:false,moved:false,suppress:false};
 function deckCardClick(id){ if(deckDrag.suppress) return; switchDeck(id,'study'); }
 function deckEndDrag(commit){
   clearTimeout(deckDrag.timer);
   if(deckDrag.el){
     deckDrag.el.style.transform='';
     deckDrag.el.classList.remove('deck-dragging');
-    if(deckDrag.dragging && commit){
+    if(deckDrag.dragging && deckDrag.moved && commit){
       let ids=[...document.querySelectorAll('#deckList .deck-card')].map(c=>c.dataset.id);
       // DOM과 decks가 어긋났으면(동시 재렌더 등) 커밋 생략해 순서가 깨지지 않게
       if(ids.length===decks.length && decks.every(d=>ids.indexOf(d.id)>=0)){
@@ -3233,7 +3238,7 @@ function deckEndDrag(commit){
       }
     }
   }
-  deckDrag.el=null; deckDrag.dragging=false; deckDrag.pid=null;
+  deckDrag.el=null; deckDrag.dragging=false; deckDrag.moved=false; deckDrag.pid=null;
 }
 (function(){
   let list=document.getElementById('deckList');
@@ -3275,8 +3280,8 @@ function deckEndDrag(commit){
       let r=s.getBoundingClientRect();
       let mid=r.top+r.height/2;
       let elBefore=(deckDrag.el.compareDocumentPosition(s)&Node.DOCUMENT_POSITION_FOLLOWING)!==0; // el이 s보다 앞
-      if(elBefore && dragMid>mid){ list.insertBefore(s, deckDrag.el); deckDrag.baseY=y; deckDrag.el.style.transform='translateY(0px) scale(1.03)'; break; }
-      if(!elBefore && dragMid<mid){ list.insertBefore(deckDrag.el, s); deckDrag.baseY=y; deckDrag.el.style.transform='translateY(0px) scale(1.03)'; break; }
+      if(elBefore && dragMid>mid){ list.insertBefore(s, deckDrag.el); deckDrag.baseY=y; deckDrag.moved=true; deckDrag.el.style.transform='translateY(0px) scale(1.03)'; break; }
+      if(!elBefore && dragMid<mid){ list.insertBefore(deckDrag.el, s); deckDrag.baseY=y; deckDrag.moved=true; deckDrag.el.style.transform='translateY(0px) scale(1.03)'; break; }
     }
   });
   list.addEventListener('pointerup',function(){ deckEndDrag(true); });
@@ -3340,7 +3345,8 @@ if(fab){
 }
 if(!onList){ let sp=document.getElementById('lsSearchPanel'); if(sp) sp.style.display='none'; }
 }
-window.addEventListener('scroll',updateLsScrollBtns);
+let _lsScrollRaf=false;
+window.addEventListener('scroll',function(){ if(_lsScrollRaf) return; _lsScrollRaf=true; requestAnimationFrame(function(){ _lsScrollRaf=false; updateLsScrollBtns(); }); });
 
 (function(){
 let card=document.getElementById('card');
