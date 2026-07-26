@@ -491,8 +491,12 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 .ls-row .speakable{color:var(--text-main)}
 .ls-row .ls-top{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;flex:none}
 .ls-row .ls-num{width:40px;height:26px;flex:0 0 40px;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;background:rgba(82,102,216,.12);color:var(--accent);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
-.ls-row .ls-eng{flex:1 1 auto;min-width:0;text-align:left;word-break:break-word}
-.ls-row .kor-mean{flex:0 0 auto;max-width:46%;text-align:right;font-weight:600;word-break:keep-all}
+.ls-row .ls-eng{flex:1 1 auto;min-width:0;text-align:left;word-break:break-word;line-height:1.25;transition:none}
+.ls-row .ls-eng.sz1{font-size:14.5px}
+.ls-row .ls-eng.sz2{font-size:13px}
+.ls-row .ls-eng.sz3{font-size:12px}
+.ls-row .ls-eng.sz4{font-size:11px}
+.ls-row .kor-mean{flex:0 0 auto;max-width:42%;text-align:right;font-weight:600;word-break:keep-all;font-size:13.5px}
 /* 목록학습의 뜻은 전역 body.hide-mean이 아니라 로컬 ls-hideMean만 따르도록 분리 */
 #lsList .kor-mean{filter:none;background:transparent;padding:0}
 #lsList.ls-hideMean .kor-mean:not(.peek){background:rgba(82,102,216,.07);filter:blur(7px);cursor:pointer;user-select:none;border-radius:6px;padding:0 6px;display:inline-block;width:76px;max-width:76px;flex:0 0 76px;overflow:hidden;white-space:nowrap}
@@ -873,7 +877,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-14.9'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-15.1'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -3040,6 +3044,7 @@ function renderListStudy(){
     return;
   }
   box.innerHTML='<ul>'+listed.map(({w,i})=>lsRowHtml(w,i)).join('')+'</ul>';
+  lsFitEng(); // 두 줄로 접힌 영어를 한 줄로 맞춤
   // 60 단위 점프 바 구성 (60·120·180·240·300·360…)
   let jumpBar=document.getElementById('lsJump');
   if(jumpBar){
@@ -3098,6 +3103,19 @@ function updateLsSpeakBtn(){
   if(lsAutoSpeak){ b.style.background='linear-gradient(135deg,#5b6796,#4c5680)'; b.style.color='#fff'; }
   else { b.style.background=''; b.style.color=''; }
 }
+// 영어가 두 줄로 접히면 한 줄이 될 때까지 글씨를 단계적으로 축소(11px까지)
+function lsFitEng(){
+  let els=[...document.querySelectorAll('#lsList .ls-eng')];
+  for(let step=1;step<=4;step++){
+    let wrapped=els.filter(el=>{
+      let fs=parseFloat(getComputedStyle(el).fontSize);
+      return el.offsetHeight>fs*1.7;
+    });
+    if(!wrapped.length) return;
+    wrapped.forEach(el=>{ el.classList.remove('sz1','sz2','sz3','sz4'); el.classList.add('sz'+step); });
+    els=wrapped;
+  }
+}
 function lsTogglePeek(el,i){
   if(el.classList.toggle('peek')){
     lsPeeked.add(i);
@@ -3122,7 +3140,7 @@ function lsRowHtml(w,i){
     <span class="ls-top">
       <span class="ls-check"></span>
       <span class="ls-num" onclick="event.stopPropagation();lsOpenInStudy(${i})" title="학습 카드로 보기">${i+1}</span>
-      <span class="ls-eng speakable" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span>
+      <span class="ls-eng speakable${w.eng.length>25?' sz3':w.eng.length>18?' sz2':w.eng.length>12?' sz1':''}" onclick="speakText('${speakAttr(w.eng)}')">${escapeHtml(w.eng)}</span>
       <a class="ls-dict" href="https://en.dict.naver.com/#/search?query=${encodeURIComponent(w.eng)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="네이버 사전에서 보기" title="네이버 사전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
       <span class="kor-mean${lsPeeked.has(i)?' peek':''}" onclick="event.stopPropagation();lsTogglePeek(this,${i})">${escapeHtml(w.kor)}</span>
     </span>
