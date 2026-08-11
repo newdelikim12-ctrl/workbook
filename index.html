@@ -19,60 +19,68 @@
 .ic{width:1.1em;height:1.1em;vertical-align:-.18em;flex-shrink:0}
 .ico .ic{width:1em;height:1em;vertical-align:-.12em}
 :root{
-  --bg-grad-1:#d9d4ca;
-  --bg-grad-2:#d3cec3;
-  --bg-grad-3:#dad5cb;
-  --container-bg:#efece4;
-  --text-main:#2e2c27;
-  --text-title:#474d63;
-  --accent:#56618f;
-  --accent-soft:#8b93b8;
-  --danger:#b25c68;
-  --card-grad-1:#2b303b;
-  --card-grad-2:#363d4d;
-  --card-grad-3:#41496030;
-  --h3-bg:#e6e2d8;
-  --h3-bg-hover:#dedad0;
-  --li-bg:#e9e5dc;
-  --li-bg-hover:#e1ddd3;
-  --input-border:#d4cfc3;
-  --input-bg:#f4f1ea;
-  --muted:#807b6f;
-  --progress-track:#ddd8cd;
-  --shadow:rgba(62,56,45,.14);
-  --shadow-strong:rgba(62,56,45,.2);
-  --result-correct-bg:#e3e3e6;
-  --result-correct-bg-hover:#dbdbe0;
-  --result-wrong-bg:#e8dcd9;
-  --result-wrong-bg-hover:#e0d1cd;
+  --bg-grad-1:#e8eaed;
+  --bg-grad-2:#e2e5e9;
+  --bg-grad-3:#e8eaed;
+  --container-bg:#f5f6f8;
+  --text-main:#23262b;
+  --text-title:#46586f;
+  --accent:#5a7ca8;
+  --accent-soft:#93a9c4;
+  --danger:#b06070;
+  --card-grad-1:#22262c;
+  --card-grad-2:#2b3038;
+  --card-grad-3:#343a44;
+  --h3-bg:#eceef1;
+  --h3-bg-hover:#e4e7eb;
+  --li-bg:#eef0f3;
+  --li-bg-hover:#e6e9ee;
+  --input-border:#d6dade;
+  --input-bg:#fafbfc;
+  --muted:#727781;
+  --progress-track:#dcdfe4;
+  --shadow:rgba(40,45,55,.12);
+  --shadow-strong:rgba(40,45,55,.18);
+  --result-correct-bg:#dde6f2;
+  --result-correct-bg-hover:#d3dfee;
+  --result-wrong-bg:#eddfe2;
+  --result-wrong-bg-hover:#e5d3d7;
+  --on-1:#7fa3d4;
+  --on-2:#5f83b8;
+  --gold:#c99a2e;
+  --link:#4a6f9e;
 }
 body.dark{
-  --bg-grad-1:#101216;
-  --bg-grad-2:#13151a;
-  --bg-grad-3:#101216;
-  --container-bg:#191c22;
-  --text-main:#dfe2e8;
-  --text-title:#aeb9e8;
-  --accent:#8b9cf2;
-  --accent-soft:#5566b8;
-  --danger:#d4576a;
-  --card-grad-1:#232833;
-  --card-grad-2:#2b3140;
-  --card-grad-3:#333b4e;
-  --h3-bg:#20242c;
-  --h3-bg-hover:#282d37;
-  --li-bg:#1f232b;
-  --li-bg-hover:#272c36;
-  --input-border:#333945;
-  --input-bg:#1f232b;
-  --muted:#8b919e;
-  --progress-track:#2a2f39;
-  --shadow:rgba(0,0,0,.4);
-  --shadow-strong:rgba(0,0,0,.55);
-  --result-correct-bg:#232c44;
-  --result-correct-bg-hover:#2a3450;
-  --result-wrong-bg:#3a2530;
-  --result-wrong-bg-hover:#462c39;
+  --bg-grad-1:#0c0d10;
+  --bg-grad-2:#101216;
+  --bg-grad-3:#0c0d10;
+  --container-bg:#16181d;
+  --text-main:#e2e5ea;
+  --text-title:#a9c3e8;
+  --accent:#8fb4e3;
+  --accent-soft:#5b7a9e;
+  --danger:#cf6377;
+  --card-grad-1:#1e2126;
+  --card-grad-2:#262a31;
+  --card-grad-3:#30353d;
+  --h3-bg:#1b1e24;
+  --h3-bg-hover:#22262d;
+  --li-bg:#1a1d22;
+  --li-bg-hover:#22262c;
+  --input-border:#2d323a;
+  --input-bg:#1a1d22;
+  --muted:#878d97;
+  --progress-track:#262a31;
+  --shadow:rgba(0,0,0,.45);
+  --shadow-strong:rgba(0,0,0,.6);
+  --result-correct-bg:#1f2a38;
+  --result-correct-bg-hover:#253243;
+  --result-wrong-bg:#33232a;
+  --result-wrong-bg-hover:#3d2a32;
+  --on-1:#6e97cc;
+  --on-2:#54749f;
+  --gold:#ffe0a3;
+  --link:#a8c4ec;
 }
 html,body{touch-action:manipulation}
 body{
@@ -135,7 +143,7 @@ textarea{width:100%;height:92px;resize:vertical;font-family:inherit;line-height:
 
 button{
   padding:11px 18px;border:none;border-radius:14px;
-  background:linear-gradient(135deg,#5b6796,#4c5680);
+  background:linear-gradient(135deg,var(--on-1),var(--on-2));
   color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:.18s;
   font-family:'Pretendard Variable',Pretendard,-apple-system,'Malgun Gothic',sans-serif;
   box-shadow:0 4px 12px rgba(76,86,128,.2);
@@ -143,7 +151,7 @@ button{
 button:hover{filter:brightness(1.05);transform:translateY(-2px);box-shadow:0 7px 18px rgba(76,86,128,.22)}
 @media (hover:none){button:hover{transform:none;box-shadow:0 4px 12px rgba(76,86,128,.2);filter:none}}
 button:active{transform:translateY(0);box-shadow:0 3px 8px rgba(76,86,128,.2)}
-button.danger{background:linear-gradient(135deg,#a85f6b,#92505c);box-shadow:0 4px 12px rgba(146,80,92,.22)}
+button.danger{background:linear-gradient(135deg,#a05f6c,#8a4d59);box-shadow:0 4px 12px rgba(146,80,92,.22)}
 button.danger:hover{box-shadow:0 7px 18px rgba(146,80,92,.28)}
 button.small{padding:8px 12px;font-size:13px;border-radius:11px}
 
@@ -197,13 +205,13 @@ input[type=file]::file-selector-button{
   position:absolute;bottom:10px;right:10px;z-index:3;
   display:none;align-items:center;gap:5px;
   padding:6px 12px;border:none;border-radius:999px;
-  background:rgba(255,233,168,.16);color:#ffe9a8;
+  background:rgba(168,196,236,.17);color:#bcd6f5;
   font-size:11.5px;font-weight:700;letter-spacing:.02em;
   box-shadow:none;cursor:pointer;backdrop-filter:blur(3px);
   opacity:0;transform:translateY(4px);transition:opacity .22s ease,transform .22s ease,background .15s;
 }
 #cardUndoBtn.show{display:inline-flex;opacity:1;transform:translateY(0)}
-#cardUndoBtn:hover{background:rgba(255,233,168,.26);filter:none}
+#cardUndoBtn:hover{background:rgba(168,196,236,.28);filter:none}
 #cardUndoBtn:active{transform:scale(.94)}
 #cardUndoBtn svg{width:13px;height:13px}
 #cardNextMini,#cardDoneMini{
@@ -214,12 +222,12 @@ input[type=file]::file-selector-button{
   box-shadow:none;cursor:pointer;backdrop-filter:blur(3px);
   opacity:0;transform:translateY(4px);transition:opacity .22s ease,transform .22s ease,background .15s;
 }
-#cardNextMini{left:10px;background:rgba(255,233,168,.16);color:#ffe9a8}
-#cardDoneMini{left:50%;background:rgba(255,233,168,.16);color:#ffe9a8}
+#cardNextMini{left:10px;background:rgba(168,196,236,.17);color:#bcd6f5}
+#cardDoneMini{left:50%;background:rgba(168,196,236,.17);color:#bcd6f5}
 #cardNextMini.show{display:inline-flex;opacity:1;transform:translateY(0)}
 #cardDoneMini.show{display:inline-flex;opacity:1;transform:translateX(-50%) translateY(0)}
 #cardDoneMini{transform:translateX(-50%) translateY(4px)}
-#cardNextMini:hover,#cardDoneMini:hover{background:rgba(255,233,168,.26);filter:none}
+#cardNextMini:hover,#cardDoneMini:hover{background:rgba(168,196,236,.28);filter:none}
 #cardNextMini:active{transform:scale(.94)}
 #cardDoneMini:active{transform:translateX(-50%) scale(.94)}
 #cardNextMini svg,#cardDoneMini svg{width:13px;height:13px}
@@ -234,7 +242,7 @@ input[type=file]::file-selector-button{
 }
 #back{
   font-size:22px;
-  color:#fff3c4;
+  color:var(--gold);
   margin-top:14px;
   display:none;
   font-weight:600;
@@ -264,7 +272,7 @@ input[type=file]::file-selector-button{
 }
 .progress-fill{
   height:100%;border-radius:8px;
-  background:linear-gradient(90deg,#5b6796,#7f8ab5);
+  background:linear-gradient(90deg,var(--on-2),var(--on-1));
   width:0%;transition:width .45s cubic-bezier(.2,.8,.3,1);
 }
 
@@ -356,7 +364,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 .speakable:hover{border-bottom-color:var(--accent);color:var(--accent)}
 /* 플래시카드(그라디언트 카드)에서는 흰색 밑줄 유지 */
 .flashcard .speakable{border-bottom-color:rgba(255,255,255,.45)}
-.flashcard .speakable:hover{border-bottom-color:#fff;color:#aee9ff}
+.flashcard .speakable:hover{border-bottom-color:#fff;color:var(--link)}
 .speakable:active{opacity:.6}
 .speakable::after{content:'🔊';font-size:11px;margin-left:4px;opacity:.65;vertical-align:middle}
 .list-scroll-btns{display:flex;gap:6px;margin-top:6px}
@@ -397,7 +405,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
   border-color:rgba(255,255,255,.28);
   box-shadow:0 14px 34px rgba(60,70,110,.5),inset 0 1px 0 rgba(255,255,255,.16)}
 .toast.undo>span{overflow:hidden;text-overflow:ellipsis}
-.toast.undo .undo-btn{flex:0 0 auto;padding:7px 15px;border-radius:999px;border:none;box-shadow:0 2px 8px rgba(0,0,0,.18);background:#fff;color:#4c5680;font-size:12.5px;font-weight:800;cursor:pointer}
+.toast.undo .undo-btn{flex:0 0 auto;padding:7px 15px;border-radius:999px;border:none;box-shadow:0 2px 8px rgba(0,0,0,.18);background:#fff;color:#3f5f86;font-size:12.5px;font-weight:800;cursor:pointer}
 .confetti{position:fixed;top:-30px;pointer-events:none;z-index:9998;will-change:transform}
 @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.15}}
 
@@ -414,9 +422,9 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
   flex:1;border:none;cursor:pointer;border-radius:14px;padding:9px 4px;
   font-family:'Pretendard Variable',Pretendard,-apple-system,'Malgun Gothic',sans-serif;font-weight:700;font-size:13px;
   color:#fff;transition:.18s;box-shadow:0 3px 10px var(--shadow);white-space:nowrap;
-  background:linear-gradient(135deg,#b8bdcc,#9aa0b0);
+  background:linear-gradient(135deg,#4a4f59,#3a3f48);
 }
-.qmode.on{background:linear-gradient(135deg,#5f8f7f,#4d766a);box-shadow:0 4px 12px rgba(77,118,106,.3)}
+.qmode.on{background:linear-gradient(135deg,var(--on-1),var(--on-2));box-shadow:0 4px 12px rgba(90,124,168,.3)}
 .qmode:hover{filter:brightness(1.05);transform:translateY(-1px)}
 .qmode:active{transform:translateY(0)}
 
@@ -442,12 +450,12 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 .quiz-opt:hover:not(:disabled){background:var(--li-bg-hover);transform:translateY(-2px);box-shadow:0 6px 16px var(--shadow-strong)}
 .quiz-opt:disabled{cursor:default}
 .quiz-opt.correct{
-  background:linear-gradient(135deg,#5f8f7f,#4d766a);color:#fff;border-color:transparent;
+  background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff;border-color:transparent;
   box-shadow:0 6px 18px rgba(62,180,137,.4);
 }
 .quiz-opt.correct .num{background:rgba(255,255,255,.25);color:#fff}
 .quiz-opt.wrong{
-  background:linear-gradient(135deg,#a85f6b,#92505c);color:#fff;border-color:transparent;
+  background:linear-gradient(135deg,#a05f6c,#8a4d59);color:#fff;border-color:transparent;
   box-shadow:0 6px 18px rgba(146,80,92,.28);
 }
 .quiz-opt.wrong .num{background:rgba(255,255,255,.25);color:#fff}
@@ -495,7 +503,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 #recentDecksBar::-webkit-scrollbar,#lsDeckBar::-webkit-scrollbar{display:none}
 .deckbar-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;box-shadow:none;white-space:nowrap;transition:background .15s,color .15s}
 .deckbar-chip:hover{background:var(--li-bg-hover);filter:none;transform:none;box-shadow:none}
-.deckbar-chip.on{background:linear-gradient(135deg,#5b6796,#4c5680);color:#fff;border-color:transparent;box-shadow:0 3px 12px rgba(76,86,128,.25)}
+.deckbar-chip.on{background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff;border-color:transparent;box-shadow:0 3px 12px rgba(76,86,128,.25)}
 /* Deck panel cards */
 .deck-card{
   background:var(--li-bg);border:1.5px solid var(--input-border);
@@ -571,11 +579,11 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 .gs-links{display:flex;gap:6px;padding:4px 6px 6px}
 .gs-links a{flex:1;text-align:center;font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;padding:7px 4px;border:1.5px solid var(--input-border);border-radius:10px;background:var(--container-bg);white-space:nowrap}
 .gs-links a:active{background:var(--h3-bg)}
-.ls-scrolltop,.ls-scrollbottom{position:fixed;right:10px;z-index:50;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#5b6796,#4c5680);color:#fff;border:none;font-size:13px;box-shadow:0 3px 10px rgba(76,86,128,.22);cursor:pointer;display:none;padding:0;opacity:.85}
+.ls-scrolltop,.ls-scrollbottom{position:fixed;right:10px;z-index:50;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff;border:none;font-size:13px;box-shadow:0 3px 10px rgba(76,86,128,.22);cursor:pointer;display:none;padding:0;opacity:.85}
 .ls-scrolltop{bottom:52px}
 .ls-scrollbottom{bottom:12px}
 .ls-scrolltop.show,.ls-scrollbottom.show{display:block}
-.ls-searchfab{position:fixed;left:10px;bottom:12px;z-index:50;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#5b6796,#4c5680);color:#fff;border:none;box-shadow:0 3px 10px rgba(76,86,128,.22);cursor:pointer;display:none;padding:0;opacity:.85;align-items:center;justify-content:center}
+.ls-searchfab{position:fixed;left:10px;bottom:12px;z-index:50;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff;border:none;box-shadow:0 3px 10px rgba(76,86,128,.22);cursor:pointer;display:none;padding:0;opacity:.85;align-items:center;justify-content:center}
 .ls-searchfab.show{display:flex}
 .ls-searchfab svg{width:16px;height:16px}
 #lsSearchPanel{position:fixed;left:8px;right:8px;bottom:8px;z-index:60;background:var(--card-bg,var(--li-bg));border:1.5px solid var(--input-border);border-radius:16px;padding:10px;box-shadow:0 -6px 24px rgba(0,0,0,.18)}
@@ -595,7 +603,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 /* 업데이트 배너 */
 #updateBanner{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-80px);z-index:9999;
   padding:11px 20px;border-radius:999px;border:none;cursor:pointer;
-  background:linear-gradient(135deg,#5b6796,#4c5680);color:#fff;
+  background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff;
   font-size:14px;font-weight:700;letter-spacing:.01em;white-space:nowrap;
   box-shadow:0 8px 24px rgba(76,86,128,.3);opacity:0;pointer-events:none;
   transition:transform .3s cubic-bezier(.2,.8,.3,1),opacity .3s}
@@ -926,7 +934,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-17.7'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-18.1'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -1410,7 +1418,7 @@ html+='<div style="color:var(--text-title);font-weight:800;font-size:13px;margin
 html+='<div style="display:flex;flex-wrap:wrap;gap:8px">';
 html+=detectedTabs.map(function(t,i){
 let active=urlGid&&urlGid===t.gid;
-return '<button class="small" onclick="importSheetTab('+i+')" style="'+(active?'background:linear-gradient(135deg,#5b6796,#4c5680);color:#fff;':'')+'">📄 '+escapeHtml(t.name)+'</button>';
+return '<button class="small" onclick="importSheetTab('+i+')" style="'+(active?'background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff;':'')+'">📄 '+escapeHtml(t.name)+'</button>';
 }).join('');
 html+='</div>';
 }else{
@@ -1546,7 +1554,7 @@ if(!eng||!both) return;
 // 방향에 맞춰 라벨 갱신 (먼저 읽는 언어 표시)
 eng.textContent=cardDir==='k2e'?'🔊 한':'🔊 영';
 both.textContent=cardDir==='k2e'?'한+영':'영+한';
-let active='linear-gradient(135deg,#5b6796,#4c5680)';
+let active='linear-gradient(135deg,var(--on-1),var(--on-2))';
 if(speakMode==='both'){
   eng.style.background=''; eng.style.color='';
   both.style.background=active; both.style.color='#fff';
@@ -1574,7 +1582,7 @@ function updateAutoSpeakBtn(){
   if(!btn) return;
   if(autoSpeak){
     btn.innerHTML=icon('vol')+' 발음 자동읽기';
-    btn.style.background='linear-gradient(135deg,#5b6796,#4c5680)';
+    btn.style.background='linear-gradient(135deg,var(--on-1),var(--on-2))';
     btn.style.color='#fff';
   } else {
     btn.innerHTML=icon('volx')+' 발음 자동읽기';
@@ -1609,7 +1617,7 @@ function updateAutoPlayBtn(){
   if(!btn) return;
   if(autoPlay){
     btn.textContent='⏹ 자동재생 중';
-    btn.style.background='linear-gradient(135deg,#5b6796,#4c5680)';
+    btn.style.background='linear-gradient(135deg,var(--on-1),var(--on-2))';
     btn.style.color='#fff';
   } else {
     btn.textContent='▶ 자동재생';
@@ -1680,7 +1688,7 @@ showToast(bothMode?'영어+한글 동시 표시 켜짐 👁':'플래시카드 �
 function updateBothModeBtn(){
 let b=document.getElementById('bothModeBtn');
 if(!b) return;
-if(bothMode){b.style.background='linear-gradient(135deg,#5f8f7f,#4d766a)';b.style.color='#fff';}
+if(bothMode){b.style.background='linear-gradient(135deg,var(--on-1),var(--on-2))';b.style.color='#fff';}
 else{b.style.background='';b.style.color='';}
 }
 let meaningHidden=localStorage.getItem('meaningHidden')==='1';
@@ -1714,7 +1722,7 @@ let b=document.getElementById('cardDirBtn');
 if(!b) return;
 let lbl=b.querySelector('.lbl');
 if(lbl) lbl.textContent=cardDir==='k2e'?'한→영':'영→한';
-if(cardDir==='k2e'){b.style.background='linear-gradient(135deg,#a8875f,#8f7050)';b.style.color='#fff';}
+if(cardDir==='k2e'){b.style.background='linear-gradient(135deg,#b99a55,#96793c)';b.style.color='#fff';}
 else{b.style.background='';b.style.color='';}
 }
 
@@ -1814,7 +1822,7 @@ let w=words[currentIndex];
 let wb=document.getElementById('cardWrongBtn');
 if(w.wrong){
 wb.textContent='✅ 오답해제';
-wb.style.background='linear-gradient(135deg,#a85f6b,#92505c)';
+wb.style.background='linear-gradient(135deg,#a05f6c,#8a4d59)';
 wb.style.color='#fff';
 wb.style.boxShadow='0 4px 12px rgba(146,80,92,.28)';
 }else{
@@ -2043,11 +2051,11 @@ function rootsHtml(word){
     if(multi && !simple && (!parts.length||!parts.some(x=>x.t==='root'))){
       // 확실한 뜻(내장 사전·내 단어장)만 표시 — 없으면 그 단어는 건너뜀
       let known=_phrKnown(t);
-      if(known){ entries.push({t,seg:'<b style="color:#ffe9a8">'+escapeHtml(t)+'</b><span style="opacity:.75">('+escapeHtml(known)+')</span>',simple:true}); }
+      if(known){ entries.push({t,seg:'<b style="color:var(--gold)">'+escapeHtml(t)+'</b><span style="opacity:.75">('+escapeHtml(known)+')</span>',simple:true}); }
       continue;
     }
     if(!parts.length) continue;
-    let seg=parts.map(x=>'<b style="color:#ffe9a8">'+escapeHtml(x.p)+'</b><span style="opacity:.75">('+escapeHtml(x.g)+')</span>').join(' + ');
+    let seg=parts.map(x=>'<b style="color:var(--gold)">'+escapeHtml(x.p)+'</b><span style="opacity:.75">('+escapeHtml(x.g)+')</span>').join(' + ');
     entries.push({t,seg,simple});
   }
   if(!entries.length) return '';
@@ -2141,8 +2149,8 @@ function baseWordFill(word){
     if(!el2 || el2.dataset.w!==dw) return; // 카드가 바뀌었으면 무시
     if(!b){ el2.style.display='none'; return; }
     let kor=b.kor?(' <span style="opacity:.8">('+escapeHtml(b.kor)+')</span>')
-      :(' <a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(b.eng)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:#cdd7ff;text-decoration:underline">뜻 보기</a>');
-    el2.innerHTML='🔤 기본형 <b style="color:#ffe9a8;cursor:pointer" onclick="event.stopPropagation();speakText(\''+speakAttr(b.eng)+'\')">'+escapeHtml(b.eng)+'</b>'+kor;
+      :(' <a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(b.eng)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--link);text-decoration:underline">뜻 보기</a>');
+    el2.innerHTML='🔤 기본형 <b style="color:var(--gold);cursor:pointer" onclick="event.stopPropagation();speakText(\''+speakAttr(b.eng)+'\')">'+escapeHtml(b.eng)+'</b>'+kor;
     el2.style.display='block';
     fitCardExample();
   }).catch(()=>{});
@@ -2224,7 +2232,7 @@ async function cardSynLookup(){
     // 찾는 동안 카드가 바뀌었으면 엉뚱한 카드 위에 덮어쓰지 않기
     if(currentIndex<0||!words[currentIndex]||words[currentIndex].eng.toLowerCase()!==word) return;
     if(!data.syn.length&&!data.ant.length){
-      el.innerHTML='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:13px;color:#cdd7ff;text-decoration:underline;font-style:normal">네이버 사전에서 보기</a>';
+      el.innerHTML='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:13px;color:var(--link);text-decoration:underline;font-style:normal">네이버 사전에서 보기</a>';
       return;
     }
     let chip=w=>'<span onclick="event.stopPropagation();speakText(\''+speakAttr(w)+'\')" style="display:inline-block;background:rgba(255,255,255,.12);border-radius:999px;padding:4px 11px;margin:3px 2px;font-size:13px;font-style:normal;cursor:pointer">'+escapeHtml(w)+'</span>';
@@ -2234,7 +2242,7 @@ async function cardSynLookup(){
     h+='<div style="margin-top:8px"><button onclick="event.stopPropagation();showExample(words[currentIndex]?words[currentIndex].example||\'\':\'\')" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);border:none;box-shadow:none;padding:4px 12px;border-radius:999px;font-size:11px">닫기</button></div></div>';
     el.innerHTML=h;
   }catch(e){
-    el.innerHTML='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:13px;color:#cdd7ff;text-decoration:underline;font-style:normal">네이버 사전에서 보기</a>';
+    el.innerHTML='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:13px;color:var(--link);text-decoration:underline;font-style:normal">네이버 사전에서 보기</a>';
   }
 }
 
@@ -2320,7 +2328,7 @@ async function cardExampleLookup(){
     let list=await getExamples(w0);
     // 검색하는 동안 다른 카드로 넘어갔으면(공유 엘리먼트) 엉뚱한 카드에 덮어쓰지 않도록 중단
     if(currentIndex<0||!words[currentIndex]||words[currentIndex].eng.toLowerCase()!==w0) return;
-    if(!list.length){ el.innerHTML='<span style="font-size:12px;color:rgba(255,255,255,.7)">예문을 찾지 못했어요 😥</span> <a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'&range=example" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:12px;color:#cdd7ff;text-decoration:underline">네이버 예문 보기</a>'; return; }
+    if(!list.length){ el.innerHTML='<span style="font-size:12px;color:rgba(255,255,255,.7)">예문을 찾지 못했어요 😥</span> <a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'&range=example" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:12px;color:var(--link);text-decoration:underline">네이버 예문 보기</a>'; return; }
     el.innerHTML='<div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:6px">마음에 드는 예문을 탭하면 저장돼요</div>'+list.map((x,i)=>
       '<div onclick="event.stopPropagation();cardExamplePick('+i+')" style="cursor:pointer;text-align:left;background:rgba(255,255,255,.1);border-radius:10px;padding:8px 10px;margin:5px 0;font-size:13px;line-height:1.45;font-style:normal">'
       +escapeHtml(x.en)+(x.ko?('<div style="color:rgba(255,255,255,.65);font-size:12px;margin-top:2px">'+escapeHtml(x.ko)+'</div>'):'')+'</div>').join('');
@@ -3217,7 +3225,7 @@ function lsToggleAutoSpeak(){
 function updateLsSpeakBtn(){
   let b=document.getElementById('lsSpeakBtn');
   if(!b) return;
-  if(lsAutoSpeak){ b.style.background='linear-gradient(135deg,#5b6796,#4c5680)'; b.style.color='#fff'; }
+  if(lsAutoSpeak){ b.style.background='linear-gradient(135deg,var(--on-1),var(--on-2))'; b.style.color='#fff'; }
   else { b.style.background=''; b.style.color=''; }
 }
 // 영어가 두 줄로 접히면 한 줄이 될 때까지 영어(11px까지) → 그래도 안 되면 한글 뜻(10px까지) 순으로 축소
