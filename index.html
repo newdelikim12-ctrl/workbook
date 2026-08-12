@@ -413,6 +413,16 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
   box-shadow:0 14px 34px rgba(60,70,110,.5),inset 0 1px 0 rgba(255,255,255,.16)}
 .toast.undo>span{overflow:hidden;text-overflow:ellipsis}
 .toast.undo .undo-btn{flex:0 0 auto;padding:7px 15px;border-radius:999px;border:none;box-shadow:0 2px 8px rgba(0,0,0,.18);background:#fff;color:#3f5f86;font-size:12.5px;font-weight:800;cursor:pointer}
+.cf-back{position:fixed;inset:0;z-index:10000;background:rgba(8,10,14,.55);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:22px}
+.cf-back.show{display:flex}
+.cf-box{width:100%;max-width:340px;background:linear-gradient(135deg,var(--card-grad-2),var(--card-grad-1));border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:22px 20px 16px;box-shadow:0 22px 50px rgba(0,0,0,.5);color:#fff;animation:cfIn .18s ease}
+@keyframes cfIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+.cf-msg{font-size:14.5px;font-weight:600;line-height:1.55;white-space:pre-line;text-align:center;letter-spacing:-.2px}
+.cf-btns{display:flex;gap:8px;margin-top:18px}
+.cf-btns button{flex:1;padding:11px 6px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:none;font-family:inherit}
+.cf-cancel{background:rgba(255,255,255,.1);color:rgba(255,255,255,.75)}
+.cf-ok{background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff}
+.cf-ok:focus-visible,.cf-cancel:focus-visible{outline:2px solid rgba(255,255,255,.5);outline-offset:2px}
 .confetti{position:fixed;top:-30px;pointer-events:none;z-index:9998;will-change:transform}
 @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.15}}
 
@@ -938,10 +948,19 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 </div>
 
 <div id="toast" class="toast"></div>
+<div id="confirmBack" class="cf-back" onclick="if(event.target===this)closeConfirm(false)">
+  <div class="cf-box" role="dialog" aria-modal="true">
+    <div class="cf-msg" id="confirmMsg"></div>
+    <div class="cf-btns">
+      <button class="cf-cancel" onclick="closeConfirm(false)">취소 (Esc)</button>
+      <button class="cf-ok" onclick="closeConfirm(true)">확인 (Enter)</button>
+    </div>
+  </div>
+</div>
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-19.6'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-19.7'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -1010,6 +1029,35 @@ function renderRecentDecks(){
 }
 function saveDeckData(){ let d=decks.find(x=>x.id===activeDeckId); if(d){d.words=words;d.stats=stats;d.dupes=dupes;} saveDecks(); }
 
+// ===== 앱 자체 확인창 (Enter=확인 / Esc=취소) =====
+let _cfCb=null,_cfArmed=false;
+function confirmOpen(){ let b=document.getElementById('confirmBack'); return !!b&&b.classList.contains('show'); }
+function openConfirm(msg,onOk){
+  let b=document.getElementById('confirmBack');
+  if(!b){ if(window.confirm(msg)) onOk(); return; }
+  document.getElementById('confirmMsg').textContent=msg;
+  _cfCb=onOk; b.classList.add('show');
+  setTimeout(function(){ let ok=b.querySelector('.cf-ok'); if(ok) ok.focus(); },30);
+}
+function closeConfirm(ok){
+  let b=document.getElementById('confirmBack');
+  if(!b||!b.classList.contains('show')) return;
+  b.classList.remove('show');
+  let cb=_cfCb; _cfCb=null;
+  if(ok&&cb) cb();
+}
+// 확인이 필요하면 창을 띄우고 false 반환 → 확인 시 같은 동작을 다시 실행
+function needConfirm2(again,msg){ return needConfirm(msg,again); }
+function needConfirm(msg,again){
+  if(_cfArmed){ _cfArmed=false; return true; }
+  openConfirm(msg,function(){ _cfArmed=true; try{ again(); } finally { _cfArmed=false; } });
+  return false;
+}
+document.addEventListener('keydown',function(e){
+  if(!confirmOpen()) return;
+  if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); closeConfirm(true); }
+  else if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); closeConfirm(false); }
+},true);
 const praises=['잘했어요! 🎉','최고예요! ⭐','멋져요! 💪','완벽해요! ✨','대단해요! 🌟'];
 let toastTimer;
 // 긴 문장도 잘리지 않고 한 줄에 들어오도록 글씨 크기를 살짝 줄임
@@ -1273,7 +1321,7 @@ function removeDupe(i){ dupes.splice(i,1); saveDupes(); render(); }
 function clearDupes(){
   let hasSrc=words.some(w=>w.src);
   if(!dupes.length && !hasSrc) return showToast('초기화할 기록이 없어요');
-  if(!confirm('중복 기록과 시트 출처 기록을 초기화할까요?\n\n삭제한 세부 시트 때문에 잘못 잡히는 중복을 없애고, 다음에 시트를 불러올 때 새로 판단하게 합니다. (단어·학습기록은 그대로 유지)')) return;
+  if(!needConfirm2(()=>clearDupes(),'중복 기록과 시트 출처 기록을 초기화할까요?\n\n삭제한 세부 시트 때문에 잘못 잡히는 중복을 없애고, 다음에 시트를 불러올 때 새로 판단하게 합니다. (단어·학습기록은 그대로 유지)')) return;
   dupes=[];
   words.forEach(w=>{ delete w.src; }); // 출처 기록 초기화 → 삭제된 시트와의 과거 중복 해소
   saveDupes(); render(); showToast('중복·출처 기록을 초기화했어요 🔄');
@@ -2569,7 +2617,7 @@ save();
 }
 function clearAll(){
 if(!words.length) return alert('단어가 없습니다');
-if(!confirm('현재 단어장의 모든 단어를 삭제하고 초기화할까요?')) return;
+if(!needConfirm2(()=>clearAll(),'현재 단어장의 모든 단어를 삭제하고 초기화할까요?')) return;
 playSound('delete');
 words=[];
 currentIndex=-1;
@@ -2579,7 +2627,7 @@ save();
 }
 function clearMastered(){
 if(!words.some(w=>w.mastered)) return alert('학습 완료된 단어가 없습니다');
-if(!confirm('학습 완료된 단어를 모두 다시 학습하도록 되돌릴까요?')) return;
+if(!needConfirm2(()=>clearMastered(),'학습 완료된 단어를 모두 다시 학습하도록 되돌릴까요?')) return;
 playSound('delete');
 words.forEach(w=>{if(w.mastered) w.mastered=false;});
 save();
@@ -2587,7 +2635,7 @@ save();
 
 function bulkDelete(items){
 if(!items.length) return alert('삭제할 단어가 없습니다');
-if(!confirm(items.length+'개의 단어를 삭제할까요?')) return;
+if(!needConfirm2(()=>bulkDelete(items),items.length+'개의 단어를 삭제할까요?')) return;
 playSound('delete');
 let set=new Set(items.map(x=>x.w));
 let curWord=currentIndex>=0?words[currentIndex]:null;
@@ -2606,7 +2654,7 @@ function clearWrongs(){
 let q=searchVal('wrongSearch');
 let items=words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,q,x.i)).map(x=>x.w);
 if(!items.length) return alert('오답노트에 단어가 없습니다');
-if(!confirm(items.length+'개의 단어를 오답노트에서 해제할까요? (전체 단어 목록에는 그대로 남아요)')) return;
+if(!needConfirm2(()=>clearWrongs(),items.length+'개의 단어를 오답노트에서 해제할까요? (전체 단어 목록에는 그대로 남아요)')) return;
 playSound('delete');
 items.forEach(w=>{w.wrong=false;w.wrongResult=null;});
 save();
@@ -2614,7 +2662,7 @@ save();
 function del(i){
 let w=words[i];
 if(!w) return;
-if(!confirm('"'+w.eng+' — '+w.kor+'" 단어를 정말 삭제할까요?')) return;
+if(!needConfirm2(()=>del(i),'"'+w.eng+' — '+w.kor+'" 단어를 정말 삭제할까요?')) return;
 playSound('delete');
 if(editIndex===i)editIndex=-1;
 let curWord=currentIndex>=0?words[currentIndex]:null;
@@ -2665,7 +2713,7 @@ function resetCardView(){
 function resetProgress(){
 let items=words.filter(w=>w.mastered);
 if(!items.length) return showToast('학습 완료된 단어가 없어요');
-if(!confirm('학습 완료된 단어 '+items.length+'개를 모두 다시 학습할 단어로 초기화할까요?')) return;
+if(!needConfirm2(()=>resetProgress(),'학습 완료된 단어 '+items.length+'개를 모두 다시 학습할 단어로 초기화할까요?')) return;
 items.forEach(w=>{w.mastered=false;w.lastResult=null;});
 save();
 resetCardView();
@@ -2675,7 +2723,7 @@ showToast('학습 진도율을 초기화했어요 ↺');
 function resetWrongProgress(){
 let items=words.filter(w=>w.wrong);
 if(!items.length) return showToast('오답노트가 비어있어요');
-if(!confirm('오답노트 단어 '+items.length+'개를 모두 다시 복습할 단어로 초기화할까요?')) return;
+if(!needConfirm2(()=>resetWrongProgress(),'오답노트 단어 '+items.length+'개를 모두 다시 복습할 단어로 초기화할까요?')) return;
 items.forEach(w=>{w.wrongResult=null;});
 save();
 resetCardView();
@@ -2687,7 +2735,7 @@ let q=searchVal('wrongSearch');
 let items=words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,q,x.i)).map(x=>x.w);
 if(!items.length) return alert('오답노트에 단어가 없습니다');
 let label=result==='correct'?'외웠어요':'재도전';
-if(!confirm(items.length+"개를 모두 '"+label+"'(으)로 표시할까요?")) return;
+if(!needConfirm2(()=>bulkWrong(result),items.length+"개를 모두 '"+label+"'(으)로 표시할까요?")) return;
 items.forEach(w=>{ w.wrongResult=result; });
 save();
 if(result==='correct') playSound('add');
@@ -2699,7 +2747,7 @@ let q=searchVal('searchBox');
 let items=words.filter(w=>matchQ(w,q));
 if(!items.length) return alert('단어가 없습니다');
 let label=state?'학습 완료':'학습 안 함';
-if(!confirm(items.length+"개를 모두 '"+label+"'(으)로 표시할까요?")) return;
+if(!needConfirm2(()=>bulkMaster(state),items.length+"개를 모두 '"+label+"'(으)로 표시할까요?")) return;
 items.forEach(w=>{ w.mastered=state; });
 save();
 if(state) playSound('add');
@@ -2752,7 +2800,7 @@ try{data=JSON.parse(raw);}catch(e){return alert('백업 데이터 형식이 올�
 let mapWord=w=>({eng:w.eng||'',kor:w.kor||'',example:w.example||'',wrong:!!w.wrong,mastered:!!w.mastered,lastResult:w.lastResult,wrongResult:w.wrongResult||null,src:w.src});
 // 신형(v2): 모든 단어장 복원
 if(data&&Array.isArray(data.decks)&&data.decks.length){
-  if(!confirm('모든 단어장을 백업 데이터로 덮어쓸까요? (지금 단어장들은 사라집니다)')) return;
+  if(!needConfirm2(()=>restoreBackup(),'모든 단어장을 백업 데이터로 덮어쓸까요? (지금 단어장들은 사라집니다)')) return;
   decks=data.decks.map(d=>({
     // 외부 백업 id는 안전한 문자만 허용(따옴표/역슬래시 등 주입 차단)
     id:(typeof d.id==='string'?d.id.replace(/[^a-zA-Z0-9_-]/g,''):'')||('deck_'+Math.random().toString(36).slice(2)),
@@ -2772,7 +2820,7 @@ if(data&&Array.isArray(data.decks)&&data.decks.length){
 }
 // 구형: 활성 단어장만 복원
 if(!data||!Array.isArray(data.words)) return alert('백업 데이터에 단어가 없습니다');
-if(!confirm('현재 단어를 백업 데이터로 덮어쓸까요? (지금 단어는 사라집니다)')) return;
+if(!needConfirm2(()=>restoreBackup(),'현재 단어를 백업 데이터로 덮어쓸까요? (지금 단어는 사라집니다)')) return;
 words=data.words.map(mapWord);
 if(data.stats&&typeof data.stats==='object'){stats=data.stats;}
 dupes=[]; // 복원된 단어와 어긋난 옛 중복 기록 제거
@@ -3004,7 +3052,7 @@ function updateLsSelBar(){
 }
 function lsDeleteSelected(){
   if(!lsSelected.size) return showToast('선택된 단어가 없어요');
-  if(!confirm('선택한 '+lsSelected.size+'개 단어를 삭제할까요?')) return;
+  if(!needConfirm2(()=>lsDeleteSelected(),'선택한 '+lsSelected.size+'개 단어를 삭제할까요?')) return;
   playSound('delete');
   words=words.filter((w,i)=>!lsSelected.has(i));
   let d=getActiveDeck(); if(d) d.words=words;
@@ -3019,7 +3067,7 @@ function lsDeleteMastered(){
   let delTarget=w=>w.mastered&&!(w.wrong&&w.wrongResult!=='correct');
   let n=words.filter(delTarget).length;
   if(!n) return showToast('삭제할 학습완료 단어가 없어요 (오답 등록된 단어는 제외)');
-  if(!confirm('외운(학습완료) 단어 '+n+'개를 단어장에서 완전히 삭제할까요?\n(오답으로 등록된 단어는 삭제되지 않아요)')) return;
+  if(!needConfirm2(()=>lsDeleteMastered(),'외운(학습완료) 단어 '+n+'개를 단어장에서 완전히 삭제할까요?\n(오답으로 등록된 단어는 삭제되지 않아요)')) return;
   playSound('delete');
   words=words.filter(w=>!delTarget(w));
   let d=getActiveDeck(); if(d) d.words=words;
@@ -3051,7 +3099,7 @@ function updateWlSelBar(){
 }
 function wlDeleteSelected(){
   if(!wlSelected.size) return showToast('선택된 단어가 없어요');
-  if(!confirm('선택한 '+wlSelected.size+'개 단어를 삭제할까요?')) return;
+  if(!needConfirm2(()=>wlDeleteSelected(),'선택한 '+wlSelected.size+'개 단어를 삭제할까요?')) return;
   playSound('delete');
   words=words.filter((w,i)=>!wlSelected.has(i));
   let d=getActiveDeck(); if(d) d.words=words;
@@ -3065,7 +3113,7 @@ function lsBulk(action){
   let items=lsCurrentList();
   if(!items.length) return alert('적용할 단어가 없어요');
   let labels={master:'학습 완료',unmaster:'학습 취소',clearWrong:'오답 해제'};
-  if(!confirm('현재 목록의 '+items.length+'개 단어를 모두 \''+labels[action]+'\' 처리할까요?')) return;
+  if(!needConfirm2(()=>lsBulk(action),'현재 목록의 '+items.length+'개 단어를 모두 \''+labels[action]+'\' 처리할까요?')) return;
   items.forEach(({w})=>{
     if(action==='master') w.mastered=true;
     else if(action==='unmaster') w.mastered=false;
@@ -3315,7 +3363,7 @@ function renameDeck(id){
 function deleteDeck(id){
   if(decks.length<=1) return showToast('단어장이 하나뿐이라 삭제할 수 없어요');
   let d=decks.find(x=>x.id===id);
-  if(!confirm((d?d.name:'단어장')+'을(를) 삭제할까요? 안에 있는 단어도 모두 사라져요')) return;
+  if(!needConfirm2(()=>deleteDeck(id),(d?d.name:'단어장')+'을(를) 삭제할까요? 안에 있는 단어도 모두 사라져요')) return;
   decks=decks.filter(x=>x.id!==id);
   if(activeDeckId===id) switchDeck(decks[0].id);
   else { saveDecks(); renderDeckPanel(); renderRecentDecks(); }
@@ -3675,6 +3723,7 @@ function kbToggleDone(){
 }
 document.addEventListener('keydown',function(e){
   if(e.altKey||e.metaKey) return;                 // OS·브라우저 단축키는 건드리지 않음
+  if(confirmOpen()) return;                       // 확인 대화상자가 떠 있으면 앱 단축키 차단
   let k0=e.key;
   // Ctrl은 방향키 조합에서만 사용(다른 Ctrl 단축키 방해 금지)
   if(e.ctrlKey && k0!=='ArrowRight' && k0!=='ArrowLeft') return;
