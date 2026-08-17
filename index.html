@@ -1017,7 +1017,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-19.33'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-19.34'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -1051,6 +1051,7 @@ if (!decks.length) {
 })();
 
 function _writeDecks(){
+  invalidateWordIndex();
   try{
     localStorage.setItem('decks',JSON.stringify(decks));
     localStorage.setItem('activeDeckId',activeDeckId);
@@ -1059,7 +1060,7 @@ function _writeDecks(){
 }
 let _saveTimer=null;
 // 뜻 확인·학습완료 등이 연달아 일어날 때 매번 전체 직렬화하지 않도록 잠시 모아서 저장
-function saveDecks(){ clearTimeout(_saveTimer); _saveTimer=setTimeout(()=>{ _saveTimer=null; _writeDecks(); },250); }
+function saveDecks(){ invalidateWordIndex(); clearTimeout(_saveTimer); _saveTimer=setTimeout(()=>{ _saveTimer=null; _writeDecks(); },250); }
 function flushDecks(){ if(_saveTimer){ clearTimeout(_saveTimer); _saveTimer=null; } _writeDecks(); }
 window.addEventListener('pagehide',flushDecks);
 window.addEventListener('beforeunload',flushDecks);
@@ -1084,7 +1085,7 @@ function renderRecentDecks(){
     if(on) bar.scrollLeft=Math.max(0,on.offsetLeft-(bar.clientWidth-on.offsetWidth)/2);
   });
 }
-function saveDeckData(){ let d=decks.find(x=>x.id===activeDeckId); if(d){d.words=words;d.stats=stats;d.dupes=dupes;} saveDecks(); }
+function saveDeckData(){ let d=decks.find(x=>x.id===activeDeckId); if(d){d.words=words;d.stats=stats;d.dupes=dupes;} invalidateWordIndex(); saveDecks(); }
 
 // ===== 앱 자체 확인창 (Enter=확인 / Esc=취소) =====
 let _cfCb=null,_cfArmed=false;
@@ -1159,7 +1160,8 @@ setTimeout(()=>s.remove(),3400);
 
 // ===== 효과음 (Web Audio로 직접 합성, 음원 파일 없음) =====
 let soundOn=localStorage.getItem('soundOn')!=='0'; // 기본 켜짐
-let sfxVol=Math.min(3,Math.max(0,parseFloat(localStorage.getItem('sfxVol'))||1.8)); // 효과음 음량 배율(0~3, 기본 180%)
+let _sv=parseFloat(localStorage.getItem('sfxVol'));
+let sfxVol=Math.min(3,Math.max(0,isNaN(_sv)?1.8:_sv)); // 효과음 음량 배율(0~3, 기본 180%). 0%도 그대로 저장됨
 let audioCtx=null, masterGain=null;
 function getCtx(){
 let AC=window.AudioContext||window.webkitAudioContext;
@@ -1681,7 +1683,7 @@ let cardDir=localStorage.getItem('cardDir')||'e2k'; // e2k: 영어 먼저, k2e: 
 let rangeFrom=null,rangeTo=null;
 let quizMode=localStorage.getItem('quizMode')==='1';
 let quizDir=localStorage.getItem('quizDir')||'random'; // 'e2k'(영어 제시) | 'k2e'(한글 제시) | 'random'
-let quizState=null;     // {i, dir:'e2k'|'k2e', correct, opts}
+let quizState=null;     // {i, w, dir:'e2k'|'k2e', correct, opts}
 let quizAnswered=false;
 let quizTimer=null;
 function speakWord(mode){
@@ -1776,6 +1778,7 @@ function setAutoPlaySpeed(v){
 function scheduleAutoPlay(){
   clearTimeout(autoPlayTimer);
   if(!autoPlay||currentIndex<0) return;
+  if(anyDialogOpen()){ autoPlayTimer=setTimeout(scheduleAutoPlay,400); return; } // 수정·메모 창이 닫힐 때까지 대기
   autoPlayTimer=setTimeout(()=>{
     nextCard();
   },autoPlaySpeed*1000);
@@ -1859,7 +1862,7 @@ bothMode=!bothMode;
 localStorage.setItem('bothMode',bothMode?'1':'0');
 playSound(bothMode?'flip':'fold');
 updateBothModeBtn();
-if(currentIndex>=0 && words[currentIndex]) showWord(words[currentIndex],currentIndex);
+if(currentIndex>=0 && words[currentIndex]) showWord(words[currentIndex],currentIndex,true); // 같은 카드 다시 그리기 → 히스토리에 쌓지 않음
 showToast(bothMode?'영어+한글 동시 표시 켜짐 👁':'플래시카드 모드로 변경 📖');
 }
 function updateBothModeBtn(){
@@ -1891,7 +1894,7 @@ cardDir=cardDir==='e2k'?'k2e':'e2k';
 localStorage.setItem('cardDir',cardDir);
 updateCardDirBtn();
 updateSpeakBtns();
-if(currentIndex>=0 && words[currentIndex]) showWord(words[currentIndex],currentIndex);
+if(currentIndex>=0 && words[currentIndex]) showWord(words[currentIndex],currentIndex,true); // 같은 카드 다시 그리기 → 히스토리에 쌓지 않음
 showToast(cardDir==='k2e'?'한글 먼저 보기로 변경 🇰🇷':'영어 먼저 보기로 변경 🇺🇸');
 }
 function updateCardDirBtn(){
@@ -2078,10 +2081,13 @@ function addNoteRow(eng,kor){
   return a;
 }
 function wordEditorOpen(){ let b=document.getElementById('wordEditBack'); return !!b&&b.classList.contains('show'); }
+let _editTarget=null, _noteTarget=null;
+function anyDialogOpen(){ return confirmOpen()||noteEditorOpen()||wordEditorOpen(); }
 function openWordEditor(){
   if(currentIndex<0||!words[currentIndex]) return;
   let b=document.getElementById('wordEditBack'); if(!b) return;
   let w=words[currentIndex];
+  _editTarget=w;
   document.getElementById('wordEditEng').value=w.eng||'';
   document.getElementById('wordEditKor').value=w.kor||'';
   playSound('memo');
@@ -2091,21 +2097,24 @@ function openWordEditor(){
 function closeWordEditor(save_){
   let b=document.getElementById('wordEditBack');
   if(!b||!b.classList.contains('show')) return;
-  if(save_&&currentIndex>=0&&words[currentIndex]){
+  let w=_editTarget;
+  if(save_&&w){
     let e=document.getElementById('wordEditEng').value.trim();
     let k=document.getElementById('wordEditKor').value.trim();
     if(!e||!k){ showToast('영어와 뜻을 모두 입력해 주세요'); return; }
-    let w=words[currentIndex];
     if(e!==w.eng||k!==w.kor){
       w.eng=e; w.kor=k;
       save();
-      document.getElementById('front').innerText=cardDir==='k2e'?w.kor:w.eng;
-      document.getElementById('back').innerText=cardDir==='k2e'?w.eng:w.kor;
-      showExample(document.getElementById('card').classList.contains('revealed')?(w.example||''):'');
-      fitCardExample();
+      if(words[currentIndex]===w){   // 아직 같은 카드일 때만 화면 갱신
+        document.getElementById('front').innerText=cardDir==='k2e'?w.kor:w.eng;
+        document.getElementById('back').innerText=cardDir==='k2e'?w.eng:w.kor;
+        showExample(document.getElementById('card').classList.contains('revealed')?(w.example||''):'');
+        fitCardExample();
+      }
       playSound('memoSave'); showToast('단어를 수정했어요 ✏️');
     }
   }
+  _editTarget=null;
   b.classList.remove('show');
 }
 document.addEventListener('keydown',function(e){
@@ -2118,8 +2127,9 @@ function openNoteEditor(){
   if(currentIndex<0||!words[currentIndex]) return;
   let b=document.getElementById('noteBack');
   if(!b) return;
-  let list=noteList(words[currentIndex]);
-  document.getElementById('noteTitle').textContent='"'+words[currentIndex].eng+'" 내 메모';
+  _noteTarget=words[currentIndex];
+  let list=noteList(_noteTarget);
+  document.getElementById('noteTitle').textContent='"'+_noteTarget.eng+'" 내 메모';
   let box=document.getElementById('noteRows');
   box.innerHTML='';
   if(list.length) list.forEach(function(n){ addNoteRow(n.eng,n.kor); });
@@ -2133,21 +2143,23 @@ function openNoteEditor(){
 function closeNoteEditor(save_){
   let b=document.getElementById('noteBack');
   if(!b||!b.classList.contains('show')) return;
-  if(save_&&currentIndex>=0&&words[currentIndex]){
+  if(save_&&_noteTarget){
     let rows=[].slice.call(document.querySelectorAll('#noteRows .note-row')).map(function(r){
       let i=r.querySelectorAll('input');
       return {eng:i[0].value.trim(),kor:i[1].value.trim()};
     }).filter(function(n){ return n.eng||n.kor; });
-    let w=words[currentIndex];
-    if(rows.length){ w.note=rows; cardReveal(true); playSound('memoSave'); showToast(rows.length>1?('메모 '+rows.length+'줄을 저장했어요 📝'):'메모를 저장했어요 📝'); }
+    let w=_noteTarget;
+    if(rows.length){ w.note=rows; if(words[currentIndex]===w) cardReveal(true); playSound('memoSave'); showToast(rows.length>1?('메모 '+rows.length+'줄을 저장했어요 📝'):'메모를 저장했어요 📝'); }
     else if(w.note){ delete w.note; showToast('메모를 지웠어요'); }
     save(); renderCardNote(); fitCardExample();
   }
+  _noteTarget=null;
   b.classList.remove('show');
 }
 function clearCardNote(){
-  if(currentIndex>=0&&words[currentIndex]) delete words[currentIndex].note;
+  if(_noteTarget) delete _noteTarget.note;
   playSound('delete');
+  _noteTarget=null;
   save(); renderCardNote();
   let b=document.getElementById('noteBack'); if(b) b.classList.remove('show');
   showToast('메모를 지웠어요');
@@ -2340,41 +2352,43 @@ function compoundParts(w){
   return [];
 }
 // 숙어(구동사) 구성 단어 뜻 — 여러 단어 숙어에서만 사용
-const _PHR={be:'이다·있다',go:'가다',touch:'만지다·닿다',deal:'다루다·거래',count:'세다·중요하다',care:'돌보다·신경 쓰다',figure:'알아내다·수치',account:'설명·계좌',depend:'의존하다',rely:'의지하다',focus:'집중하다',apply:'적용·지원하다',belong:'속하다',consist:'구성되다',result:'결과·비롯되다',refer:'언급·참조하다',object:'반대하다·물체',insist:'주장하다',succeed:'성공하다',fail:'실패하다',agree:'동의하다',argue:'논쟁하다',complain:'불평하다',worry:'걱정하다',laugh:'웃다',smile:'미소짓다',cry:'울다',wait:'기다리다',search:'찾다',hope:'바라다',wish:'바라다',plan:'계획하다',prepare:'준비하다',decide:'결정하다',choose:'고르다',think:'생각하다',know:'알다',learn:'배우다',teach:'가르치다',read:'읽다',write:'쓰다',speak:'말하다',talk:'이야기하다',tell:'말하다',ask:'묻다·요청하다',answer:'대답하다',listen:'듣다',hear:'듣다',feel:'느끼다',want:'원하다',need:'필요하다',like:'좋아하다',love:'사랑하다',hate:'싫어하다',help:'돕다',save:'구하다·아끼다',spend:'쓰다·보내다',buy:'사다',sell:'팔다',send:'보내다',receive:'받다',open:'열다',close:'닫다',lock:'잠그다',build:'짓다',grow:'자라다',change:'바꾸다',add:'더하다',remove:'없애다',clean:'청소하다',wash:'씻다',cook:'요리하다',eat:'먹다',drink:'마시다',sleep:'자다',wake:'깨다',rise:'오르다',sit:'앉다',lie:'눕다·거짓말',jump:'뛰다',climb:'오르다',drive:'운전하다',ride:'타다',fly:'날다',swim:'수영하다',play:'놀다·경기하다',win:'이기다',lose:'잃다·지다',beat:'이기다·치다',fight:'싸우다',join:'합류하다',meet:'만나다',visit:'방문하다',leave:'떠나다·남기다',arrive:'도착하다',return:'돌아오다',enter:'들어가다',exit:'나가다',follow:'따르다',lead:'이끌다',carry:'나르다',come:'오다',get:'얻다·되다',take:'잡다·취하다',make:'만들다',put:'놓다',turn:'돌다·돌리다',look:'보다',give:'주다',keep:'유지하다',hold:'잡다',bring:'가져오다',call:'부르다',carry:'나르다',catch:'잡다',cut:'자르다',do:'하다',drop:'떨어뜨리다',fall:'떨어지다',fill:'채우다',find:'찾다',hand:'건네다·손',hang:'걸다',let:'~하게 하다',pass:'지나가다·건네다',pay:'지불하다',pick:'고르다·줍다',pull:'당기다',push:'밀다',run:'달리다',see:'보다',set:'놓다·정하다',show:'보여주다',stand:'서다·견디다',stay:'머무르다',throw:'던지다',try:'시도하다',walk:'걷다',work:'일하다·작동하다',break:'부수다',check:'확인하다',watch:'지켜보다',stick:'붙다·고수하다',live:'살다',move:'움직이다',stop:'멈추다',start:'시작하다',end:'끝나다',wear:'입다',blow:'불다',burn:'타다',
+const _PHR={be:'이다·있다',go:'가다',touch:'만지다·닿다',deal:'다루다·거래',count:'세다·중요하다',care:'돌보다·신경 쓰다',figure:'알아내다·수치',account:'설명·계좌',depend:'의존하다',rely:'의지하다',focus:'집중하다',apply:'적용·지원하다',belong:'속하다',consist:'구성되다',result:'결과·비롯되다',refer:'언급·참조하다',object:'반대하다·물체',insist:'주장하다',succeed:'성공하다',fail:'실패하다',agree:'동의하다',argue:'논쟁하다',complain:'불평하다',worry:'걱정하다',laugh:'웃다',smile:'미소짓다',cry:'울다',wait:'기다리다',search:'찾다',hope:'바라다',wish:'바라다',plan:'계획하다',prepare:'준비하다',decide:'결정하다',choose:'고르다',think:'생각하다',know:'알다',learn:'배우다',teach:'가르치다',read:'읽다',write:'쓰다',speak:'말하다',talk:'이야기하다',tell:'말하다',ask:'묻다·요청하다',answer:'대답하다',listen:'듣다',hear:'듣다',feel:'느끼다',want:'원하다',need:'필요하다',like:'좋아하다',love:'사랑하다',hate:'싫어하다',help:'돕다',save:'구하다·아끼다',spend:'쓰다·보내다',buy:'사다',sell:'팔다',send:'보내다',receive:'받다',open:'열다',close:'닫다',lock:'잠그다',build:'짓다',grow:'자라다',change:'바꾸다',add:'더하다',remove:'없애다',clean:'청소하다',wash:'씻다',cook:'요리하다',eat:'먹다',drink:'마시다',sleep:'자다',wake:'깨다',rise:'오르다',sit:'앉다',lie:'눕다·거짓말',jump:'뛰다',climb:'오르다',drive:'운전하다',ride:'타다',fly:'날다',swim:'수영하다',play:'놀다·경기하다',win:'이기다',lose:'잃다·지다',beat:'이기다·치다',fight:'싸우다',join:'합류하다',meet:'만나다',visit:'방문하다',leave:'떠나다·남기다',arrive:'도착하다',return:'돌아오다',enter:'들어가다',exit:'나가다',follow:'따르다',lead:'이끌다',carry:'나르다',come:'오다',get:'얻다·되다',take:'잡다·취하다',make:'만들다',put:'놓다',turn:'돌다·돌리다',look:'보다',give:'주다',keep:'유지하다',hold:'잡다',bring:'가져오다',call:'부르다',catch:'잡다',cut:'자르다',do:'하다',drop:'떨어뜨리다',fall:'떨어지다',fill:'채우다',find:'찾다',hand:'건네다·손',hang:'걸다',let:'~하게 하다',pass:'지나가다·건네다',pay:'지불하다',pick:'고르다·줍다',pull:'당기다',push:'밀다',run:'달리다',see:'보다',set:'놓다·정하다',show:'보여주다',stand:'서다·견디다',stay:'머무르다',throw:'던지다',try:'시도하다',walk:'걷다',work:'일하다·작동하다',break:'부수다',check:'확인하다',watch:'지켜보다',stick:'붙다·고수하다',live:'살다',move:'움직이다',stop:'멈추다',start:'시작하다',end:'끝나다',wear:'입다',blow:'불다',burn:'타다',
 up:'위로',down:'아래로',out:'밖으로',off:'떨어져·벗어나',on:'~위에·계속',in:'안에',into:'~안으로',away:'멀리·떨어져',back:'뒤로·다시',over:'~위로·넘어',through:'~을 통과하여',about:'~에 대해·주위에',around:'주위에',across:'~을 가로질러',along:'~을 따라',after:'~후에·뒤쫓아',against:'~에 맞서',ahead:'앞에',apart:'떨어져',aside:'옆으로',by:'~옆에·~까지',for:'~을 위해',from:'~로부터',of:'~의',to:'~로·~에게',with:'~와 함께',without:'~없이',behind:'뒤에',below:'아래에',beyond:'~을 넘어',near:'가까이',past:'지나서',under:'아래에',upon:'~위에',onto:'~위로',toward:'~을 향해',towards:'~을 향해',forward:'앞으로',at:'~에서'};
 // 확실한 뜻만: 내 단어장에 등록된 단어(또는 그 원형)의 뜻
 // 내 단어장 어딘가에 그 단어가 그대로 있으면 그 뜻을 우선 사용
-function _deckMeaning(t){
+// 모든 단어장의 영어→뜻 색인 (단어가 바뀌면 invalidateWordIndex()로 무효화)
+let _wIdx=null;
+function wordIndex(){
+  if(_wIdx) return _wIdx;
+  let m=new Map();
   try{
     for(let d of decks){
-      let list=(d.id===activeDeckId)?words:(d.words||[]);
-      for(let x of list){
+      let list=(d.id===activeDeckId)?words:(d.words||[]);   // 활성 단어장은 최신 배열 사용
+      for(let x of (list||[])){
         let e=(x.eng||'').toLowerCase().replace(/[^a-z]/g,'');
-        if(e===t && (x.kor||'').trim()) return x.kor.trim();
+        let k=(x.kor||'').trim();
+        if(e&&k&&!m.has(e)) m.set(e,k);
       }
     }
   }catch(err){}
-  return null;
+  _wIdx=m; return m;
 }
+function invalidateWordIndex(){ _wIdx=null; try{ _baseCache.clear(); }catch(e){} } // 단어가 바뀌면 기본형 캐시도 함께 비움
+function _deckMeaning(t){ return wordIndex().get(t)||null; }
 function _phrKnown(t){
-  try{
-    for(let d of decks){ for(let x of (d.words||[])){
-      let e=(x.eng||'').toLowerCase().replace(/[^a-z]/g,'');
-      if(e===t && x.kor) return x.kor;
-    }}
-    // -ed/-ing/-s 형태면 원형으로도 조회 (concerned→concern)
-    let stems=[];
-    if(/ed$/.test(t)) stems.push(t.slice(0,-2),t.slice(0,-1));
-    if(/ing$/.test(t)) stems.push(t.slice(0,-3),t.slice(0,-3)+'e');
-    if(/s$/.test(t)&&!/ss$/.test(t)) stems.push(t.slice(0,-1));
-    for(let s of stems){
-      if(_PHR[s]) return _PHR[s];
-      for(let d of decks){ for(let x of (d.words||[])){
-        let e=(x.eng||'').toLowerCase().replace(/[^a-z]/g,'');
-        if(e===s && x.kor) return x.kor;
-      }}
-    }
-  }catch(e){}
+  let idx=wordIndex();
+  let hit=idx.get(t);
+  if(hit) return hit;
+  // -ed/-ing/-s 형태면 원형으로도 조회 (concerned→concern)
+  let stems=[];
+  if(/ed$/.test(t)) stems.push(t.slice(0,-2),t.slice(0,-1));
+  if(/ing$/.test(t)) stems.push(t.slice(0,-3),t.slice(0,-3)+'e');
+  if(/s$/.test(t)&&!/ss$/.test(t)) stems.push(t.slice(0,-1));
+  for(let st of stems){
+    if(_PHR[st]) return _PHR[st];
+    let h=idx.get(st);
+    if(h) return h;
+  }
   return '';
 }
 // 접두사 + 아는 단어 (encompass → en + compass, enclose → en + close)
@@ -2457,10 +2471,12 @@ function _baseCandidates(w){
   let cands=[], seen=new Set();
   // 접두사를 뗀 형태도 후보로 (encompass→compass, enclose→close)
   for(let k of _PREKEYS){
-    if(!w.startsWith(k)) continue;
+    if(k.length<2||!w.startsWith(k)) continue;      // a·e 같은 한 글자 접두사는 오탐이 많아 제외
     let rem=w.slice(k.length);
     if(rem.length<4) continue;
-    for(let c of [rem, rem+'e']){
+    let forms=[rem];
+    if(!rem.endsWith('e')) forms.push(rem+'e');
+    for(let c of forms){
       if(c.length>=4 && c!==w && !seen.has(c)){ seen.add(c); cands.push({c,len:c.length}); }
     }
   }
@@ -2470,9 +2486,10 @@ function _baseCandidates(w){
     let forms=[p, p+'e'];                                   // confid→confide, us→use
     if(p.endsWith('i')) forms.push(p.slice(0,-1)+'y');      // beauti→beauty, happi→happy
     if(/([a-z])\1$/.test(p)) forms.push(p.slice(0,-1));     // runn→run, bigg→big
-    for(let c of forms){ if(c.length>=3 && c!==w && !seen.has(c)){ seen.add(c); cands.push({c,len}); } }
+    for(let c of forms){ if(c.length>=3 && c!==w && !seen.has(c)){ seen.add(c); cands.push({c,len:c.length}); } }
   }
-  return cands; // 이미 len 내림차순
+  cands.sort(function(a,b){ return b.len-a.len; }); // 원단어에 가까운 후보부터
+  return cands;
 }
 // 내 단어장에 이미 있는 더 짧은 동족어 우선(오프라인·즉시)
 function _baseFromDecks(w){
@@ -2500,7 +2517,7 @@ async function findBaseWord(word){
   if(_baseCache.size>500) _baseCache.clear(); // 메모리 상한
   let mine=_baseFromDecks(w);
   if(mine){ _baseCache.set(w,mine); return mine; }
-  let cands=_baseCandidates(w).slice(0,6);
+  let cands=_baseCandidates(w).slice(0,8);
   if(!cands.length){ _baseCache.set(w,null); return null; }
   let checks=await Promise.all(cands.map(async o=>{
     try{ let r=await fetchT('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(o.c),2500); return r.ok?o:null; }
@@ -2591,6 +2608,7 @@ function _fitCardOnce(){
 function showExample(text){
   let el=document.getElementById('cardExample');
   if(!el) return;
+  _synSeq++;   // 예문 화면을 다시 그리므로, 진행 중인 유의어 조회 결과는 버린다
   let revealed=document.getElementById('card').classList.contains('revealed');
   let studying=revealed && currentIndex>=0 && words[currentIndex];
   let pill='background:rgba(255,255,255,.14);color:rgba(255,255,255,.85);border:none;box-shadow:none;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600';
@@ -2624,10 +2642,12 @@ function openNaverExample(){
 
 // ===== 유의어/반의어 (Datamuse) =====
 let _synCache=new Map();
+let _synSeq=0;
 async function cardSynLookup(){
   if(currentIndex<0||!words[currentIndex]) return;
   let el=document.getElementById('cardExample');
   let word=words[currentIndex].eng.toLowerCase();
+  let seq=++_synSeq;
   el.innerHTML='<span style="font-size:12px;color:rgba(255,255,255,.7)">유의어·반의어를 찾는 중... ⏳</span>';
   try{
     if(_synCache.size>500) _synCache.clear(); // 메모리 상한
@@ -2644,7 +2664,8 @@ async function cardSynLookup(){
             ant:(an.length?an:op.filter(w2=>w2!==word&&!sy.includes(w2))).slice(0,3)};
       if(data.syn.length||data.ant.length) _synCache.set(word,data);
     }
-    // 찾는 동안 카드가 바뀌었으면 엉뚱한 카드 위에 덮어쓰지 않기
+    // 찾는 동안 카드가 바뀌었거나 화면이 다시 그려졌으면 덮어쓰지 않기
+    if(seq!==_synSeq) return;
     if(currentIndex<0||!words[currentIndex]||words[currentIndex].eng.toLowerCase()!==word) return;
     if(!data.syn.length&&!data.ant.length){
       el.innerHTML='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:13px;color:var(--link);text-decoration:underline;font-style:normal">네이버 사전에서 보기</a>';
@@ -2731,6 +2752,8 @@ async function exampleFill(inputId,word){
   showToast('예문을 찾는 중... ⏳');
   let list=await getExamples(word.toLowerCase()).catch(()=>[]);
   if(!list.length) return showToast('예문을 찾지 못했어요. 직접 입력하거나 네이버 사전을 참고해 주세요');
+  inp=document.getElementById(inputId);   // 기다리는 동안 목록이 다시 그려졌을 수 있음
+  if(!inp) return showToast('수정 화면이 닫혀 예문을 넣지 못했어요');
   let k=word.toLowerCase();
   _exFillIdx[k]=((_exFillIdx[k]??-1)+1)%list.length;
   inp.value=list[_exFillIdx[k]].en;
@@ -2798,6 +2821,7 @@ showToast(why);
 return;
 }
 currentIndex=chosen.i; // 발음 듣기에서 사용
+chosen.w=words[chosen.i]; // 삭제·정렬로 인덱스가 밀려도 이 단어를 채점하도록
 quizState=chosen;
 renderQuiz();
 }
@@ -2862,7 +2886,8 @@ quizAnswered=true;
 let chosen=s.opts[idx];
 let correct=chosen.toLowerCase()===s.correct.toLowerCase();
 let i=s.i;
-if(i<0||i>=words.length||!words[i]){ quizAnswered=false; loadQuizQuestion(); return; } // 단어 삭제 등으로 인덱스가 어긋나면 새 문제로
+if(s.w&&words[i]!==s.w) i=words.indexOf(s.w);   // 삭제 등으로 밀렸으면 실제 위치로 보정
+if(i<0||i>=words.length||!words[i]){ quizAnswered=false; loadQuizQuestion(); return; } // 그래도 없으면(삭제됨) 새 문제로
 // 버튼 잠그고 색칠
 document.querySelectorAll('#quizOpts .quiz-opt').forEach((b,bi)=>{
 b.disabled=true;
@@ -2904,7 +2929,8 @@ let s=quizState;
 if(!s||quizAnswered) return;
 quizAnswered=true;
 let i=s.i;
-if(i<0||i>=words.length||!words[i]){ quizAnswered=false; loadQuizQuestion(); return; } // 단어 삭제 등으로 인덱스가 어긋나면 새 문제로
+if(s.w&&words[i]!==s.w) i=words.indexOf(s.w);   // 삭제 등으로 밀렸으면 실제 위치로 보정
+if(i<0||i>=words.length||!words[i]){ quizAnswered=false; loadQuizQuestion(); return; } // 그래도 없으면(삭제됨) 새 문제로
 document.querySelectorAll('#quizOpts .quiz-opt').forEach((b,bi)=>{
 b.disabled=true;
 if(s.opts[bi].toLowerCase()===s.correct.toLowerCase()) b.classList.add('correct');
@@ -2967,7 +2993,7 @@ function addToWrongDeck(w){
     if(d.id===activeDeckId) return; // 오답노트 단어장 안에서의 오답 표시는 복사 불필요
     let eng=w.eng.toLowerCase();
     if(d.words.some(x=>(x.eng||'').toLowerCase()===eng)) return; // 이미 있으면 중복 방지
-    d.words.push({eng:w.eng,kor:w.kor,example:w.example||'',note:w.note||undefined,wrong:false,mastered:false,lastResult:null,wrongResult:null});
+    d.words.push({eng:w.eng,kor:w.kor,example:w.example||'',note:w.note||undefined,src:w.src,wrong:false,mastered:false,lastResult:null,wrongResult:null});
     saveDecks();
     renderDeckPanel(); // 단어장 목록의 단어 수 갱신 (스크롤 부작용 없음)
   }catch(e){}
@@ -2993,6 +3019,7 @@ words=[];
 currentIndex=-1;
 stats={};
 dupes=[];
+afterWordsRemoved();
 save();
 }
 function clearMastered(){
@@ -3003,6 +3030,26 @@ words.forEach(w=>{if(w.mastered) w.mastered=false;});
 save();
 }
 
+// 단어를 지우면 인덱스 기반 상태(선택·기록·퀴즈·범위)를 모두 정리한다
+function afterWordsRemoved(){
+  cardHistory=[]; recentSeen=[]; lsPeeked.clear();
+  editIndex=-1; lsEditIndex=-1;
+  lsSelMode=false; lsSelected.clear();
+  wlSelMode=false; wlSelected.clear();
+  quizState=null; quizAnswered=false; clearTimeout(quizTimer);
+  let qp=document.getElementById('quizPanel'); if(qp) qp.style.display='none';
+  clampRange();
+}
+// 남은 단어 수보다 큰 학습 범위는 자동으로 풀어준다 (빈 화면·가짜 "모두 학습" 방지)
+function clampRange(){
+  let n=words.length;
+  if(rangeFrom&&rangeFrom>n){ rangeFrom=null; rangeTo=null;
+    let a=document.getElementById('rangeFrom'), b2=document.getElementById('rangeTo');
+    if(a) a.value=''; if(b2) b2.value='';
+    return;
+  }
+  if(rangeTo&&rangeTo>n) rangeTo=n;
+}
 function bulkDelete(items){
 if(!items.length) return alert('삭제할 단어가 없습니다');
 if(!needConfirm2(()=>bulkDelete(items),items.length+'개의 단어를 삭제할까요?')) return;
@@ -3011,9 +3058,7 @@ let set=new Set(items.map(x=>x.w));
 let curWord=currentIndex>=0?words[currentIndex]:null;
 words=words.filter(w=>!set.has(w));
 currentIndex=curWord&&!set.has(curWord)?words.indexOf(curWord):-1;
-editIndex=-1; lsEditIndex=-1;
-// 삭제로 단어 인덱스가 밀리므로 인덱스 기반 기록 초기화
-cardHistory=[]; recentSeen=[]; lsPeeked.clear();
+afterWordsRemoved();
 save();
 }
 function clearAllWords(){
@@ -3040,8 +3085,7 @@ let removed=words[i];
 words.splice(i,1);
 // 학습 중이던 단어가 삭제됐으면 해제, 아니면 새 위치로 인덱스 보정
 currentIndex=(curWord && curWord!==removed)?words.indexOf(curWord):-1;
-// 삭제로 단어 인덱스가 밀리므로 인덱스 기반 기록 초기화
-cardHistory=[]; recentSeen=[]; lsPeeked.clear(); lsEditIndex=-1;
+afterWordsRemoved();
 save();
 }
 function toggleWrongFlag(i){
@@ -3181,9 +3225,10 @@ if(data&&Array.isArray(data.decks)&&data.decks.length){
     dupes:Array.isArray(d.dupes)?d.dupes:[]
   }));
   activeDeckId=(data.activeDeckId&&decks.find(d=>d.id===data.activeDeckId))?data.activeDeckId:decks[0].id;
+  invalidateWordIndex();
   let d=decks.find(x=>x.id===activeDeckId);
   words=d.words; stats=d.stats; dupes=d.dupes;
-  editIndex=-1;currentIndex=-1;cardHistory=[];recentSeen=[];lsPeeked.clear();
+  currentIndex=-1; afterWordsRemoved();
   recentDeckIds=[]; pushRecentDeck(activeDeckId);
   saveDecks(); render(); renderDeckPanel(); renderRecentDecks();
   showToast(decks.length+'개 단어장을 복원했어요! ♻️');
@@ -3195,7 +3240,7 @@ if(!needConfirm2(()=>restoreBackup(),'현재 단어를 백업 데이터로 덮�
 words=data.words.map(mapWord);
 if(data.stats&&typeof data.stats==='object'){stats=data.stats;}
 dupes=[]; // 복원된 단어와 어긋난 옛 중복 기록 제거
-editIndex=-1;currentIndex=-1;cardHistory=[];recentSeen=[];lsPeeked.clear();
+currentIndex=-1; afterWordsRemoved();
 save();
 showToast('백업을 복원했어요! ♻️');
 }
@@ -3427,9 +3472,8 @@ function lsDeleteSelected(){
   playSound('delete');
   words=words.filter((w,i)=>!lsSelected.has(i));
   let d=getActiveDeck(); if(d) d.words=words;
-  lsSelected.clear(); lsSelMode=false;
-  currentIndex=-1; editIndex=-1; lsEditIndex=-1;
-  cardHistory=[]; recentSeen=[]; lsPeeked.clear();
+  currentIndex=-1;
+  afterWordsRemoved();
   save();
   showToast('삭제했어요 🗑');
 }
@@ -3442,9 +3486,8 @@ function lsDeleteMastered(){
   playSound('delete');
   words=words.filter(w=>!delTarget(w));
   let d=getActiveDeck(); if(d) d.words=words;
-  lsSelected.clear(); lsSelMode=false; wlSelected.clear(); wlSelMode=false;
-  currentIndex=-1; editIndex=-1; lsEditIndex=-1;
-  cardHistory=[]; recentSeen=[]; lsPeeked.clear();
+  currentIndex=-1;
+  afterWordsRemoved();
   save();
   showToast(n+'개를 삭제했어요 🏆');
 }
@@ -3474,9 +3517,8 @@ function wlDeleteSelected(){
   playSound('delete');
   words=words.filter((w,i)=>!wlSelected.has(i));
   let d=getActiveDeck(); if(d) d.words=words;
-  wlSelected.clear(); wlSelMode=false; lsSelected.clear(); lsSelMode=false;
-  currentIndex=-1; editIndex=-1; lsEditIndex=-1;
-  cardHistory=[]; recentSeen=[]; lsPeeked.clear();
+  currentIndex=-1;
+  afterWordsRemoved();
   save();
   showToast('삭제했어요 🗑');
 }
@@ -3686,6 +3728,7 @@ function lsRowHtml(w,i){
 function switchDeck(id,targetTab){
   saveDeckData();
   activeDeckId = id;
+  invalidateWordIndex();   // 활성 단어장이 바뀌면 색인 갱신
   let d = decks.find(x=>x.id===id) || decks[0];
   words = d.words||[]; stats = d.stats||{}; dupes = d.dupes||[];
   currentIndex=-1; editIndex=-1; cardHistory=[]; recentSeen=[];
@@ -4004,8 +4047,8 @@ function lsSwipeDelete(i){
   let w=words[i];
   words.splice(i,1); // 오답노트 단어장에서만 제거 — 원본 단어장에는 영향 없음
   _lsUndo={deckId:activeDeckId,word:w,index:i};
-  currentIndex=-1; editIndex=-1; lsEditIndex=-1;
-  cardHistory=[]; recentSeen=[]; lsPeeked.clear(); lsSelected.clear();
+  currentIndex=-1;
+  afterWordsRemoved();
   playSound('delete');
   save();
   // 복원 버튼이 달린 토스트 (잠시 뒤 만료)
