@@ -189,7 +189,7 @@ input[type=file]::file-selector-button{
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  padding:58px 42px 54px;
+  padding:66px 42px 52px;
   text-align:center;
   color:#fff;
   box-shadow:0 18px 44px rgba(20,24,32,.45);
@@ -202,21 +202,21 @@ input[type=file]::file-selector-button{
   display:inline-flex;align-items:center;gap:3px;
   padding:5px 10px;border:none;border-radius:999px;
   background:rgba(255,255,255,.22);color:#fff;
-  font-size:11px;font-weight:700;letter-spacing:.02em;
+  font-size:11.5px;font-weight:700;letter-spacing:.02em;
   box-shadow:none;cursor:pointer;backdrop-filter:blur(2px);
   transition:.15s;
 }
 #cardDirBtn:hover{background:rgba(255,255,255,.34);filter:none;transform:none}
 #cardDirBtn:active{transform:scale(.92)}
 #cardDirBtn .lbl{font-size:11px}
-#cardTimer{position:absolute;top:36px;left:50%;transform:translateX(-50%);z-index:2;min-width:20px;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.6);font-size:10.5px;font-weight:800;pointer-events:none;opacity:0;transition:opacity .2s ease}
+#cardTimer{position:absolute;top:43px;left:50%;transform:translateX(-50%);z-index:2;min-width:20px;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.6);font-size:11px;font-weight:800;pointer-events:none;opacity:0;transition:opacity .2s ease}
 #cardTimer.on{opacity:1}
 #cardUndoBtn{
   position:absolute;bottom:10px;left:10px;z-index:3;
   display:none;align-items:center;gap:5px;
   padding:6px 12px;border:none;border-radius:999px;
   background:rgba(168,196,236,.17);color:#bcd6f5;
-  font-size:11.5px;font-weight:700;letter-spacing:.02em;
+  font-size:12px;font-weight:700;letter-spacing:.02em;
   box-shadow:none;cursor:pointer;backdrop-filter:blur(3px);
   opacity:0;transform:translateY(4px);transition:opacity .22s ease,transform .22s ease,background .15s;
 }
@@ -226,26 +226,26 @@ input[type=file]::file-selector-button{
 #cardUndoBtn.done:hover{background:rgba(168,196,236,.28)}
 #cardUndoBtn:hover{background:rgba(168,196,236,.28);filter:none}
 #cardUndoBtn:active{transform:scale(.94)}
-#cardUndoBtn svg{width:13px;height:13px}
+#cardUndoBtn svg{width:14px;height:14px}
 #cardNextMini{
   position:absolute;bottom:10px;z-index:3;
   display:none;align-items:center;gap:5px;
   padding:6px 12px;border:none;border-radius:999px;
-  font-size:11.5px;font-weight:700;letter-spacing:.02em;
+  font-size:12px;font-weight:700;letter-spacing:.02em;
   box-shadow:none;cursor:pointer;backdrop-filter:blur(3px);
   opacity:0;transform:translateY(4px);transition:opacity .22s ease,transform .22s ease,background .15s;
 }
 #cardNextMini{right:10px;background:rgba(168,196,236,.17);color:#bcd6f5}
-#cardEditBtn{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:3;display:none;align-items:center;justify-content:center;width:30px;height:26px;padding:0;border:none;border-radius:999px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.42);box-shadow:none;cursor:pointer;transition:background .18s ease,color .18s ease}
+#cardEditBtn{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:3;display:none;align-items:center;justify-content:center;width:32px;height:28px;padding:0;border:none;border-radius:999px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.42);box-shadow:none;cursor:pointer;transition:background .18s ease,color .18s ease}
 #cardEditBtn.show{display:inline-flex}
-#cardEditBtn svg{width:13px;height:13px;stroke-width:2}
+#cardEditBtn svg{width:14.5px;height:14.5px;stroke-width:2}
 #cardEditBtn:hover{background:rgba(255,255,255,.14);color:rgba(255,255,255,.85)}
 #cardEditBtn:active{transform:translateX(-50%) scale(.94)}
 #cardNextMini.show{display:inline-flex;opacity:1;transform:translateY(0)}
 #cardNextMini:hover{background:rgba(168,196,236,.28);filter:none}
 #cardNextMini:active{transform:scale(.94)}
-#cardNextMini svg{width:13px;height:13px}
-#cardListBtn{position:absolute;top:10px;left:10px;z-index:2;display:inline-flex;align-items:center;gap:3px;padding:5px 10px;border:none;border-radius:999px;background:rgba(255,255,255,.22);color:#fff;font-size:11px;font-weight:700;box-shadow:none;cursor:pointer;backdrop-filter:blur(2px);transition:.15s}
+#cardNextMini svg{width:14px;height:14px}
+#cardListBtn{position:absolute;top:10px;left:10px;z-index:2;display:inline-flex;align-items:center;gap:3px;padding:5px 10px;border:none;border-radius:999px;background:rgba(255,255,255,.22);color:#fff;font-size:11.5px;font-weight:700;box-shadow:none;cursor:pointer;backdrop-filter:blur(2px);transition:.15s}
 #cardListBtn:active{transform:scale(.92)}
 .ls-row .ls-num{cursor:pointer}
 .ls-row.flash{box-shadow:inset 0 0 0 2.5px var(--accent);transition:box-shadow .3s}
@@ -339,7 +339,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
   body{padding:10px 10px}
   .container{padding:14px 14px}
   h2{font-size:22px;margin-bottom:2px}
-  .flashcard{margin-top:10px;height:344px;padding:58px 20px 48px;border-radius:20px}
+  .flashcard{margin-top:10px;height:344px;padding:66px 20px 46px;border-radius:20px}
   #front{font-size:clamp(27px,8.6vw,39px)}
   #back{font-size:23px;margin-top:8px}
   .flashcard.k2e #front{font-size:clamp(21px,5.9vw,27px)}
@@ -439,6 +439,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 .note-in{width:100%;box-sizing:border-box;margin-top:10px;padding:11px 12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-size:14px;font-family:inherit}
 .note-in::placeholder{color:rgba(255,255,255,.4)}
 .note-in:focus{outline:none;border-color:var(--on-2)}
+textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 .note-row{display:flex;gap:6px;align-items:center}
 .note-row .note-in{margin-top:8px}
 .note-row .nr-del{flex:0 0 auto;margin-top:8px;width:28px;height:38px;padding:0;border:none;border-radius:10px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:15px;line-height:1;box-shadow:none;cursor:pointer}
@@ -446,9 +447,9 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 #cardNote .nt-item{display:block}
 #cardNote .nt-item+.nt-item{margin-top:2px}
 #cardNote{flex-shrink:0;display:none;margin-top:8px;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.09);border:1px dashed rgba(255,255,255,.22);font-size:12.5px;line-height:1.45;color:#fff;text-align:center;cursor:pointer;word-break:keep-all;overflow-wrap:normal;max-width:100%;max-height:86px;overflow-y:auto}
-#cardNoteAdd{position:absolute;top:9px;left:50%;transform:translateX(-50%);z-index:3;display:none;width:26px;height:22px;padding:0;align-items:center;justify-content:center;border-radius:9px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.06);color:rgba(255,255,255,.38);box-shadow:none;cursor:pointer;transition:background .18s ease,color .18s ease,border-color .18s ease}
+#cardNoteAdd{position:absolute;top:9px;left:50%;transform:translateX(-50%);z-index:3;display:none;width:29px;height:24px;padding:0;align-items:center;justify-content:center;border-radius:9px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.06);color:rgba(255,255,255,.38);box-shadow:none;cursor:pointer;transition:background .18s ease,color .18s ease,border-color .18s ease}
 #cardNoteAdd.show{display:flex}
-#cardNoteAdd svg{width:11px;height:11px;stroke-width:2.1}
+#cardNoteAdd svg{width:12.5px;height:12.5px;stroke-width:2.1}
 #cardNoteAdd:hover,#cardNoteAdd:active{background:rgba(255,255,255,.13);color:rgba(255,255,255,.85);border-color:rgba(255,255,255,.26)}
 #cardNoteAdd.has{color:#a9c6f5;background:rgba(157,189,240,.14);border-color:rgba(157,189,240,.32)}
 #cardNote .nt-eng{font-weight:800;color:#9dbdf0}
@@ -988,9 +989,13 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 <div id="wordEditBack" class="cf-back" onclick="if(event.target===this)closeWordEditor(false)">
   <div class="cf-box" role="dialog" aria-modal="true">
     <div class="cf-msg">단어 수정</div>
-    <div style="font-size:11.5px;color:rgba(255,255,255,.55);text-align:center;margin-top:6px">이 단어장에 저장된 영어와 뜻을 고칩니다</div>
+    <div style="font-size:11.5px;color:rgba(255,255,255,.55);text-align:center;margin-top:6px">영어·뜻·예문을 고칩니다 (예문은 비우면 삭제돼요)</div>
     <input id="wordEditEng" placeholder="영어" class="note-in">
     <input id="wordEditKor" placeholder="뜻" class="note-in">
+    <div style="display:flex;gap:6px;align-items:flex-start">
+      <textarea id="wordEditEx" placeholder="예문 (선택)" class="note-in" rows="2" style="resize:none"></textarea>
+      <button onclick="exampleFill('wordEditEx',document.getElementById('wordEditEng').value)" title="예문 자동으로 가져오기" style="flex:0 0 auto;margin-top:10px;width:38px;height:42px;padding:0;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);box-shadow:none;cursor:pointer;font-size:15px">💬</button>
+    </div>
     <div class="cf-btns">
       <button class="cf-cancel" onclick="closeWordEditor(false)">취소 (Esc)</button>
       <button class="cf-ok" onclick="closeWordEditor(true)">저장 (Enter)</button>
@@ -1022,7 +1027,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-19.38'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-19.39'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -2096,6 +2101,7 @@ function openWordEditor(){
   _editTarget=w;
   document.getElementById('wordEditEng').value=w.eng||'';
   document.getElementById('wordEditKor').value=w.kor||'';
+  document.getElementById('wordEditEx').value=w.example||'';
   playSound('memo');
   b.classList.add('show');
   setTimeout(function(){ let i=document.getElementById('wordEditEng'); if(i){ i.focus(); i.select(); } },40);
@@ -2108,8 +2114,11 @@ function closeWordEditor(save_){
     let e=document.getElementById('wordEditEng').value.trim();
     let k=document.getElementById('wordEditKor').value.trim();
     if(!e||!k){ showToast('영어와 뜻을 모두 입력해 주세요'); return; }
-    if(e!==w.eng||k!==w.kor){
+    let ex=(document.getElementById('wordEditEx').value||'').trim();
+    let onlyEx=(e===w.eng&&k===w.kor&&ex!==(w.example||''));
+    if(e!==w.eng||k!==w.kor||ex!==(w.example||'')){
       w.eng=e; w.kor=k;
+      if(ex) w.example=ex; else delete w.example;
       save();
       if(words[currentIndex]===w){   // 아직 같은 카드일 때만 화면 갱신
         document.getElementById('front').innerText=cardDir==='k2e'?w.kor:w.eng;
@@ -2117,7 +2126,8 @@ function closeWordEditor(save_){
         showExample(document.getElementById('card').classList.contains('revealed')?(w.example||''):'');
         fitCardExample();
       }
-      playSound('memoSave'); showToast('단어를 수정했어요 ✏️');
+      playSound('memoSave');
+      showToast(onlyEx?(ex?'예문을 저장했어요 ✏️':'예문을 지웠어요 🗑'):'단어를 수정했어요 ✏️');
     }
   }
   _editTarget=null;
@@ -2125,7 +2135,8 @@ function closeWordEditor(save_){
 }
 document.addEventListener('keydown',function(e){
   if(!wordEditorOpen()) return;
-  if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); closeWordEditor(true); }
+  let inTextarea=e.target&&e.target.tagName==='TEXTAREA';
+  if(e.key==='Enter'&&!(inTextarea&&!e.ctrlKey)){ e.preventDefault(); e.stopPropagation(); closeWordEditor(true); }
   else if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); closeWordEditor(false); }
 },true);
 function noteEditorOpen(){ let b=document.getElementById('noteBack'); return !!b&&b.classList.contains('show'); }
@@ -2457,7 +2468,7 @@ function rootsHtml(word){
   } else {
     lines=entries.map(e=>(multi&&!e.simple?('<span style="opacity:.85">'+escapeHtml(e.t)+'</span> = '):'')+e.seg);
   }
-  return '<div class="roots-line" style="margin-top:8px;font-size:12.5px;font-style:normal;color:rgba(255,255,255,.85);line-height:1.45">🧩 '+lines.join('<br>')+'</div>';
+  return '<div class="roots-line" style="margin-top:8px;font-size:13.5px;font-style:normal;color:rgba(255,255,255,.85);line-height:1.45">🧩 '+lines.join('<br>')+'</div>';
 }
 
 // ===== 기본형(원형) 단어 찾기 — 어근이 안 잡히는 파생어용 (예: confidential→confide, dangerous→danger) =====
@@ -2541,7 +2552,7 @@ function morphHtml(word){
   let r=rootsHtml(word);
   if(r) return r;
   let dw=String(word||'').toLowerCase().replace(/[^a-z]/g,'');
-  return '<div id="baseWordLine" class="roots-line" data-w="'+escapeHtml(dw)+'" style="display:none;margin-top:8px;font-size:12.5px;font-style:normal;color:rgba(255,255,255,.78);line-height:1.45"></div>';
+  return '<div id="baseWordLine" class="roots-line" data-w="'+escapeHtml(dw)+'" style="display:none;margin-top:8px;font-size:13.5px;font-style:normal;color:rgba(255,255,255,.78);line-height:1.45"></div>';
 }
 function baseWordFill(word){
   let line=document.getElementById('baseWordLine');
@@ -2562,6 +2573,20 @@ function baseWordFill(word){
 // 카드 안 남은 공간에 맞춰 어근 줄을 줄여 스크롤 없이 모두 보이게 함
 // 글자는 크게 유지하고, 줄 수가 너무 많아지거나 가로로 넘칠 때만 조금 줄인다
 // (줄바꿈은 CSS의 word-break:keep-all / overflow-wrap:normal 이 단어 경계에서 처리)
+// 살짝만 줄이면 한 줄에 들어가는 경우엔 한 줄로 (많이 줄여야 하면 그냥 줄바꿈)
+function preferOneLine(el,softMinPx){
+  if(!el||getComputedStyle(el).display==='none'||!el.textContent.trim()) return;
+  let base=parseFloat(getComputedStyle(el).fontSize)||16;
+  let lines=()=>{ let cs=getComputedStyle(el);
+                  let lh=parseFloat(cs.lineHeight)||parseFloat(cs.fontSize)*1.3;
+                  return el.offsetHeight/lh; };
+  if(lines()<=1.35) return;
+  for(let f=base-0.5; f>=softMinPx; f-=0.5){
+    el.style.fontSize=f+'px';
+    if(lines()<=1.35) return;
+  }
+  el.style.fontSize='';   // 그 정도로는 안 되면 원래 크기로 두고 줄을 바꾼다
+}
 function fitLines(el,maxLines,minPx){
   if(!el||getComputedStyle(el).display==='none'||!el.textContent.trim()) return;
   let base=parseFloat(getComputedStyle(el).fontSize)||16;
@@ -2600,6 +2625,8 @@ function _fitCardOnce(){
   let h=n=>{ if(!n||getComputedStyle(n).display==='none') return 0;
              return n.offsetHeight+parseFloat(getComputedStyle(n).marginTop||0); };
   // 뜻·메모·영단어는 되도록 한 줄로 (넘치면 글자를 조금씩 줄여 줄바꿈을 없앤다)
+  // 조금만 줄이면 한 줄이 되는 경우 우선 시도 → 그래도 안 되면 자연스럽게 줄바꿈
+  preferOneLine(front,29); preferOneLine(back,19.5);
   fitLines(front,3,24); fitLines(back,3,17); fitLines(note,4,10);
   let mt=parseFloat(getComputedStyle(el).marginTop||0);
   let calc=()=>{ let a=Math.max(44, inner-h(front)-h(back)-h(note)-mt-2); el.style.maxHeight=a+'px'; };
@@ -2609,7 +2636,7 @@ function _fitCardOnce(){
   // 덜 중요한 것부터 차례로 줄인다: 어근 줄 → 예문 → 메모 → 영단어·뜻
   let rl=el.querySelector('.roots-line');
   if(rl){
-    for(let sz of [12.5,11.5,10.5,9.5,8.5]){
+    for(let sz of [13.5,12.5,11.5,10.5,9.5]){
       rl.style.fontSize=sz+'px'; calc();
       if(!over()) return;
     }
