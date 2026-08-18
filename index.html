@@ -1027,7 +1027,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-19.41'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-19.42'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -2114,6 +2114,9 @@ function closeWordEditor(save_){
     let e=document.getElementById('wordEditEng').value.trim();
     let k=document.getElementById('wordEditKor').value.trim();
     if(!e||!k){ showToast('영어와 뜻을 모두 입력해 주세요'); return; }
+    if(e.toLowerCase()!==(w.eng||'').toLowerCase() && words.some(x=>x!==w && (x.eng||'').toLowerCase()===e.toLowerCase())){
+      showToast('"'+e+'"는 이 단어장에 이미 있어요'); return;
+    }
     let ex=(document.getElementById('wordEditEx').value||'').trim();
     let onlyEx=(e===w.eng&&k===w.kor&&ex!==(w.example||''));
     if(e!==w.eng||k!==w.kor||ex!==(w.example||'')){
@@ -2415,9 +2418,11 @@ const _WFKEYS=['ing','ed','est','s','es','d'].concat(_SUFKEYS);
 function wordFirstParts(t,allowSelf){
   let idx=wordIndex();
   let known=f=>idx.get(f)||_COMP[f]||_PHR[f]||null;
-  if(allowSelf){
-    let g0=known(t);
-    if(g0) return [{t:'root',p:t,g:g0}];
+  let self=known(t);
+  if(self){
+    // 그 단어 자체를 아는 경우: 숙어의 구성 단어면 그대로 보여주고,
+    // 카드의 단어 자신이면(이미 위에 뜻이 있으므로) 억지로 쪼개지 않는다
+    return allowSelf?[{t:'root',p:t,g:self}]:[];
   }
   for(let sk of _WFKEYS){
     if(!t.endsWith(sk)) continue;
@@ -2430,7 +2435,7 @@ function wordFirstParts(t,allowSelf){
     for(let f of forms){
       if(f===t) continue;
       let g=known(f);
-      if(g) return [{t:'root',p:f,g:g},{t:'suf',p:sk,g:_SUF[sk]||_INFL[sk]}];
+      if(g) return [{t:'root',p:f,g:g},{t:'suf',p:sk,g:_INFL[sk]||_SUF[sk]}];
     }
   }
   return [];
@@ -2620,7 +2625,9 @@ function fitLines(el,maxLines,minPx){
     let cs=getComputedStyle(el);
     let lh=parseFloat(cs.lineHeight)||parseFloat(cs.fontSize)*1.3;
     if(el.scrollWidth>el.clientWidth+1) return true;              // 한 낱말이 가로로 넘침
-    return el.offsetHeight/lh > maxLines+0.35;                    // 줄이 너무 많음
+    // max-height로 잘리는 요소(메모)는 보이는 높이가 아니라 실제 내용 높이로 판단
+    let hh=Math.max(el.offsetHeight,el.scrollHeight);
+    return hh/lh > maxLines+0.35;                                 // 줄이 너무 많음
   };
   if(!bad()) return;
   for(let f=base-1; f>=minPx; f-=1){
@@ -2644,16 +2651,16 @@ function _fitCardOnce(){
   if(front) front.style.fontSize='';
   if(back) back.style.fontSize='';
   if(note) note.style.fontSize='';
-  if(!card||!el||el.style.display==='none') return;
+  if(!card) return;
+  // 예문 영역이 없거나 숨겨져 있어도 영단어·뜻·메모 크기는 항상 맞춘다
+  preferOneLine(front,29); preferOneLine(back,19.5);
+  fitLines(front,3,24); fitLines(back,3,17); fitLines(note,4,10);
+  if(!el||el.style.display==='none') return;
   el.style.fontSize='';
   let cs=getComputedStyle(card);
   let inner=card.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
   let h=n=>{ if(!n||getComputedStyle(n).display==='none') return 0;
              return n.offsetHeight+parseFloat(getComputedStyle(n).marginTop||0); };
-  // 뜻·메모·영단어는 되도록 한 줄로 (넘치면 글자를 조금씩 줄여 줄바꿈을 없앤다)
-  // 조금만 줄이면 한 줄이 되는 경우 우선 시도 → 그래도 안 되면 자연스럽게 줄바꿈
-  preferOneLine(front,29); preferOneLine(back,19.5);
-  fitLines(front,3,24); fitLines(back,3,17); fitLines(note,4,10);
   let mt=parseFloat(getComputedStyle(el).marginTop||0);
   let calc=()=>{ let a=Math.max(44, inner-h(front)-h(back)-h(note)-mt-2); el.style.maxHeight=a+'px'; };
   let over=()=>el.scrollHeight>el.clientHeight+1 || (note&&note.scrollHeight>note.clientHeight+1);
@@ -2824,12 +2831,17 @@ async function getExamples(word){
 }
 // 수정 폼: 버튼 한 번으로 예문 채우기(반복 클릭 시 다음 예문)
 let _exFillIdx={};
+let _exFillSeq=0;
 async function exampleFill(inputId,word){
   let inp=document.getElementById(inputId);
   if(!inp||!word) return;
+  let seq=++_exFillSeq;
+  let target=_editTarget;   // 카드 수정창에서 눌렀다면 그 단어에만 넣는다
   showToast('예문을 찾는 중... ⏳');
   let list=await getExamples(word.toLowerCase()).catch(()=>[]);
   if(!list.length) return showToast('예문을 찾지 못했어요. 직접 입력하거나 네이버 사전을 참고해 주세요');
+  if(seq!==_exFillSeq) return;            // 그 사이 다른 단어로 다시 눌렀음
+  if(target&&_editTarget!==target) return; // 수정 대상이 바뀌었으면 넣지 않음
   inp=document.getElementById(inputId);   // 기다리는 동안 목록이 다시 그려졌을 수 있음
   if(!inp) return showToast('수정 화면이 닫혀 예문을 넣지 못했어요');
   let k=word.toLowerCase();
@@ -3747,15 +3759,22 @@ function updateLsSpeakBtn(){
 }
 // 영어가 두 줄로 접히면 한 줄이 될 때까지 영어(11px까지) → 그래도 안 되면 한글 뜻(10px까지) 순으로 축소
 function lsFitEng(scope){
-  const wrapped=el=>{ let fs=parseFloat(getComputedStyle(el).fontSize); return el.offsetHeight>fs*1.7; };
   let els=scope?[scope.querySelector('.ls-eng')].filter(Boolean):[...document.querySelectorAll('#lsList .ls-eng')];
+  if(!els.length) return;
+  // 같은 단계의 요소는 글자 크기가 같으므로 대표 하나만 재서 기준을 잡는다 (요소마다 재면 매우 느림)
+  const wrappedOnes=arr=>{
+    if(!arr.length) return arr;
+    let fs=parseFloat(getComputedStyle(arr[0]).fontSize)||14;
+    let lim=fs*1.7;
+    return arr.filter(el=>el.offsetHeight>lim);
+  };
   for(let step=1;step<=4;step++){
-    els=els.filter(wrapped);
+    els=wrappedOnes(els);
     if(!els.length) return;
     els.forEach(el=>{ el.classList.remove('sz1','sz2','sz3','sz4'); el.classList.add('sz'+step); });
   }
   for(let k=1;k<=3;k++){
-    els=els.filter(wrapped);
+    els=wrappedOnes(els);
     if(!els.length) return;
     els.forEach(el=>{
       let km=el.parentElement.querySelector('.kor-mean');
@@ -4074,6 +4093,7 @@ function stepTab(dir){
   let i=TAB_ORDER.indexOf(cur); if(i<0) i=0;
   let next=TAB_ORDER[(i+dir+TAB_ORDER.length)%TAB_ORDER.length];
   if(next===cur) return;
+  if(cur==='study'){ autoPlay=false; clearTimeout(autoPlayTimer); updateAutoPlayBtn(); stopCardTimer(); } // 학습 탭을 떠나면 자동재생 정지
   showTab(next);
   playSound(dir>0?'navUp':'navDown');
 }
@@ -4267,6 +4287,10 @@ document.addEventListener('keydown',function(e){
 document.addEventListener('keydown',function(e){
   if(e.altKey||e.metaKey) return;                 // OS·브라우저 단축키는 건드리지 않음
   if(confirmOpen()||noteEditorOpen()||wordEditorOpen()) return;  // 대화상자가 떠 있으면 앱 단축키 차단
+  let el=e.target;
+  if(el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT'||el.isContentEditable)) return;
+  let board=document.getElementById('drawBoard');
+  if(board&&board.style.display&&board.style.display!=='none') return;   // 칠판 사용 중이면 무시
   // Ctrl + ↑/↓ : 화면 맨 위·맨 아래로
   if(e.ctrlKey){
     if(e.key==='ArrowUp'||e.key==='ArrowDown'){
@@ -4278,17 +4302,10 @@ document.addEventListener('keydown',function(e){
   }
   // Shift + ←/→ : 탭 이동 (학습 ↔ 목록학습 ↔ 단어장)
   if(e.shiftKey&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){
-    let el0=e.target;
-    if(!(el0&&(el0.tagName==='INPUT'||el0.tagName==='TEXTAREA'||el0.tagName==='SELECT'||el0.isContentEditable))){
-      e.preventDefault(); stepTab(e.key==='ArrowRight'?1:-1);
-    }
+    e.preventDefault(); stepTab(e.key==='ArrowRight'?1:-1);
     return;
   }
-  let el=e.target;
-  if(el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT'||el.isContentEditable)) return;
   if((localStorage.getItem('activeTab')||'study')!=='study') return;
-  let board=document.getElementById('drawBoard');
-  if(board&&board.style.display&&board.style.display!=='none') return;   // 칠판 사용 중이면 무시
   let k=e.key;
   if(!k) return;
   // 범위·진도 단축키는 퀴즈 중에도 동작
