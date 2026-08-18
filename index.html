@@ -1478,6 +1478,7 @@ function clearDupes(){
 }
 function renderDupes(){
 let box=document.getElementById('dupesList'); if(!box) return;
+if(!sectionOpen('dupeBox')) return;   // 접혀 있으면 건너뜀 (펼칠 때 그려짐)
 let sq=(document.getElementById('dupesSearch')||{}).value||'';
 let list=sq?dupes.filter(d=>d.eng.toLowerCase().includes(sq.toLowerCase())):dupes;
 if(!dupes.length){ box.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px">아직 중복으로 감지된 단어가 없어요. 시트를 불러오면 겹치는 영단어가 여기에 기록돼요.</div>'; return; }
@@ -1990,7 +1991,6 @@ if(rangeFrom||rangeTo){
   cnt.innerText='(총 '+total+'개)';
 }else cnt.innerText='';
 }
-function cardMarkDone(){ if(currentIndex<0||!words[currentIndex]) return; nextCard(true); }
 // ===== 학습취소(현재 카드의 단어를 다시 학습 대상으로) =====
 function _undoTarget(){
   if(currentIndex<0||!words[currentIndex]) return null;
@@ -2391,7 +2391,6 @@ function wordIndex(){
   _wIdx=m; return m;
 }
 function invalidateWordIndex(){ _wIdx=null; try{ _baseCache.clear(); }catch(e){} } // 단어가 바뀌면 기본형 캐시도 함께 비움
-function _deckMeaning(t){ return wordIndex().get(t)||null; }
 function _phrKnown(t){
   let idx=wordIndex();
   let hit=idx.get(t);
@@ -3247,7 +3246,12 @@ save();
 if(state) playSound('add');
 showToast(state?'전체 단어를 학습 완료로 표시했어요 🏆':'전체 단어를 학습 안 함으로 되돌렸어요');
 }
-function toggle(id,el){document.getElementById(id).classList.toggle('open');if(el)el.classList.toggle('open-arrow');}
+function toggle(id,el){
+  let c=document.getElementById(id);
+  let opened=c.classList.toggle('open');
+  if(el) el.classList.toggle('open-arrow');
+  if(opened) render();   // 접혀 있는 동안 건너뛴 목록을 여기서 채운다
+}
 function closeSection(id){
 let c=document.getElementById(id);
 if(!c) return;
@@ -3454,6 +3458,8 @@ renderGlobalSearch();
 function wordRowHtml(i,eng,kor,tint,btns,sel){
 return `<li class="wl-row ${tint||''}${sel?' selmode':''}${sel&&wlSelected.has(i)?' sel':''}"${sel?` onclick="wlToggleSel(${i},this)"`:''} style="flex-direction:column;align-items:stretch;gap:8px"><span class="wl-top"><span class="ls-check"></span><span class="wl-num">${i+1}</span><span class="wl-eng speakable" onclick="speakText('${speakAttr(eng)}')">${escapeHtml(eng)}</span><span class="wl-kor" onclick="event.stopPropagation();this.classList.toggle('peek')">${escapeHtml(kor)}</span></span><span class="btns" style="justify-content:flex-end;gap:6px">${btns}</span></li>`;
 }
+// 접힌 섹션은 그리지 않고, 펼칠 때 다시 그린다 (단어가 많을 때 저장·완료가 느려지지 않도록)
+function sectionOpen(id){ let c=document.getElementById(id); return !!c&&c.classList.contains('open'); }
 function render(){
 let all=document.getElementById('allWordsList');
 let q=searchVal('searchBox');
@@ -3467,7 +3473,7 @@ if(wt) wt.style.display=(isWD&&!wlSelMode)?'flex':'none';
 let sb=document.getElementById('wlSelBar');
 if(sb) sb.style.display=(isWD&&wlSelMode)?'flex':'none';
 updateWlSelBar();
-all.innerHTML='<ul>'+list.map(({w,i})=>{
+if(sectionOpen('allWords')) all.innerHTML='<ul>'+list.map(({w,i})=>{
 if(i===editIndex&&!wlSel){
 return `<li class="wl-row" style="flex-direction:column;gap:6px"><div style="display:flex;gap:6px;width:100%;align-items:center"><span class="wl-num">${i+1}</span><div class="input-clear" style="flex:1;min-width:0"><input id="editEng" placeholder="영어" value="${escapeHtml(w.eng)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editEng').value='';document.getElementById('editEng').focus()" aria-label="지우기">✕</button></div><div class="input-clear" style="flex:1;min-width:0"><input id="editKor" placeholder="뜻" value="${escapeHtml(w.kor)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editKor').value='';document.getElementById('editKor').focus()" aria-label="지우기">✕</button></div></div><div style="display:flex;gap:6px"><div class="input-clear" style="flex:1;min-width:0"><input id="editEx" placeholder="예문 (선택사항)" value="${escapeHtml(w.example||'')}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editEx').value='';document.getElementById('editEx').focus()" aria-label="지우기">✕</button></div><button onclick="exampleFill('editEx','${speakAttr(w.eng)}')" style="flex:0 0 auto;box-shadow:none;padding:8px 10px">${icon('msg')}</button></div><span class="btns" style="justify-content:center"><button onclick="saveEdit(${i})">💾 저장</button><button onclick="cancelEdit()">↩️ 취소</button></span></li>`;
 }
@@ -3477,13 +3483,13 @@ return wordRowHtml(i,w.eng,w.kor,tint,btns,wlSel);
 }).join('')+'</ul>';
 
 let wq=searchVal('wrongSearch');
-document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&x.w.wrongResult!=='correct'&&matchQ(x.w,wq,x.i)).map(({w,i})=>{
+if(sectionOpen('wrongs')) document.getElementById('wrongsList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&x.w.wrongResult!=='correct'&&matchQ(x.w,wq,x.i)).map(({w,i})=>{
 let tint=w.wrongResult==='correct'?'result-correct':w.wrongResult==='wrong'?'result-wrong':'';
 let btns=`<button style="flex:1;white-space:nowrap" onclick="wrongNoteCorrect(${i})">${icon('check')} 외웠어요</button><button style="flex:1;white-space:nowrap" onclick="wrongNoteAgain(${i})">${icon('repeat')} 재도전</button><button style="flex:0 0 auto;white-space:nowrap" onclick="removeWrongFlag(${i})">🗑</button>`;
 return wordRowHtml(i,w.eng,w.kor,tint,btns);
 }).join('')+'</ul>';
 let mq=searchVal('masteredSearch');
-document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq,x.i)).map(({w,i})=>{
+if(sectionOpen('mastered')) document.getElementById('masteredList').innerHTML='<ul>'+words.map((w,i)=>({w,i})).filter(x=>x.w.mastered&&matchQ(x.w,mq,x.i)).map(({w,i})=>{
 let btns=`<button style="white-space:nowrap" onclick="toggleMaster(${i})">↩️ 학습취소</button><button onclick="removeMasteredFlag(${i})">🗑</button>`;
 return wordRowHtml(i,w.eng,w.kor,'',btns);
 }).join('')+'</ul>';
