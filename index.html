@@ -627,6 +627,8 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 .gs-kor{color:var(--muted);font-weight:600;margin-left:auto;text-align:right;flex-shrink:0;max-width:45%}
 .gs-deck{border:none;box-shadow:none;cursor:pointer;font-family:inherit;line-height:1.4;flex-shrink:0;font-size:11px;font-weight:700;color:var(--accent);background:rgba(82,102,216,.10);border-radius:999px;padding:2px 8px;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;padding:3px 9px}
 .gs-deck:hover,.gs-deck:active{filter:none;background:rgba(82,102,216,.22)}
+.card-ex{font-style:italic}
+.card-ex+.card-ex{margin-top:4px}
 .rs-menu{display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);z-index:70;
   background:var(--li-bg);border:1.5px solid var(--input-border);border-radius:14px;padding:6px;
   box-shadow:0 10px 26px rgba(0,0,0,.22);width:max-content;max-width:96%}
@@ -1003,10 +1005,8 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
     <div style="font-size:11.5px;color:rgba(255,255,255,.55);text-align:center;margin-top:6px">영어·뜻·예문을 고칩니다 (예문은 비우면 삭제돼요)</div>
     <input id="wordEditEng" placeholder="영어" class="note-in">
     <input id="wordEditKor" placeholder="뜻" class="note-in">
-    <div style="display:flex;gap:6px;align-items:flex-start">
-      <textarea id="wordEditEx" placeholder="예문 (선택)" class="note-in" rows="2" style="resize:none"></textarea>
-      <button onclick="exampleFill('wordEditEx',document.getElementById('wordEditEng').value)" title="예문 자동으로 가져오기" style="flex:0 0 auto;margin-top:10px;width:38px;height:42px;padding:0;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);box-shadow:none;cursor:pointer;font-size:15px">💬</button>
-    </div>
+    <div id="wordEditExRows" style="max-height:34vh;overflow-y:auto"></div>
+    <button id="wordEditAddEx" onclick="addExRow()" style="width:100%;margin-top:8px;padding:8px;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.22);border-radius:12px;color:rgba(255,255,255,.7);font-size:12.5px;font-weight:700;box-shadow:none;cursor:pointer">＋ 예문 추가</button>
     <div class="cf-btns">
       <button class="cf-cancel" onclick="closeWordEditor(false)">취소 (Esc)</button>
       <button class="cf-ok" onclick="closeWordEditor(true)">저장 (Enter)</button>
@@ -1038,7 +1038,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-19.46'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-19.47'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -1870,7 +1870,7 @@ card.classList.remove('revealed');
 showExample('');
 if(bothMode){
   card.classList.add('revealed');
-  showExample(w.example||'');
+  showExample(exList(w));
 }
 showCardActions();
 startCardTimer();
@@ -2148,6 +2148,28 @@ function addNoteRow(eng,kor){
   box.appendChild(row);
   return a;
 }
+// 수정창의 예문 입력 줄 (여러 개 등록 가능)
+function addExRow(text){
+  let box=document.getElementById('wordEditExRows');
+  if(!box) return;
+  let row=document.createElement('div');
+  row.style.cssText='display:flex;gap:6px;align-items:flex-start';
+  let ta=document.createElement('textarea');
+  ta.className='note-in'; ta.rows=2; ta.placeholder='예문 (선택)'; ta.value=text||'';
+  ta.style.resize='none';
+  let fill=document.createElement('button');
+  fill.type='button'; fill.textContent='💬'; fill.title='예문 자동으로 가져오기';
+  fill.style.cssText='flex:0 0 auto;margin-top:10px;width:34px;height:40px;padding:0;border-radius:11px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);box-shadow:none;cursor:pointer;font-size:14px';
+  fill.onclick=function(){ ta.id=ta.id||('exRow'+Date.now()+Math.floor(Math.random()*1000));
+    exampleFill(ta.id,document.getElementById('wordEditEng').value); };
+  let del=document.createElement('button');
+  del.type='button'; del.textContent='✕'; del.title='이 예문 지우기';
+  del.style.cssText='flex:0 0 auto;margin-top:10px;width:28px;height:40px;padding:0;border-radius:10px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);box-shadow:none;cursor:pointer';
+  del.onclick=function(){ row.remove(); if(!box.children.length) addExRow(); };
+  row.appendChild(ta); row.appendChild(fill); row.appendChild(del);
+  box.appendChild(row);
+  return ta;
+}
 function wordEditorOpen(){ let b=document.getElementById('wordEditBack'); return !!b&&b.classList.contains('show'); }
 let _editTarget=null, _noteTarget=null;
 function anyDialogOpen(){ return confirmOpen()||noteEditorOpen()||wordEditorOpen(); }
@@ -2158,7 +2180,11 @@ function openWordEditor(){
   _editTarget=w;
   document.getElementById('wordEditEng').value=w.eng||'';
   document.getElementById('wordEditKor').value=w.kor||'';
-  document.getElementById('wordEditEx').value=w.example||'';
+  let exs=exList(w);
+  let exBox=document.getElementById('wordEditExRows');
+  exBox.innerHTML='';
+  if(exs.length) exs.forEach(function(t){ addExRow(t); });
+  else addExRow();
   playSound('memo');
   b.classList.add('show');
   setTimeout(function(){ let i=document.getElementById('wordEditEng'); if(i){ i.focus(); i.select(); } },40);
@@ -2174,20 +2200,22 @@ function closeWordEditor(save_){
     if(e.toLowerCase()!==(w.eng||'').toLowerCase() && words.some(x=>x!==w && (x.eng||'').toLowerCase()===e.toLowerCase())){
       showToast('"'+e+'"는 이 단어장에 이미 있어요'); return;
     }
-    let ex=(document.getElementById('wordEditEx').value||'').trim();
-    let onlyEx=(e===w.eng&&k===w.kor&&ex!==(w.example||''));
-    if(e!==w.eng||k!==w.kor||ex!==(w.example||'')){
+    let exs=[].slice.call(document.querySelectorAll('#wordEditExRows textarea')).map(function(t){ return t.value.trim(); }).filter(Boolean);
+    let before=exList(w).join('\u0001');
+    let exChanged=exs.join('\u0001')!==before;
+    let onlyEx=(e===w.eng&&k===w.kor&&exChanged);
+    if(e!==w.eng||k!==w.kor||exChanged){
       w.eng=e; w.kor=k;
-      if(ex) w.example=ex; else delete w.example;
+      setExList(w,exs);
       save();
       if(words[currentIndex]===w){   // 아직 같은 카드일 때만 화면 갱신
         document.getElementById('front').innerText=cardDir==='k2e'?w.kor:w.eng;
         document.getElementById('back').innerText=cardDir==='k2e'?w.eng:w.kor;
-        showExample(document.getElementById('card').classList.contains('revealed')?(w.example||''):'');
+        showExample(document.getElementById('card').classList.contains('revealed')?exList(w):'');
         fitCardExample();
       }
       playSound('memoSave');
-      showToast(onlyEx?(ex?'예문을 저장했어요 ✏️':'예문을 지웠어요 🗑'):'단어를 수정했어요 ✏️');
+      showToast(onlyEx?(exs.length?('예문 '+exs.length+'개를 저장했어요 ✏️'):'예문을 지웠어요 🗑'):'단어를 수정했어요 ✏️');
     }
   }
   _editTarget=null;
@@ -2747,6 +2775,18 @@ function _fitCardOnce(){
     calc();
   }
 }
+// 예문은 1개면 문자열, 여러 개면 배열로 저장한다 (예전 데이터도 그대로 읽힘)
+function exList(w){
+  if(!w||!w.example) return [];
+  let arr=Array.isArray(w.example)?w.example:[w.example];
+  return arr.map(function(x){ return String(x||'').trim(); }).filter(Boolean);
+}
+function setExList(w,arr){
+  let a=(arr||[]).map(function(x){ return String(x||'').trim(); }).filter(Boolean);
+  if(!a.length) delete w.example;
+  else if(a.length===1) w.example=a[0];
+  else w.example=a;
+}
 function showExample(text){
   let el=document.getElementById('cardExample');
   if(!el) return;
@@ -2756,16 +2796,18 @@ function showExample(text){
   let pill='background:rgba(255,255,255,.14);color:rgba(255,255,255,.85);border:none;box-shadow:none;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600';
   let synBtn=studying?('<button onclick="event.stopPropagation();cardSynLookup()" style="'+pill+'">'+icon('branch')+' 유의·반의</button>'):'';
   let roots=studying?morphHtml(words[currentIndex].eng):'';
-  if(text){
-    el.innerHTML='<div style="font-style:italic">"'+escapeHtml(text)+'"</div>'+roots+(synBtn?('<div style="margin-top:8px;font-style:normal">'+synBtn+'</div>'):'');
+  let exLink=studying?('<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(words[currentIndex].eng)+'&range=example" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="'+pill+';text-decoration:none;display:inline-flex;align-items:center;gap:5px">'+icon('msg')+' 네이버 예문</a>'):'';
+  let btnRow=(exLink||synBtn)?('<div style="display:flex;gap:8px;justify-content:center;font-style:normal;margin-top:8px;flex-wrap:wrap">'+exLink+synBtn+'</div>'):'';
+  let exs=Array.isArray(text)?text:(text?[text]:[]);
+  if(exs.length){
+    el.innerHTML=exs.map(function(t){ return '<div class="card-ex">"'+escapeHtml(t)+'"</div>'; }).join('')+roots+btnRow;
     el.style.display='block';
     fitCardExample();
     if(studying) baseWordFill(words[currentIndex].eng);
     return;
   }
   if(studying){
-    let exLink='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(words[currentIndex].eng)+'&range=example" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="'+pill+';text-decoration:none;display:inline-flex;align-items:center;gap:5px">'+icon('msg')+' 네이버 예문</a>';
-    el.innerHTML=roots+'<div style="display:flex;gap:8px;justify-content:center;font-style:normal;margin-top:8px">'+exLink+synBtn+'</div>';
+    el.innerHTML=roots+btnRow;
     el.style.display='block';
     fitCardExample();
     baseWordFill(words[currentIndex].eng);
@@ -2817,7 +2859,7 @@ async function cardSynLookup(){
     let h='<div style="font-style:normal;text-align:center">';
     if(data.syn.length) h+='<div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:2px">유의어</div><div>'+data.syn.map(chip).join('')+'</div>';
     if(data.ant.length) h+='<div style="font-size:11px;color:rgba(255,255,255,.6);margin:6px 0 2px">반의어</div><div>'+data.ant.map(chip).join('')+'</div>';
-    h+='<div style="margin-top:8px"><button onclick="event.stopPropagation();showExample(words[currentIndex]?words[currentIndex].example||\'\':\'\')" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);border:none;box-shadow:none;padding:4px 12px;border-radius:999px;font-size:11px">닫기</button></div></div>';
+    h+='<div style="margin-top:8px"><button onclick="event.stopPropagation();showExample(words[currentIndex]?exList(words[currentIndex]):[])" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);border:none;box-shadow:none;padding:4px 12px;border-radius:999px;font-size:11px">닫기</button></div></div>';
     el.innerHTML=h;
   }catch(e){
     el.innerHTML='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:13px;color:var(--link);text-decoration:underline;font-style:normal">네이버 사전에서 보기</a>';
@@ -2914,7 +2956,7 @@ let revealed=document.getElementById('card').classList.toggle('revealed');
 if(revealed){
   playSound('flip');
   if(currentIndex>=0 && words[currentIndex]){
-    showExample(words[currentIndex].example||'');
+    showExample(exList(words[currentIndex]));
   }
 }else{
   playSound('fold');
@@ -3341,7 +3383,8 @@ let ex=(document.getElementById('editEx')||{}).value||'';
 ex=ex.trim();
 if(!e||!k) return alert('영어와 뜻을 모두 입력하세요');
 if(words.some((w,j)=>j!==i && w.eng.toLowerCase()===e.toLowerCase())) return alert('이미 있는 단어예요');
-words[i].eng=e; words[i].kor=k; words[i].example=ex;
+words[i].eng=e; words[i].kor=k;
+setExList(words[i],[ex].concat(exList(words[i]).slice(1)));   // 첫 예문만 수정, 나머지 예문은 유지
 editIndex=-1;
 save();
 }
@@ -3544,7 +3587,7 @@ if(sb) sb.style.display=(isWD&&wlSelMode)?'flex':'none';
 updateWlSelBar();
 if(sectionOpen('allWords')) all.innerHTML='<ul>'+list.map(({w,i})=>{
 if(i===editIndex&&!wlSel){
-return `<li class="wl-row" style="flex-direction:column;gap:6px"><div style="display:flex;gap:6px;width:100%;align-items:center"><span class="wl-num">${i+1}</span><div class="input-clear" style="flex:1;min-width:0"><input id="editEng" placeholder="영어" value="${escapeHtml(w.eng)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editEng').value='';document.getElementById('editEng').focus()" aria-label="지우기">✕</button></div><div class="input-clear" style="flex:1;min-width:0"><input id="editKor" placeholder="뜻" value="${escapeHtml(w.kor)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editKor').value='';document.getElementById('editKor').focus()" aria-label="지우기">✕</button></div></div><div style="display:flex;gap:6px"><div class="input-clear" style="flex:1;min-width:0"><input id="editEx" placeholder="예문 (선택사항)" value="${escapeHtml(w.example||'')}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editEx').value='';document.getElementById('editEx').focus()" aria-label="지우기">✕</button></div><button onclick="exampleFill('editEx','${speakAttr(w.eng)}')" style="flex:0 0 auto;box-shadow:none;padding:8px 10px">${icon('msg')}</button></div><span class="btns" style="justify-content:center"><button onclick="saveEdit(${i})">💾 저장</button><button onclick="cancelEdit()">↩️ 취소</button></span></li>`;
+return `<li class="wl-row" style="flex-direction:column;gap:6px"><div style="display:flex;gap:6px;width:100%;align-items:center"><span class="wl-num">${i+1}</span><div class="input-clear" style="flex:1;min-width:0"><input id="editEng" placeholder="영어" value="${escapeHtml(w.eng)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editEng').value='';document.getElementById('editEng').focus()" aria-label="지우기">✕</button></div><div class="input-clear" style="flex:1;min-width:0"><input id="editKor" placeholder="뜻" value="${escapeHtml(w.kor)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editKor').value='';document.getElementById('editKor').focus()" aria-label="지우기">✕</button></div></div><div style="display:flex;gap:6px"><div class="input-clear" style="flex:1;min-width:0"><input id="editEx" placeholder="예문 (선택사항)" value="${escapeHtml(exList(w)[0]||'')}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editEx').value='';document.getElementById('editEx').focus()" aria-label="지우기">✕</button></div><button onclick="exampleFill('editEx','${speakAttr(w.eng)}')" style="flex:0 0 auto;box-shadow:none;padding:8px 10px">${icon('msg')}</button></div><span class="btns" style="justify-content:center"><button onclick="saveEdit(${i})">💾 저장</button><button onclick="cancelEdit()">↩️ 취소</button></span></li>`;
 }
 let tint=w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':'';
 let btns=`<button onclick="toggleWrongFlag(${i})">${w.wrong?icon('check'):icon('xcircle')}</button><button onclick="toggleMaster(${i})">${w.mastered?icon('repeat'):icon('check')}</button><button onclick="startEdit(${i})">✏️</button><button onclick="markCorrect(${i})">정답</button><button onclick="markWrong(${i})">오답</button><button onclick="del(${i})">🗑</button>`;
@@ -3796,7 +3839,8 @@ function lsSaveEdit(i){
   let ex=(document.getElementById('lsEditEx')?.value||'').trim();
   if(!e||!k) return alert('영어와 뜻을 모두 입력하세요');
   if(words.some((w,j)=>j!==i && w.eng.toLowerCase()===e.toLowerCase())) return alert('이미 있는 단어예요');
-  words[i].eng=e; words[i].kor=k; words[i].example=ex;
+  words[i].eng=e; words[i].kor=k;
+setExList(words[i],[ex].concat(exList(words[i]).slice(1)));   // 첫 예문만 수정, 나머지 예문은 유지
   lsEditIndex=-1;
   save();
   showToast('단어를 수정했어요 ✏️');
@@ -3863,7 +3907,7 @@ function lsRowHtml(w,i){
   if(lsFilter==='all' && i===lsEditIndex){
     return `<li class="ls-row" data-i="${i}" style="flex-direction:column;align-items:stretch;gap:8px;padding:14px 14px">
       <div style="display:flex;gap:6px;align-items:center"><span class="ls-num">${i+1}</span><div class="input-clear" style="flex:1;min-width:0"><input id="lsEditEng" placeholder="영어" value="${escapeHtml(w.eng)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('lsEditEng').value='';document.getElementById('lsEditEng').focus()" aria-label="지우기">✕</button></div><div class="input-clear" style="flex:1;min-width:0"><input id="lsEditKor" placeholder="뜻" value="${escapeHtml(w.kor)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('lsEditKor').value='';document.getElementById('lsEditKor').focus()" aria-label="지우기">✕</button></div></div>
-      <div style="display:flex;gap:6px"><div class="input-clear" style="flex:1;min-width:0"><input id="lsEditEx" placeholder="예문 (선택사항)" value="${escapeHtml(w.example||'')}" style="width:100%"><button class="clear-x" onclick="document.getElementById('lsEditEx').value='';document.getElementById('lsEditEx').focus()" aria-label="지우기">✕</button></div><button onclick="exampleFill('lsEditEx','${speakAttr(w.eng)}')" style="flex:0 0 auto;box-shadow:none;padding:8px 10px">${icon('msg')}</button></div>
+      <div style="display:flex;gap:6px"><div class="input-clear" style="flex:1;min-width:0"><input id="lsEditEx" placeholder="예문 (선택사항)" value="${escapeHtml(exList(w)[0]||'')}" style="width:100%"><button class="clear-x" onclick="document.getElementById('lsEditEx').value='';document.getElementById('lsEditEx').focus()" aria-label="지우기">✕</button></div><button onclick="exampleFill('lsEditEx','${speakAttr(w.eng)}')" style="flex:0 0 auto;box-shadow:none;padding:8px 10px">${icon('msg')}</button></div>
       <span class="btns" style="justify-content:center;gap:6px"><button onclick="lsSaveEdit(${i})">💾 저장</button><button onclick="lsCancelEdit()">↩️ 취소</button></span>
     </li>`;
   }
@@ -3876,7 +3920,7 @@ function lsRowHtml(w,i){
       <a class="ls-dict" href="https://en.dict.naver.com/#/search?query=${encodeURIComponent(w.eng)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="네이버 사전에서 보기" title="네이버 사전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
       <span class="kor-mean${lsPeeked.has(i)?' peek':''}" onclick="event.stopPropagation();lsTogglePeek(this,${i})">${escapeHtml(w.kor)}</span>
     </span>
-    ${w.example?`<span class="ls-ex" style="font-size:13px;color:var(--muted);font-style:italic;line-height:1.5">${escapeHtml(w.example)}</span>`:''}
+    ${exList(w).map(t=>`<span class="ls-ex" style="font-size:13px;color:var(--muted);font-style:italic;line-height:1.5">${escapeHtml(t)}</span>`).join('')}
     <span class="btns" style="justify-content:flex-end;gap:6px">
       ${lsFilter==='all'?`<button onclick="lsStartEdit(${i})">✏️</button>`:''}
       <button onclick="toggleWrongFlag(${i})">${w.wrong?icon('check')+' 오답해제':icon('xcircle')+' 오답'}</button>
