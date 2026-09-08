@@ -19,6 +19,12 @@
 .ic{width:1.1em;height:1.1em;vertical-align:-.18em;flex-shrink:0}
 .ico .ic{width:1em;height:1em;vertical-align:-.12em}
 :root{
+  /* 글자 크기 단계 (전체 화면 공통) */
+  --fs-xs:11.5px;   /* 배지·보조 설명 */
+  --fs-sm:12.5px;   /* 작은 버튼·라벨 */
+  --fs-md:14px;     /* 본문·목록 */
+  --fs-lg:15px;     /* 입력칸·주요 버튼 */
+  --fs-xl:17px;     /* 소제목 */
   --bg-grad-1:#e8eaed;
   --bg-grad-2:#e2e5e9;
   --bg-grad-3:#e8eaed;
@@ -89,7 +95,7 @@ body.dark{
 html,body{touch-action:manipulation}
 body{
   font-family:'Pretendard Variable',Pretendard,-apple-system,'Malgun Gothic',sans-serif;
-  font-size:15px;line-height:1.6;font-weight:500;
+  font-size:var(--fs-lg);line-height:1.6;font-weight:500;
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
   background:linear-gradient(135deg,var(--bg-grad-1) 0%,var(--bg-grad-2) 50%,var(--bg-grad-3) 100%);
   background-attachment:fixed;
@@ -112,16 +118,16 @@ h3{
   cursor:pointer;background:var(--h3-bg);padding:14px 18px;border-radius:16px;
   margin:12px 0 0;color:var(--text-title);transition:.2s;user-select:none;
   display:flex;justify-content:space-between;align-items:center;
-  font-weight:700;letter-spacing:-.2px;font-size:15px;
+  font-weight:700;letter-spacing:-.2px;font-size:var(--fs-lg);
 }
 h3:hover{background:var(--h3-bg-hover);transform:translateY(-1px)}
-h3::after{content:'▾';font-size:14px;color:var(--accent-soft);transition:.25s}
+h3::after{content:'▾';font-size:var(--fs-md);color:var(--accent-soft);transition:.25s}
 h3.open-arrow::after{transform:rotate(180deg)}
 
 .row{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}
 input,textarea{
   padding:12px 14px;border:2px solid var(--input-border);border-radius:14px;
-  font-size:15px;outline:none;transition:.2s;
+  font-size:var(--fs-lg);outline:none;transition:.2s;
   background:var(--input-bg);color:var(--text-main);
   font-family:'Pretendard Variable',Pretendard,-apple-system,'Malgun Gothic',sans-serif;
 }
@@ -142,7 +148,7 @@ input[type=text],input:not([type]){flex:1;min-width:120px}
   width:24px;height:24px;padding:0;border-radius:50%;border:none;
   display:flex;align-items:center;justify-content:center;
   background:var(--input-border);color:var(--text-main);
-  font-size:13px;line-height:1;box-shadow:none;cursor:pointer;
+  font-size:var(--fs-md);line-height:1;box-shadow:none;cursor:pointer;
   opacity:.55;transition:.15s;
 }
 .clear-x:hover{opacity:1;background:var(--danger);color:#fff;filter:none;transform:translateY(-50%)}
@@ -154,7 +160,7 @@ textarea{width:100%;height:92px;resize:vertical;font-family:inherit;line-height:
 button{
   padding:11px 18px;border:none;border-radius:14px;
   background:linear-gradient(135deg,var(--on-1),var(--on-2));
-  color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:.18s;
+  color:#fff;font-size:var(--fs-lg);font-weight:700;cursor:pointer;transition:.18s;
   font-family:'Pretendard Variable',Pretendard,-apple-system,'Malgun Gothic',sans-serif;
   box-shadow:0 4px 12px rgba(76,86,128,.2);
 }
@@ -163,7 +169,7 @@ button:hover{filter:brightness(1.05);transform:translateY(-2px);box-shadow:0 7px
 button:active{transform:translateY(0);box-shadow:0 3px 8px rgba(76,86,128,.2)}
 button.danger{background:linear-gradient(135deg,var(--alt-1),var(--alt-2));box-shadow:0 4px 12px rgba(146,80,92,.22)}
 button.danger:hover{box-shadow:0 7px 18px rgba(146,80,92,.28)}
-button.small{padding:8px 12px;font-size:13px;border-radius:11px}
+button.small{padding:8px 12px;font-size:var(--fs-md);border-radius:11px}
 
 input[type=file]{
   flex:1;min-width:160px;padding:9px;background:var(--input-bg);border:2px dashed var(--accent-soft);
@@ -202,21 +208,21 @@ input[type=file]::file-selector-button{
   display:inline-flex;align-items:center;gap:3px;
   padding:5px 10px;border:none;border-radius:999px;
   background:rgba(255,255,255,.22);color:#fff;
-  font-size:11.5px;font-weight:700;letter-spacing:.02em;
+  font-size:var(--fs-xs);font-weight:700;letter-spacing:.02em;
   box-shadow:none;cursor:pointer;backdrop-filter:blur(2px);
   transition:.15s;
 }
 #cardDirBtn:hover{background:rgba(255,255,255,.34);filter:none;transform:none}
 #cardDirBtn:active{transform:scale(.92)}
-#cardDirBtn .lbl{font-size:11px}
-#cardTimer{position:absolute;top:43px;left:50%;transform:translateX(-50%);z-index:2;min-width:20px;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.6);font-size:11px;font-weight:800;pointer-events:none;opacity:0;transition:opacity .2s ease}
+#cardDirBtn .lbl{font-size:var(--fs-xs)}
+#cardTimer{position:absolute;top:43px;left:50%;transform:translateX(-50%);z-index:2;min-width:20px;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.6);font-size:var(--fs-xs);font-weight:800;pointer-events:none;opacity:0;transition:opacity .2s ease}
 #cardTimer.on{opacity:1}
 #cardUndoBtn{
   position:absolute;bottom:10px;left:10px;z-index:3;
   display:none;align-items:center;gap:5px;
   padding:6px 12px;border:none;border-radius:999px;
   background:rgba(168,196,236,.17);color:#bcd6f5;
-  font-size:12px;font-weight:700;letter-spacing:.02em;
+  font-size:var(--fs-sm);font-weight:700;letter-spacing:.02em;
   box-shadow:none;cursor:pointer;backdrop-filter:blur(3px);
   opacity:0;transform:translateY(4px);transition:opacity .22s ease,transform .22s ease,background .15s;
 }
@@ -231,7 +237,7 @@ input[type=file]::file-selector-button{
   position:absolute;bottom:10px;z-index:3;
   display:none;align-items:center;gap:5px;
   padding:6px 12px;border:none;border-radius:999px;
-  font-size:12px;font-weight:700;letter-spacing:.02em;
+  font-size:var(--fs-sm);font-weight:700;letter-spacing:.02em;
   box-shadow:none;cursor:pointer;backdrop-filter:blur(3px);
   opacity:0;transform:translateY(4px);transition:opacity .22s ease,transform .22s ease,background .15s;
 }
@@ -245,7 +251,7 @@ input[type=file]::file-selector-button{
 #cardNextMini:hover{background:rgba(168,196,236,.28);filter:none}
 #cardNextMini:active{transform:scale(.94)}
 #cardNextMini svg{width:14px;height:14px}
-#cardListBtn{position:absolute;top:10px;left:10px;z-index:2;display:inline-flex;align-items:center;gap:3px;padding:5px 10px;border:none;border-radius:999px;background:rgba(255,255,255,.22);color:#fff;font-size:11.5px;font-weight:700;box-shadow:none;cursor:pointer;backdrop-filter:blur(2px);transition:.15s}
+#cardListBtn{position:absolute;top:10px;left:10px;z-index:2;display:inline-flex;align-items:center;gap:3px;padding:5px 10px;border:none;border-radius:999px;background:rgba(255,255,255,.22);color:#fff;font-size:var(--fs-xs);font-weight:700;box-shadow:none;cursor:pointer;backdrop-filter:blur(2px);transition:.15s}
 #cardListBtn:active{transform:scale(.92)}
 .ls-row .ls-num{cursor:pointer}
 .ls-row.flash{box-shadow:inset 0 0 0 2.5px var(--accent);transition:box-shadow .3s}
@@ -273,16 +279,16 @@ input[type=file]::file-selector-button{
 }
 .flashcard.revealed #back{display:block;animation:fadeIn .3s ease}
 .flashcard.revealed #cardHint{display:none}   /* 뜻이 이미 보이면 안내문 숨김 */
-.hint{font-size:13px;opacity:.85;margin-top:10px;position:relative}
+.hint{font-size:var(--fs-md);opacity:.85;margin-top:10px;position:relative}
 
 .modes{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 .modes button{flex:1;min-width:90px;background:var(--h3-bg);color:var(--text-main);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 8px;line-height:1.1;box-shadow:0 3px 10px var(--shadow)}
 .modes button:hover{background:var(--h3-bg-hover);filter:none}
 .modes .ico{font-size:26px}
-.modes .lbl{font-size:14px;font-weight:700}
+.modes .lbl{font-size:var(--fs-md);font-weight:700}
 
 .progress-wrap{margin:18px 0;padding:16px;background:var(--h3-bg);border-radius:18px}
-.progress-label{text-align:center;color:var(--muted);font-size:15px;margin-bottom:8px}
+.progress-label{text-align:center;color:var(--muted);font-size:var(--fs-lg);margin-bottom:8px}
 .progress-label b{color:var(--text-title)}
 .progress-bar{
   width:100%;height:14px;border-radius:8px;background:var(--progress-track);overflow:hidden;
@@ -298,7 +304,7 @@ ul{list-style:none;margin:10px 0;padding:0}
 li{
   margin:8px 0;background:var(--li-bg);padding:13px 15px;border-radius:14px;
   display:flex;justify-content:space-between;align-items:center;gap:8px;
-  font-size:14px;font-weight:600;line-height:1.5;transition:.15s;
+  font-size:var(--fs-md);font-weight:600;line-height:1.5;transition:.15s;
 }
 li>span:first-child{overflow-wrap:break-word;word-break:keep-all;min-width:0;flex:1}
 li:hover{background:var(--li-bg-hover);transform:translateX(2px)}
@@ -308,20 +314,20 @@ li.result-wrong{background:var(--result-wrong-bg);border-left:4px solid var(--da
 li.result-wrong:hover{background:var(--result-wrong-bg-hover)}
 li span:first-child{flex:1}
 li .btns{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
-li button{padding:6px 9px;font-size:13px;border-radius:10px;background:var(--h3-bg);color:var(--text-main);box-shadow:none;font-weight:600}
+li button{padding:6px 9px;font-size:var(--fs-md);border-radius:10px;background:var(--h3-bg);color:var(--text-main);box-shadow:none;font-weight:600}
 li button:hover{background:var(--h3-bg-hover);filter:none;transform:none}
 
-.cnt{font-size:13px;color:var(--accent-soft);font-weight:400}
-li input{flex:1;min-width:90px;font-size:14px}
-#backupBox{height:92px;font-size:12px}
+.cnt{font-size:var(--fs-md);color:var(--accent-soft);font-weight:400}
+li input{flex:1;min-width:90px;font-size:var(--fs-md)}
+#backupBox{height:92px;font-size:var(--fs-sm)}
 
 /* 통일된 단어 행 카드 스타일 (전체단어/오답노트/학습완료) */
 .wl-row{margin:8px 0;background:var(--li-bg);border:1.5px solid var(--input-border);border-radius:16px;padding:13px 13px;transition:.15s}
 .wl-row:hover{background:var(--li-bg);transform:none}
 .wl-row.result-correct{background:var(--result-correct-bg);border-color:var(--accent)}
 .wl-row.result-wrong{background:var(--result-wrong-bg);border-color:var(--danger)}
-.wl-row .wl-top{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:700;color:var(--text-main)}
-.wl-row .wl-num{width:40px;height:26px;flex:0 0 40px;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;background:rgba(82,102,216,.12);color:var(--accent);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.wl-row .wl-top{display:flex;align-items:center;gap:9px;font-size:var(--fs-lg);font-weight:700;color:var(--text-main)}
+.wl-row .wl-num{width:40px;height:26px;flex:0 0 40px;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;background:rgba(82,102,216,.12);color:var(--accent);font-size:var(--fs-sm);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
 .wl-row .wl-eng{flex:1 1 auto;min-width:0;text-align:left;word-break:break-word;color:var(--text-main)}
 .wl-row .wl-kor{flex:0 0 auto;max-width:46%;text-align:right;font-weight:600;color:var(--text-main);word-break:keep-all}
 .wl-row .speakable{color:var(--text-main);border-bottom-color:rgba(76,86,128,.25)}
@@ -331,7 +337,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 
 @media (max-width:480px){
   .container{padding:24px 18px;border-radius:22px}
-  li{font-size:14px}
+  li{font-size:var(--fs-md)}
 }
 
 /* 모바일 세로 공간 압축 */
@@ -344,15 +350,15 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
   #back{font-size:20.5px;margin-top:8px}
   .flashcard.k2e #front{font-size:clamp(19px,5.3vw,24px)}
   .flashcard.k2e #back{font-size:28px}
-  .hint{font-size:12px;margin-top:6px}
+  .hint{font-size:var(--fs-sm);margin-top:6px}
   #cardActions{margin-top:6px}
-  #cardActions button{padding:11px 10px;font-size:14px}
+  #cardActions button{padding:11px 10px;font-size:var(--fs-md)}
     .modes{margin-top:8px;gap:8px}
   .modes button{padding:10px 6px;gap:4px}
   .modes .ico{font-size:20px}
-  .modes .lbl{font-size:13px}
+  .modes .lbl{font-size:var(--fs-md)}
   .progress-wrap{margin:10px 0;padding:10px 14px}
-  .progress-label{font-size:13px;margin-bottom:6px}
+  .progress-label{font-size:var(--fs-md);margin-bottom:6px}
   .progress-bar{height:10px}
 }
 
@@ -374,18 +380,18 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
 .flashcard .speakable{border-bottom-color:rgba(255,255,255,.45)}
 .flashcard .speakable:hover{border-bottom-color:#fff;color:var(--link)}
 .speakable:active{opacity:.6}
-.speakable::after{content:'🔊';font-size:11px;margin-left:4px;opacity:.65;vertical-align:middle}
+.speakable::after{content:'🔊';font-size:var(--fs-xs);margin-left:4px;opacity:.65;vertical-align:middle}
 .list-scroll-btns{display:flex;gap:6px;margin-top:6px}
-.list-scroll-btns button{flex:1;padding:5px;font-size:13px;background:var(--h3-bg);color:var(--muted);box-shadow:none;border-radius:10px;border:1.5px solid var(--input-border)}
+.list-scroll-btns button{flex:1;padding:5px;font-size:var(--fs-md);background:var(--h3-bg);color:var(--muted);box-shadow:none;border-radius:10px;border:1.5px solid var(--input-border)}
 #dupesList li{
-  margin:5px 0;padding:8px 10px;font-size:13px;border-radius:10px;
+  margin:5px 0;padding:8px 10px;font-size:var(--fs-md);border-radius:10px;
 }
-#dupesList li span:first-child{font-size:13px}
-#wrongsList li button,#masteredList li button,#dupesList li button{padding:5px 8px;font-size:12px}
+#dupesList li span:first-child{font-size:var(--fs-md)}
+#wrongsList li button,#masteredList li button,#dupesList li button{padding:5px 8px;font-size:var(--fs-sm)}
 .fold-btn{
   display:block;width:100%;margin-top:10px;padding:7px 0;
   background:none;border:1.5px solid var(--input-border);border-radius:12px;
-  color:var(--muted);font-size:13px;font-weight:600;letter-spacing:.5px;
+  color:var(--muted);font-size:var(--fs-md);font-weight:600;letter-spacing:.5px;
   box-shadow:none;cursor:pointer;transition:.15s;
 }
 .fold-btn:hover{background:var(--li-bg-hover);color:var(--text-main);transform:none;filter:none;box-shadow:none}
@@ -400,7 +406,7 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
   background:linear-gradient(135deg,rgba(52,59,74,.97),rgba(33,37,46,.97));
   color:#fff;padding:11px 20px;border-radius:999px;
   border:1px solid rgba(255,255,255,.16);
-  font-weight:700;font-size:14px;letter-spacing:-.2px;line-height:1.25;
+  font-weight:700;font-size:var(--fs-md);letter-spacing:-.2px;line-height:1.25;
   white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis;
   opacity:0;pointer-events:none;z-index:9999;
   transition:opacity .2s ease,transform .3s cubic-bezier(.2,.9,.28,1.25);
@@ -413,24 +419,24 @@ body.hide-mean .wl-kor.peek{filter:none;background:transparent;padding:0}
   border-color:rgba(255,255,255,.28);
   box-shadow:0 14px 34px rgba(60,70,110,.5),inset 0 1px 0 rgba(255,255,255,.16)}
 .toast.undo>span{overflow:hidden;text-overflow:ellipsis}
-.toast.undo .undo-btn{flex:0 0 auto;padding:7px 15px;border-radius:999px;border:none;box-shadow:0 2px 8px rgba(0,0,0,.18);background:#fff;color:#3f5f86;font-size:12.5px;font-weight:800;cursor:pointer}
+.toast.undo .undo-btn{flex:0 0 auto;padding:7px 15px;border-radius:999px;border:none;box-shadow:0 2px 8px rgba(0,0,0,.18);background:#fff;color:#3f5f86;font-size:var(--fs-sm);font-weight:800;cursor:pointer}
 .cf-back{position:fixed;inset:0;z-index:10000;background:rgba(8,10,14,.55);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:22px}
 .cf-back.show{display:flex}
 .cf-box{width:100%;max-width:340px;background:linear-gradient(135deg,var(--card-grad-2),var(--card-grad-1));border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:22px 20px 16px;box-shadow:0 22px 50px rgba(0,0,0,.5);color:#fff;animation:cfIn .18s ease}
 @keyframes cfIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
-.cf-msg{font-size:14.5px;font-weight:600;line-height:1.55;white-space:pre-line;text-align:center;letter-spacing:-.2px}
+.cf-msg{font-size:var(--fs-lg);font-weight:600;line-height:1.55;white-space:pre-line;text-align:center;letter-spacing:-.2px}
 .cf-btns{display:flex;gap:8px;margin-top:18px}
-.cf-btns button{flex:1;padding:11px 6px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:none;font-family:inherit}
+.cf-btns button{flex:1;padding:11px 6px;border:none;border-radius:12px;font-size:var(--fs-md);font-weight:800;cursor:pointer;box-shadow:none;font-family:inherit}
 .cf-cancel{background:rgba(255,255,255,.1);color:rgba(255,255,255,.75)}
 .cf-ok{background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff}
 .cf-ok:focus-visible,.cf-cancel:focus-visible{outline:2px solid rgba(255,255,255,.5);outline-offset:2px}
-.note-in{width:100%;box-sizing:border-box;margin-top:10px;padding:11px 12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-size:14px;font-family:inherit}
+.note-in{width:100%;box-sizing:border-box;margin-top:10px;padding:11px 12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-size:var(--fs-md);font-family:inherit}
 .note-in::placeholder{color:rgba(255,255,255,.4)}
 .note-in:focus{outline:none;border-color:var(--on-2)}
 textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 .note-row{display:flex;gap:6px;align-items:center}
 .note-row .note-in{margin-top:8px}
-.note-row .nr-del{flex:0 0 auto;margin-top:8px;width:28px;height:38px;padding:0;border:none;border-radius:10px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:15px;line-height:1;box-shadow:none;cursor:pointer}
+.note-row .nr-del{flex:0 0 auto;margin-top:8px;width:28px;height:38px;padding:0;border:none;border-radius:10px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);font-size:var(--fs-lg);line-height:1;box-shadow:none;cursor:pointer}
 .note-row .nr-del:hover{background:rgba(255,255,255,.14);color:#fff}
 #cardNote .nt-item{display:block}
 #cardNote .nt-item+.nt-item{margin-top:2px}
@@ -458,7 +464,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
   flex:1;min-width:0;display:flex;flex-direction:row;align-items:center;justify-content:center;
   gap:6px;padding:13px 4px;
   background:none;border:none;border-radius:0;box-shadow:none;
-  font-size:14px;color:var(--muted);font-weight:600;cursor:pointer;white-space:nowrap;
+  font-size:var(--fs-md);color:var(--muted);font-weight:600;cursor:pointer;white-space:nowrap;
   transition:background .15s,color .15s;
 }
 .tab-btn .ico{font-size:18px;line-height:1}
@@ -470,7 +476,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 /* 학습 탭 상단 단어장 선택 바 */
 #recentDecksBar,#lsDeckBar{scrollbar-width:none;-webkit-overflow-scrolling:touch}
 #recentDecksBar::-webkit-scrollbar,#lsDeckBar::-webkit-scrollbar{display:none}
-.deckbar-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;box-shadow:none;white-space:nowrap;transition:background .15s,color .15s}
+.deckbar-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:var(--fs-md);font-weight:700;cursor:pointer;box-shadow:none;white-space:nowrap;transition:background .15s,color .15s}
 .deckbar-chip:hover{background:var(--li-bg-hover);filter:none;transform:none;box-shadow:none}
 .deckbar-chip.on{background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff;border-color:transparent;box-shadow:0 3px 12px rgba(76,86,128,.25)}
 /* Deck panel cards */
@@ -485,10 +491,10 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 .deck-card.deck-dragging{touch-action:none;opacity:.97;box-shadow:0 16px 36px rgba(76,86,128,.3);border-color:var(--accent);position:relative;z-index:10;cursor:grabbing;transition:none}
 .deck-active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(82,102,216,.18)}
 .deck-card-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.deck-name{font-size:16px;font-weight:700;color:var(--text-title);font-weight:800;display:flex;align-items:center;min-width:0}
+.deck-name{font-size:var(--fs-lg);font-weight:700;color:var(--text-title);font-weight:800;display:flex;align-items:center;min-width:0}
 .deck-grip{color:var(--accent);font-size:20px;margin-right:10px;flex-shrink:0;opacity:1}
-.deck-meta{font-size:13px;color:var(--muted);margin-top:4px}
-.deck-badge{margin-top:8px;font-size:12px;color:var(--accent);font-weight:700}
+.deck-meta{font-size:var(--fs-md);color:var(--muted);margin-top:4px}
+.deck-badge{margin-top:8px;font-size:var(--fs-sm);color:var(--accent);font-weight:700}
 .deck-actions{display:flex;gap:4px}
 /* Add bottom padding to study view so content isn't hidden behind tab bar */
 .container{padding-bottom:16px}
@@ -496,8 +502,8 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 #listStudyView{max-width:720px;margin:18px auto 0;background:var(--container-bg);border-radius:28px;box-shadow:0 18px 50px var(--shadow);color:var(--text-main)}
 #lsHeader{background:var(--container-bg);border-bottom:1.5px solid var(--input-border);border-radius:28px 28px 0 0;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
 #lsHeader .ls-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
-#lsHeader .ls-deckname{font-weight:800;font-size:17px;color:var(--text-title);display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#lsHeader .ls-prog{font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap}
+#lsHeader .ls-deckname{font-weight:800;font-size:var(--fs-xl);color:var(--text-title);display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#lsHeader .ls-prog{font-size:var(--fs-sm);font-weight:700;color:var(--accent);white-space:nowrap}
 #lsList{padding:8px 16px 22px}
 #lsList ul{list-style:none;margin:0;padding:0}
 .ls-row{margin:10px 0;background:var(--li-bg);border:1.5px solid var(--input-border);border-radius:16px;transition:.15s}
@@ -508,8 +514,8 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 .ls-row.result-correct{border-color:var(--accent)}
 .ls-row.result-wrong{border-color:var(--danger)}
 .ls-row .speakable{color:var(--text-main)}
-.ls-row .ls-top{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;flex:none}
-.ls-row .ls-num{width:40px;height:26px;flex:0 0 40px;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;background:rgba(82,102,216,.12);color:var(--accent);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.ls-row .ls-top{display:flex;align-items:center;gap:10px;font-size:var(--fs-lg);font-weight:700;flex:none}
+.ls-row .ls-num{width:40px;height:26px;flex:0 0 40px;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;background:rgba(82,102,216,.12);color:var(--accent);font-size:var(--fs-sm);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
 .ls-row .ls-eng{flex:1 1 auto;min-width:0;text-align:left;word-break:break-word;line-height:1.25;transition:none}
 .ls-row .ls-eng.sz1{font-size:14.5px}
 .ls-row .ls-eng.sz2{font-size:13px}
@@ -518,49 +524,49 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 .ls-row .kor-mean.ksz1{font-size:12px}
 .ls-row .kor-mean.ksz2{font-size:11px}
 .ls-row .kor-mean.ksz3{font-size:10px}
-.ls-row .kor-mean{flex:0 0 auto;max-width:42%;text-align:right;font-weight:600;word-break:keep-all;font-size:13.5px}
+.ls-row .kor-mean{flex:0 0 auto;max-width:42%;text-align:right;font-weight:600;word-break:keep-all;font-size:var(--fs-md)}
 /* 목록학습의 뜻은 전역 body.hide-mean이 아니라 로컬 ls-hideMean만 따르도록 분리 */
 #lsList .kor-mean{filter:none;background:transparent;padding:0}
 #lsList.ls-hideMean .kor-mean:not(.peek){background:rgba(82,102,216,.07);filter:blur(7px);cursor:pointer;user-select:none;border-radius:6px;padding:0 6px;display:inline-block;width:76px;max-width:76px;flex:0 0 76px;overflow:hidden;white-space:nowrap}
 #lsList.ls-hideMean .kor-mean.peek{filter:none;background:transparent}
 .ls-chips{display:flex;gap:6px}
-.ls-chip{flex:1;min-width:0;padding:8px 4px;border-radius:12px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;text-align:center;white-space:nowrap;box-shadow:none;line-height:1.3}
+.ls-chip{flex:1;min-width:0;padding:8px 4px;border-radius:12px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:var(--fs-sm);font-weight:700;cursor:pointer;text-align:center;white-space:nowrap;box-shadow:none;line-height:1.3}
 .ls-chip:hover{filter:none;transform:none;box-shadow:none;background:var(--li-bg-hover)}
 .ls-chip.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
-.ls-chip .ls-c{display:block;font-size:14px;font-weight:800}
+.ls-chip .ls-c{display:block;font-size:var(--fs-md);font-weight:800}
 .ls-jump{display:flex;gap:6px;justify-content:safe center;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
 .ls-jump::-webkit-scrollbar{display:none}
-.ls-jump button{flex:0 0 auto;padding:6px 12px;border-radius:999px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:12px;font-weight:800;cursor:pointer;box-shadow:none;line-height:1}
+.ls-jump button{flex:0 0 auto;padding:6px 12px;border-radius:999px;border:1.5px solid var(--input-border);background:var(--li-bg);color:var(--muted);font-size:var(--fs-sm);font-weight:800;cursor:pointer;box-shadow:none;line-height:1}
 .ls-jump button:hover{filter:none;transform:none;box-shadow:none;background:var(--li-bg-hover)}
 .ls-jump button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
 .ls-bulk{display:flex;gap:6px;flex-wrap:wrap}
-.ls-bulk button{flex:1 1 30%;min-width:0;padding:8px 4px;font-size:12px;white-space:nowrap;box-shadow:none}
-.ls-empty{text-align:center;color:var(--muted);padding:48px 16px;font-size:15px;line-height:1.7}
+.ls-bulk button{flex:1 1 30%;min-width:0;padding:8px 4px;font-size:var(--fs-sm);white-space:nowrap;box-shadow:none}
+.ls-empty{text-align:center;color:var(--muted);padding:48px 16px;font-size:var(--fs-lg);line-height:1.7}
 /* 통합 검색 결과 */
 #gSearchResults{margin-top:6px;border:1.5px solid var(--input-border);border-radius:14px;max-height:280px;overflow-y:auto;background:var(--li-bg);padding:4px 6px}
-.gs-row{display:flex;align-items:center;gap:8px;padding:9px 8px;border-bottom:1px solid var(--input-border);font-size:14px}
+.gs-row{display:flex;align-items:center;gap:8px;padding:9px 8px;border-bottom:1px solid var(--input-border);font-size:var(--fs-md)}
 .gs-row:last-child{border-bottom:none}
 .gs-eng{font-weight:700;color:var(--text-main)}
 .gs-link{text-decoration:none;border-bottom:1.5px dotted var(--link);cursor:pointer}
 .gs-link:hover,.gs-link:active{color:var(--link);border-bottom-color:var(--link)}
-.gs-spk{flex-shrink:0;padding:2px 5px;font-size:12px;line-height:1;background:none;border:none;box-shadow:none;opacity:.55;cursor:pointer}
+.gs-spk{flex-shrink:0;padding:2px 5px;font-size:var(--fs-sm);line-height:1;background:none;border:none;box-shadow:none;opacity:.55;cursor:pointer}
 .gs-spk:hover{opacity:1;background:none;filter:none}
 .gs-kor{color:var(--muted);font-weight:600;margin-left:auto;text-align:right;flex-shrink:0;max-width:45%}
-.gs-deck{border:none;box-shadow:none;cursor:pointer;font-family:inherit;line-height:1.4;flex-shrink:0;font-size:11px;font-weight:700;color:var(--accent);background:rgba(82,102,216,.10);border-radius:999px;padding:2px 8px;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;padding:3px 9px}
+.gs-deck{border:none;box-shadow:none;cursor:pointer;font-family:inherit;line-height:1.4;flex-shrink:0;font-size:var(--fs-xs);font-weight:700;color:var(--accent);background:rgba(82,102,216,.10);border-radius:999px;padding:2px 8px;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;padding:3px 9px}
 .gs-deck:hover,.gs-deck:active{filter:none;background:rgba(82,102,216,.22)}
 .rp-box{display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:75;
   background:var(--li-bg);border:1.5px solid var(--input-border);border-radius:14px;
   box-shadow:0 12px 30px rgba(0,0,0,.25);overflow:hidden}
 .rp-box.show{display:block;animation:fadeIn .14s ease}
-.rp-head{padding:9px 12px;font-size:12px;font-weight:800;color:var(--muted);border-bottom:1px solid var(--input-border)}
+.rp-head{padding:9px 12px;font-size:var(--fs-sm);font-weight:800;color:var(--muted);border-bottom:1px solid var(--input-border)}
 .rp-list{max-height:44vh;overflow-y:auto;padding:6px;display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
-.rp-item{padding:10px 8px;font-size:13px;font-weight:700;border:none;border-radius:10px;box-shadow:none;
+.rp-item{padding:10px 8px;font-size:var(--fs-md);font-weight:700;border:none;border-radius:10px;box-shadow:none;
   background:var(--h3-bg);color:var(--text-main);cursor:pointer;white-space:nowrap;font-family:inherit}
 .rp-item.on{background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff}
 .rp-item:hover{filter:none;background:var(--input-border)}
 .rp-item.on:hover{background:linear-gradient(135deg,var(--on-1),var(--on-2))}
 .rp-foot{display:flex;gap:6px;padding:6px;border-top:1px solid var(--input-border)}
-.rp-foot button{flex:1;padding:8px;font-size:12.5px;font-weight:700;border:none;border-radius:10px;box-shadow:none;
+.rp-foot button{flex:1;padding:8px;font-size:var(--fs-sm);font-weight:700;border:none;border-radius:10px;box-shadow:none;
   background:var(--h3-bg);color:var(--text-main);cursor:pointer;font-family:inherit}
 .card-ex{font-style:italic}
 .card-ex+.card-ex{margin-top:4px}
@@ -568,17 +574,17 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
   background:var(--li-bg);border:1.5px solid var(--input-border);border-radius:14px;padding:6px;
   box-shadow:0 10px 26px rgba(0,0,0,.22);width:max-content;max-width:96%}
 .rs-menu.show{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;animation:fadeIn .14s ease}
-.rs-menu button{padding:9px 12px;font-size:13px;font-weight:700;border-radius:10px;border:none;box-shadow:none;
+.rs-menu button{padding:9px 12px;font-size:var(--fs-md);font-weight:700;border-radius:10px;border:none;box-shadow:none;
   background:var(--h3-bg);color:var(--text-main);cursor:pointer;white-space:nowrap;font-family:inherit}
 .rs-menu button.on{background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff}
 .rs-menu button:hover{filter:none;background:var(--input-border)}
 .rs-menu button.on:hover{background:linear-gradient(135deg,var(--on-1),var(--on-2))}
-.gs-none{color:var(--muted);font-size:13px;padding:10px;text-align:center}
+.gs-none{color:var(--muted);font-size:var(--fs-md);padding:10px;text-align:center}
 .dict-card{margin:6px;padding:12px 14px;border:1.5px solid var(--input-border);border-radius:12px;background:var(--container-bg)}
 .gs-links{display:flex;gap:6px;padding:4px 6px 6px}
-.gs-links a{flex:1;text-align:center;font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;padding:7px 4px;border:1.5px solid var(--input-border);border-radius:10px;background:var(--container-bg);white-space:nowrap}
+.gs-links a{flex:1;text-align:center;font-size:var(--fs-sm);font-weight:700;color:var(--accent);text-decoration:none;padding:7px 4px;border:1.5px solid var(--input-border);border-radius:10px;background:var(--container-bg);white-space:nowrap}
 .gs-links a:active{background:var(--h3-bg)}
-.ls-scrolltop,.ls-scrollbottom{position:fixed;right:10px;z-index:50;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff;border:none;font-size:13px;box-shadow:0 3px 10px rgba(76,86,128,.22);cursor:pointer;display:none;padding:0;opacity:.85}
+.ls-scrolltop,.ls-scrollbottom{position:fixed;right:10px;z-index:50;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff;border:none;font-size:var(--fs-md);box-shadow:0 3px 10px rgba(76,86,128,.22);cursor:pointer;display:none;padding:0;opacity:.85}
 .ls-scrolltop{bottom:52px}
 .ls-scrollbottom{bottom:12px}
 .ls-scrolltop.show,.ls-scrollbottom.show{display:block}
@@ -603,7 +609,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 #updateBanner{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-80px);z-index:9999;
   padding:11px 20px;border-radius:999px;border:none;cursor:pointer;
   background:linear-gradient(135deg,var(--on-1),var(--on-2));color:#fff;
-  font-size:14px;font-weight:700;letter-spacing:.01em;white-space:nowrap;
+  font-size:var(--fs-md);font-weight:700;letter-spacing:.01em;white-space:nowrap;
   box-shadow:0 8px 24px rgba(76,86,128,.3);opacity:0;pointer-events:none;
   transition:transform .3s cubic-bezier(.2,.8,.3,1),opacity .3s}
 #updateBanner.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
@@ -616,7 +622,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 <button class="small" onclick="toggleSound()" id="soundBtn">소리 켜짐</button><button class="small" onclick="toggleVolPanel()" id="volBtn" title="효과음 음량">음량 180%</button>
 <button class="small" onclick="toggleDark()" id="darkBtn">다크모드</button>
 </div>
-<div id="volPanel" style="display:none;align-items:center;gap:10px;margin:-6px 0 12px;padding:10px 12px;border:1.5px solid var(--input-border);border-radius:14px;background:var(--h3-bg)"><span style="font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap">효과음 음량</span><input type="range" id="volRange" min="0" max="300" step="10" value="180" oninput="setSfxVol(this.value)" onchange="sfxPreview()" style="flex:1;min-width:0;accent-color:var(--accent)"><span id="volNum" style="font-size:12px;font-weight:800;color:var(--text-main);min-width:44px;text-align:right">180%</span></div>
+<div id="volPanel" style="display:none;align-items:center;gap:10px;margin:-6px 0 12px;padding:10px 12px;border:1.5px solid var(--input-border);border-radius:14px;background:var(--h3-bg)"><span style="font-size:var(--fs-sm);font-weight:700;color:var(--muted);white-space:nowrap">효과음 음량</span><input type="range" id="volRange" min="0" max="300" step="10" value="180" oninput="setSfxVol(this.value)" onchange="sfxPreview()" style="flex:1;min-width:0;accent-color:var(--accent)"><span id="volNum" style="font-size:var(--fs-sm);font-weight:800;color:var(--text-main);min-width:44px;text-align:right">180%</span></div>
 <h2>오늘 하루도 화이팅!</h2>
 <div id="recentDecksBar" style="display:flex;flex-wrap:nowrap;gap:8px;margin-top:8px;margin-bottom:2px;min-height:36px;overflow-x:auto;padding:3px 2px 6px;scroll-behavior:smooth"></div>
 
@@ -627,8 +633,8 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 </div>
 </div>
 <div class="row" style="flex-wrap:nowrap">
-<button style="flex:1;min-width:0;padding:11px 6px;font-size:13px;white-space:nowrap;letter-spacing:-.3px" onclick="loadSheetTabs()">📑 시트 목록 불러오기</button>
-<button class="danger" style="flex:1;min-width:0;padding:11px 6px;font-size:13px;white-space:nowrap;letter-spacing:-.3px" onclick="clearAll()">🗑 전체 초기화</button>
+<button style="flex:1;min-width:0;padding:11px 6px;font-size:var(--fs-md);white-space:nowrap;letter-spacing:-.3px" onclick="loadSheetTabs()">📑 시트 목록 불러오기</button>
+<button class="danger" style="flex:1;min-width:0;padding:11px 6px;font-size:var(--fs-md);white-space:nowrap;letter-spacing:-.3px" onclick="clearAll()">🗑 전체 초기화</button>
 </div>
 <div id="sheetTabs" style="margin-top:8px"></div>
 
@@ -640,19 +646,19 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 <div id="gSearchResults" style="display:none"></div>
 </div>
 <div id="rangeWrap" style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:nowrap;overflow:visible;position:relative">
-<span style="color:var(--muted);font-size:12px;white-space:nowrap;flex-shrink:0">범위</span>
-<input type="number" id="rangeFrom" min="1" placeholder="처음" style="width:0;flex:1;min-width:0;padding:6px 6px;font-size:13px" onkeydown="if(event.key==='Enter')applyRange()">
-<span style="color:var(--muted);font-size:12px;flex-shrink:0">~</span>
-<input type="number" id="rangeTo" min="1" placeholder="끝" style="width:0;flex:1;min-width:0;padding:6px 6px;font-size:13px" onkeydown="if(event.key==='Enter')applyRange()">
+<span style="color:var(--muted);font-size:var(--fs-sm);white-space:nowrap;flex-shrink:0">범위</span>
+<input type="number" id="rangeFrom" min="1" placeholder="처음" style="width:0;flex:1;min-width:0;padding:6px 6px;font-size:var(--fs-md)" onkeydown="if(event.key==='Enter')applyRange()">
+<span style="color:var(--muted);font-size:var(--fs-sm);flex-shrink:0">~</span>
+<input type="number" id="rangeTo" min="1" placeholder="끝" style="width:0;flex:1;min-width:0;padding:6px 6px;font-size:var(--fs-md)" onkeydown="if(event.key==='Enter')applyRange()">
 <button class="small" onclick="applyRange()" style="flex-shrink:0;padding:7px 10px">적용</button>
 <button class="small" onclick="clearRange()" style="flex-shrink:0;padding:7px 10px">전체</button>
-<span id="rangeCnt" style="color:var(--muted);font-size:12px;flex-shrink:0"></span>
+<span id="rangeCnt" style="color:var(--muted);font-size:var(--fs-sm);flex-shrink:0"></span>
 <div id="rangePicker" class="rp-box"></div>
 </div>
 <div style="display:flex;align-items:center;gap:5px;margin-top:5px;position:relative">
-<button class="small" onclick="rangeStep(-1)" style="flex:1;padding:6px 4px;font-size:12px;box-shadow:none">◀ 이전</button>
-<span id="rangeStepLabel" title="탭하면 다음 단위, 길게 누르면 목록에서 선택" style="flex:2;text-align:center;font-size:12px;color:var(--muted);white-space:nowrap;cursor:pointer;user-select:none;-webkit-user-select:none">단위 10</span>
-<button class="small" onclick="rangeStep(1)" style="flex:1;padding:6px 4px;font-size:12px;box-shadow:none">다음 ▶</button>
+<button class="small" onclick="rangeStep(-1)" style="flex:1;padding:6px 4px;font-size:var(--fs-sm);box-shadow:none">◀ 이전</button>
+<span id="rangeStepLabel" title="탭하면 다음 단위, 길게 누르면 목록에서 선택" style="flex:2;text-align:center;font-size:var(--fs-sm);color:var(--muted);white-space:nowrap;cursor:pointer;user-select:none;-webkit-user-select:none">단위 10</span>
+<button class="small" onclick="rangeStep(1)" style="flex:1;padding:6px 4px;font-size:var(--fs-sm);box-shadow:none">다음 ▶</button>
 <div id="rangeStepMenu" class="rs-menu"></div>
 </div>
 
@@ -669,7 +675,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 <div id="front">단어를 선택하세요</div>
 <div id="back">뜻</div>
 <div id="cardNote" onclick="event.stopPropagation();openNoteEditor()" title="탭하면 내 메모를 쓰거나 고칠 수 있어요"></div>
-<div id="cardExample" style="display:none;margin-top:10px;font-size:13px;font-style:italic;color:rgba(255,255,255,.65);line-height:1.5;text-align:center;max-height:76px;overflow-y:auto;width:100%"></div>
+<div id="cardExample" style="display:none;margin-top:10px;font-size:var(--fs-md);font-style:italic;color:rgba(255,255,255,.65);line-height:1.5;text-align:center;max-height:76px;overflow-y:auto;width:100%"></div>
 <div class="hint" id="cardHint">카드를 클릭하면 뜻이 표시됩니다</div>
 <button id="cardNextMini" onclick="event.stopPropagation();nextCard(false)" title="학습완료 없이 다음 단어로 (다음에 또 나옵니다)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg> 다음 단어</button>
 <button id="cardEditBtn" onclick="event.stopPropagation();openWordEditor()" title="이 단어와 뜻 고치기" aria-label="단어 수정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
@@ -677,18 +683,18 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 </div>
 <div id="cardActions" style="display:none;gap:8px;margin-top:10px;flex-wrap:nowrap;align-items:stretch">
 <div id="cardSpeakBtn" onclick="event.stopPropagation()" style="flex:1;min-width:0;display:flex;border-radius:12px;overflow:hidden;border:1.5px solid var(--input-border);box-sizing:border-box">
-  <button onclick="speakWord('eng')" id="speakSegEng" style="flex:1;padding:10px 4px;font-size:13px;border-radius:0;box-shadow:none;border:none;white-space:nowrap">🔊 영</button>
-  <button onclick="speakWord('both')" id="speakSegBoth" style="flex:1;padding:10px 4px;font-size:13px;border-radius:0;box-shadow:none;border:none;border-left:1.5px solid var(--input-border);white-space:nowrap">한</button>
+  <button onclick="speakWord('eng')" id="speakSegEng" style="flex:1;padding:10px 4px;font-size:var(--fs-md);border-radius:0;box-shadow:none;border:none;white-space:nowrap">🔊 영</button>
+  <button onclick="speakWord('both')" id="speakSegBoth" style="flex:1;padding:10px 4px;font-size:var(--fs-md);border-radius:0;box-shadow:none;border:none;border-left:1.5px solid var(--input-border);white-space:nowrap">한</button>
 </div>
-<button onclick="event.stopPropagation();toggleWrongFlag(currentIndex);showCardActions()" id="cardWrongBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center"></button>
-<button onclick="event.stopPropagation();nextCard()" id="cardNextBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:13px;white-space:nowrap;display:flex;align-items:center;justify-content:center">➡️ 다음 단어</button>
+<button onclick="event.stopPropagation();toggleWrongFlag(currentIndex);showCardActions()" id="cardWrongBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:var(--fs-md);white-space:nowrap;display:flex;align-items:center;justify-content:center"></button>
+<button onclick="event.stopPropagation();nextCard()" id="cardNextBtn" style="flex:1;min-width:0;padding:10px 4px;font-size:var(--fs-md);white-space:nowrap;display:flex;align-items:center;justify-content:center">➡️ 다음 단어</button>
 </div>
 <div id="autoPlayBar" style="display:none;margin-top:8px;align-items:center;justify-content:center;gap:6px;flex-wrap:nowrap;overflow:hidden;box-sizing:border-box;width:100%">
-<button id="autoSpeakBtn" onclick="event.stopPropagation();toggleAutoSpeak()" style="flex:1;padding:7px 4px;font-size:12px;white-space:nowrap;box-shadow:none;background:var(--h3-bg);color:var(--text-main)">자동읽기</button>
-<button id="autoPlayBtn" onclick="event.stopPropagation();toggleAutoPlay()" style="flex:1;padding:7px 4px;font-size:12px;white-space:nowrap;box-shadow:none;background:var(--h3-bg);color:var(--text-main)">▶ 자동재생</button>
+<button id="autoSpeakBtn" onclick="event.stopPropagation();toggleAutoSpeak()" style="flex:1;padding:7px 4px;font-size:var(--fs-sm);white-space:nowrap;box-shadow:none;background:var(--h3-bg);color:var(--text-main)">자동읽기</button>
+<button id="autoPlayBtn" onclick="event.stopPropagation();toggleAutoPlay()" style="flex:1;padding:7px 4px;font-size:var(--fs-sm);white-space:nowrap;box-shadow:none;background:var(--h3-bg);color:var(--text-main)">▶ 자동재생</button>
 <div style="display:flex;gap:4px;align-items:center;flex-shrink:0">
-<span style="font-size:12px;color:var(--muted);white-space:nowrap">간격</span>
-<select id="autoPlaySpeed" onchange="event.stopPropagation();setAutoPlaySpeed(this.value)" style="padding:5px 4px;font-size:12px;border-radius:10px;border:1.5px solid var(--input-border);background:var(--input-bg);color:var(--text-main);cursor:pointer;max-width:60px">
+<span style="font-size:var(--fs-sm);color:var(--muted);white-space:nowrap">간격</span>
+<select id="autoPlaySpeed" onchange="event.stopPropagation();setAutoPlaySpeed(this.value)" style="padding:5px 4px;font-size:var(--fs-sm);border-radius:10px;border:1.5px solid var(--input-border);background:var(--input-bg);color:var(--text-main);cursor:pointer;max-width:60px">
 <option value="1">1초</option>
 <option value="2">2초</option>
 <option value="3" selected>3초</option>
@@ -719,12 +725,12 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 <button class="small" style="flex:1;min-width:120px" onclick="bulkMaster(false)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> 전부 학습 취소</button>
 </div>
 <div id="wlRangeBox" style="position:relative;margin-top:10px;padding:10px;border:1.5px solid var(--input-border);border-radius:14px;background:var(--h3-bg)">
-  <div style="font-size:12.5px;font-weight:800;color:var(--text-title);margin-bottom:8px">번호 범위로 일괄 처리</div>
+  <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text-title);margin-bottom:8px">번호 범위로 일괄 처리</div>
   <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
-    <input type="number" id="wlBulkFrom" min="1" placeholder="처음" oninput="updateWlBulkCnt()" style="width:0;flex:1;min-width:0;padding:6px;font-size:13px">
-    <span style="color:var(--muted);font-size:12px">~</span>
-    <input type="number" id="wlBulkTo" min="1" placeholder="끝" oninput="updateWlBulkCnt()" style="width:0;flex:1;min-width:0;padding:6px;font-size:13px">
-    <span id="wlBulkCnt" style="color:var(--muted);font-size:12px;white-space:nowrap;flex-shrink:0"></span>
+    <input type="number" id="wlBulkFrom" min="1" placeholder="처음" oninput="updateWlBulkCnt()" style="width:0;flex:1;min-width:0;padding:6px;font-size:var(--fs-md)">
+    <span style="color:var(--muted);font-size:var(--fs-sm)">~</span>
+    <input type="number" id="wlBulkTo" min="1" placeholder="끝" oninput="updateWlBulkCnt()" style="width:0;flex:1;min-width:0;padding:6px;font-size:var(--fs-md)">
+    <span id="wlBulkCnt" style="color:var(--muted);font-size:var(--fs-sm);white-space:nowrap;flex-shrink:0"></span>
     <div id="wlBulkPicker" class="rp-box"></div>
   </div>
   <div class="row" style="margin-top:8px">
@@ -799,7 +805,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 
 <h3 onclick="toggle('dupeBox',this)"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> 중복 단어 <b id="cntDupes" class="cnt"></b></span></h3>
 <div id="dupeBox" class="section-content">
-<p style="color:var(--muted);font-size:13px;margin:10px 0 6px">여러 시트에 겹쳐서 불러와진 영단어예요. 시트에서 하나만 남기고 지우면 깔끔해요.</p>
+<p style="color:var(--muted);font-size:var(--fs-md);margin:10px 0 6px">여러 시트에 겹쳐서 불러와진 영단어예요. 시트에서 하나만 남기고 지우면 깔끔해요.</p>
 <div class="row" style="margin-top:8px">
 <div class="input-clear">
 <input type="text" id="dupesSearch" placeholder="🔍 중복 단어 검색" oninput="renderDeb()">
@@ -818,7 +824,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 <h3 onclick="toggle('addWord',this);ensureBulkRows()"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 단어 추가</span></h3>
 <div id="addWord" class="section-content">
 <div style="margin-top:12px">
-  <div style="color:var(--text-title);font-weight:800;font-size:13px;margin-bottom:8px">단일 추가</div>
+  <div style="color:var(--text-title);font-weight:800;font-size:var(--fs-md);margin-bottom:8px">단일 추가</div>
   <div class="row">
     <input id="eng" placeholder="English">
     <input id="kor" placeholder="뜻">
@@ -829,7 +835,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
   <div class="row" style="justify-content:center;margin-top:4px">
     <button onclick="addWord()">➕ 추가</button>
   </div>
-  <div style="color:var(--text-title);font-weight:800;font-size:13px;margin-top:18px;margin-bottom:8px">일괄 추가</div>
+  <div style="color:var(--text-title);font-weight:800;font-size:var(--fs-md);margin-top:18px;margin-bottom:8px">일괄 추가</div>
   <div id="bulkRows" style="max-height:260px;overflow-y:auto;overflow-x:hidden;padding:4px;border:2px dashed var(--accent-soft);border-radius:16px"></div>
   <div class="row" style="justify-content:center;margin-top:10px">
     <button class="small" onclick="addBulkRow()">➕ 행 추가</button>
@@ -840,7 +846,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 
 <h3 onclick="toggle('backup',this)"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> 데이터 백업</span></h3>
 <div id="backup" class="section-content">
-<p style="color:var(--muted);font-size:13px;margin:10px 0 6px">단어는 이 브라우저에만 저장됩니다. 기록을 지우거나 기기를 바꾸기 전에 백업하세요.</p>
+<p style="color:var(--muted);font-size:var(--fs-md);margin:10px 0 6px">단어는 이 브라우저에만 저장됩니다. 기록을 지우거나 기기를 바꾸기 전에 백업하세요.</p>
 <div class="row">
 <button onclick="exportBackup()">💾 백업 내보내기</button>
 <button onclick="restoreBackup()">♻️ 백업 복원</button>
@@ -854,7 +860,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 <div id="deckPanel" style="display:none;padding:16px 16px 16px;max-width:480px;margin:0 auto">
   <h2 style="font-weight:800;font-size:20px;letter-spacing:-.3px;margin-bottom:16px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> 내 단어장</h2>
   <div id="deckList"></div>
-  <button onclick="createDeck()" style="width:100%;margin-top:12px;padding:14px;font-size:15px;border-radius:16px">＋ 새 단어장 만들기</button>
+  <button onclick="createDeck()" style="width:100%;margin-top:12px;padding:14px;font-size:var(--fs-lg);border-radius:16px">＋ 새 단어장 만들기</button>
 </div>
 
 <div id="listStudyView" style="display:none">
@@ -923,11 +929,11 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 <div id="wordEditBack" class="cf-back" onclick="if(event.target===this)closeWordEditor(false)">
   <div class="cf-box" role="dialog" aria-modal="true">
     <div class="cf-msg">단어 수정</div>
-    <div style="font-size:11.5px;color:rgba(255,255,255,.55);text-align:center;margin-top:6px">영어·뜻·예문을 고칩니다 (예문은 비우면 삭제돼요)</div>
+    <div style="font-size:var(--fs-xs);color:rgba(255,255,255,.55);text-align:center;margin-top:6px">영어·뜻·예문을 고칩니다 (예문은 비우면 삭제돼요)</div>
     <input id="wordEditEng" placeholder="영어" class="note-in">
     <input id="wordEditKor" placeholder="뜻" class="note-in">
     <div id="wordEditExRows" style="max-height:34vh;overflow-y:auto"></div>
-    <button id="wordEditAddEx" onclick="addExRow()" style="width:100%;margin-top:8px;padding:8px;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.22);border-radius:12px;color:rgba(255,255,255,.7);font-size:12.5px;font-weight:700;box-shadow:none;cursor:pointer">＋ 예문 추가</button>
+    <button id="wordEditAddEx" onclick="addExRow()" style="width:100%;margin-top:8px;padding:8px;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.22);border-radius:12px;color:rgba(255,255,255,.7);font-size:var(--fs-sm);font-weight:700;box-shadow:none;cursor:pointer">＋ 예문 추가</button>
     <div class="cf-btns">
       <button class="cf-cancel" onclick="closeWordEditor(false)">취소 (Esc)</button>
       <button class="cf-ok" onclick="closeWordEditor(true)">저장 (Enter)</button>
@@ -937,14 +943,14 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 <div id="noteBack" class="cf-back" onclick="if(event.target===this)closeNoteEditor(false)">
   <div class="cf-box" role="dialog" aria-modal="true">
     <div class="cf-msg" id="noteTitle">내 메모</div>
-    <div style="font-size:11.5px;color:rgba(255,255,255,.55);text-align:center;margin-top:6px">헷갈리는 단어·뜻을 적어두면 카드 아래에 작게 표시돼요</div>
+    <div style="font-size:var(--fs-xs);color:rgba(255,255,255,.55);text-align:center;margin-top:6px">헷갈리는 단어·뜻을 적어두면 카드 아래에 작게 표시돼요</div>
     <div id="noteRows" style="max-height:46vh;overflow-y:auto"></div>
-    <button id="noteAddRow" onclick="addNoteRow()" style="width:100%;margin-top:8px;padding:8px;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.22);border-radius:12px;color:rgba(255,255,255,.7);font-size:12.5px;font-weight:700;box-shadow:none;cursor:pointer">＋ 줄 추가</button>
+    <button id="noteAddRow" onclick="addNoteRow()" style="width:100%;margin-top:8px;padding:8px;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.22);border-radius:12px;color:rgba(255,255,255,.7);font-size:var(--fs-sm);font-weight:700;box-shadow:none;cursor:pointer">＋ 줄 추가</button>
     <div class="cf-btns">
       <button class="cf-cancel" onclick="closeNoteEditor(false)">취소 (Esc)</button>
       <button class="cf-ok" onclick="closeNoteEditor(true)">저장 (Enter)</button>
     </div>
-    <button id="noteDelBtn" onclick="clearCardNote()" style="width:100%;margin-top:8px;background:none;border:none;box-shadow:none;color:rgba(255,255,255,.5);font-size:12px;padding:6px;cursor:pointer">메모 삭제</button>
+    <button id="noteDelBtn" onclick="clearCardNote()" style="width:100%;margin-top:8px;background:none;border:none;box-shadow:none;color:rgba(255,255,255,.5);font-size:var(--fs-sm);padding:6px;cursor:pointer">메모 삭제</button>
   </div>
 </div>
 <div id="confirmBack" class="cf-back" onclick="if(event.target===this)closeConfirm(false)">
@@ -959,7 +965,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-19.56'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-07-19.57'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 let words=JSON.parse(localStorage.getItem('words')||'[]');
@@ -1422,13 +1428,13 @@ let box=document.getElementById('dupesList'); if(!box) return;
 if(!sectionOpen('dupeBox')) return;   // 접혀 있으면 건너뜀 (펼칠 때 그려짐)
 let sq=(document.getElementById('dupesSearch')||{}).value||'';
 let list=sq?dupes.filter(d=>d.eng.toLowerCase().includes(sq.toLowerCase())):dupes;
-if(!dupes.length){ box.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px">아직 중복으로 감지된 단어가 없어요. 시트를 불러오면 겹치는 영단어가 여기에 기록돼요.</div>'; return; }
-if(!list.length){ box.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px">검색 결과가 없어요.</div>'; return; }
+if(!dupes.length){ box.innerHTML='<div style="color:var(--muted);font-size:var(--fs-md);padding:8px 2px">아직 중복으로 감지된 단어가 없어요. 시트를 불러오면 겹치는 영단어가 여기에 기록돼요.</div>'; return; }
+if(!list.length){ box.innerHTML='<div style="color:var(--muted);font-size:var(--fs-md);padding:8px 2px">검색 결과가 없어요.</div>'; return; }
 let wIdx=new Map(); words.forEach((w,i2)=>{let k=w.eng.toLowerCase(); if(!wIdx.has(k)) wIdx.set(k,i2);});
 let dIdx=new Map(); dupes.forEach((d,i2)=>dIdx.set(d,i2));
-box.innerHTML='<ul>'+list.map(d=>{let i=dIdx.get(d);let wi=wIdx.has(d.eng.toLowerCase())?wIdx.get(d.eng.toLowerCase()):-1;let num=wi>=0?`<span style="min-width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.13);font-size:11px;font-weight:800;color:rgba(255,255,255,.7);flex-shrink:0">${wi+1}</span>`:'';return(
-'<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="display:flex;align-items:center;gap:6px">'+num+'<b style="font-size:15px;font-weight:700;color:#fff">'+escapeHtml(d.eng)+'</b></span>'
-+'<span style="color:rgba(255,255,255,.65);font-size:12px;display:block;margin-top:2px">'
+box.innerHTML='<ul>'+list.map(d=>{let i=dIdx.get(d);let wi=wIdx.has(d.eng.toLowerCase())?wIdx.get(d.eng.toLowerCase()):-1;let num=wi>=0?`<span style="min-width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.13);font-size:var(--fs-xs);font-weight:800;color:rgba(255,255,255,.7);flex-shrink:0">${wi+1}</span>`:'';return(
+'<li style="flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="display:flex;align-items:center;gap:6px">'+num+'<b style="font-size:var(--fs-lg);font-weight:700;color:#fff">'+escapeHtml(d.eng)+'</b></span>'
++'<span style="color:rgba(255,255,255,.65);font-size:var(--fs-sm);display:block;margin-top:2px">'
 +(d.sheets.length?('📄 '+d.sheets.map(escapeHtml).join(' · ')):'시트 정보 없음')
 +(d.n>1?('  ·  '+d.n+'회 감지'):'')
 +'</span>'
@@ -1496,7 +1502,7 @@ if(!url) return alert('구글 시트 링크를 입력해주세요');
 let id=parseSheetId(url);
 if(!id) return alert('올바른 구글 시트 링크가 아닙니다');
 let box=document.getElementById('sheetTabs');
-box.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px">📑 시트 목록을 불러오는 중... ⏳</div>';
+box.innerHTML='<div style="color:var(--muted);font-size:var(--fs-md);padding:8px 2px">📑 시트 목록을 불러오는 중... ⏳</div>';
 showToast('시트 목록을 불러오는 중... ⏳');
 // 탭 정보(gid+이름)가 들어있는 HTML 페이지들
 let htmlEndpoints=[
@@ -1544,7 +1550,7 @@ let box=document.getElementById('sheetTabs');
 let urlGid=parseSheetGid(document.getElementById('sheetUrl').value.trim());
 let html='<div style="border:2px solid var(--accent-soft);border-radius:16px;padding:12px;margin-top:4px">';
 if(detectedTabs.length){
-html+='<div style="color:var(--text-title);font-weight:800;font-size:13px;margin-bottom:8px">📑 가져올 시트(탭)를 선택하세요</div>';
+html+='<div style="color:var(--text-title);font-weight:800;font-size:var(--fs-md);margin-bottom:8px">📑 가져올 시트(탭)를 선택하세요</div>';
 html+='<div style="display:flex;flex-wrap:wrap;gap:8px">';
 html+=detectedTabs.map(function(t,i){
 let active=urlGid&&urlGid===t.gid;
@@ -1552,7 +1558,7 @@ return '<button class="small" onclick="importSheetTab('+i+')" style="'+(active?'
 }).join('');
 html+='</div>';
 }else{
-html+='<div style="color:var(--muted);font-size:13px;margin-bottom:4px">아래에 시트 탭 이름을 입력하세요</div>';
+html+='<div style="color:var(--muted);font-size:var(--fs-md);margin-bottom:4px">아래에 시트 탭 이름을 입력하세요</div>';
 }
 html+='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--input-border)">';
 html+='<div class="row" style="flex-wrap:nowrap;margin:0">';
@@ -2140,7 +2146,7 @@ function addExRow(text){
   ta.style.resize='none';
   let fill=document.createElement('button');
   fill.type='button'; fill.textContent='💬'; fill.title='예문 자동으로 가져오기';
-  fill.style.cssText='flex:0 0 auto;margin-top:10px;width:34px;height:40px;padding:0;border-radius:11px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);box-shadow:none;cursor:pointer;font-size:14px';
+  fill.style.cssText='flex:0 0 auto;margin-top:10px;width:34px;height:40px;padding:0;border-radius:11px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);box-shadow:none;cursor:pointer;font-size:var(--fs-md)';
   fill.onclick=function(){ ta.id=ta.id||('exRow'+Date.now()+Math.floor(Math.random()*1000));
     exampleFill(ta.id,document.getElementById('wordEditEng').value); };
   let del=document.createElement('button');
@@ -2751,7 +2757,7 @@ function showExample(text){
   _synSeq++;   // 예문 화면을 다시 그리므로, 진행 중인 유의어 조회 결과는 버린다
   let revealed=document.getElementById('card').classList.contains('revealed');
   let studying=revealed && currentIndex>=0 && words[currentIndex];
-  let pill='background:rgba(255,255,255,.14);color:rgba(255,255,255,.85);border:none;box-shadow:none;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600';
+  let pill='background:rgba(255,255,255,.14);color:rgba(255,255,255,.85);border:none;box-shadow:none;padding:6px 14px;border-radius:999px;font-size:var(--fs-sm);font-weight:600';
   let synBtn=studying?('<button onclick="event.stopPropagation();cardSynLookup()" style="'+pill+'">'+icon('branch')+' 유의·반의</button>'):'';
   let roots=studying?morphHtml(words[currentIndex].eng):'';
   let exLink=studying?('<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(words[currentIndex].eng)+'&range=example" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="'+pill+';text-decoration:none;display:inline-flex;align-items:center;gap:5px">'+icon('msg')+' 네이버 예문</a>'):'';
@@ -2790,7 +2796,7 @@ async function cardSynLookup(){
   let el=document.getElementById('cardExample');
   let word=words[currentIndex].eng.toLowerCase();
   let seq=++_synSeq;
-  el.innerHTML='<span style="font-size:12px;color:rgba(255,255,255,.7)">유의어·반의어를 찾는 중... ⏳</span>';
+  el.innerHTML='<span style="font-size:var(--fs-sm);color:rgba(255,255,255,.7)">유의어·반의어를 찾는 중... ⏳</span>';
   try{
     if(_synCache.size>500) _synCache.clear(); // 메모리 상한
     let data=_synCache.get(word);
@@ -2810,17 +2816,17 @@ async function cardSynLookup(){
     if(seq!==_synSeq) return;
     if(currentIndex<0||!words[currentIndex]||words[currentIndex].eng.toLowerCase()!==word) return;
     if(!data.syn.length&&!data.ant.length){
-      el.innerHTML='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:13px;color:var(--link);text-decoration:underline;font-style:normal">네이버 사전에서 보기</a>';
+      el.innerHTML='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:var(--fs-md);color:var(--link);text-decoration:underline;font-style:normal">네이버 사전에서 보기</a>';
       return;
     }
-    let chip=w=>'<span onclick="event.stopPropagation();speakText(\''+speakAttr(w)+'\')" style="display:inline-block;background:rgba(255,255,255,.12);border-radius:999px;padding:4px 11px;margin:3px 2px;font-size:13px;font-style:normal;cursor:pointer">'+escapeHtml(w)+'</span>';
+    let chip=w=>'<span onclick="event.stopPropagation();speakText(\''+speakAttr(w)+'\')" style="display:inline-block;background:rgba(255,255,255,.12);border-radius:999px;padding:4px 11px;margin:3px 2px;font-size:var(--fs-md);font-style:normal;cursor:pointer">'+escapeHtml(w)+'</span>';
     let h='<div style="font-style:normal;text-align:center">';
-    if(data.syn.length) h+='<div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:2px">유의어</div><div>'+data.syn.map(chip).join('')+'</div>';
-    if(data.ant.length) h+='<div style="font-size:11px;color:rgba(255,255,255,.6);margin:6px 0 2px">반의어</div><div>'+data.ant.map(chip).join('')+'</div>';
-    h+='<div style="margin-top:8px"><button onclick="event.stopPropagation();showExample(words[currentIndex]?exList(words[currentIndex]):[])" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);border:none;box-shadow:none;padding:4px 12px;border-radius:999px;font-size:11px">닫기</button></div></div>';
+    if(data.syn.length) h+='<div style="font-size:var(--fs-xs);color:rgba(255,255,255,.6);margin-bottom:2px">유의어</div><div>'+data.syn.map(chip).join('')+'</div>';
+    if(data.ant.length) h+='<div style="font-size:var(--fs-xs);color:rgba(255,255,255,.6);margin:6px 0 2px">반의어</div><div>'+data.ant.map(chip).join('')+'</div>';
+    h+='<div style="margin-top:8px"><button onclick="event.stopPropagation();showExample(words[currentIndex]?exList(words[currentIndex]):[])" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);border:none;box-shadow:none;padding:4px 12px;border-radius:999px;font-size:var(--fs-xs)">닫기</button></div></div>';
     el.innerHTML=h;
   }catch(e){
-    el.innerHTML='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:13px;color:var(--link);text-decoration:underline;font-style:normal">네이버 사전에서 보기</a>';
+    el.innerHTML='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:var(--fs-md);color:var(--link);text-decoration:underline;font-style:normal">네이버 사전에서 보기</a>';
   }
 }
 
@@ -3402,20 +3408,20 @@ if(!kor&&!def){ area.innerHTML='<div class="gs-none">사전에서 찾지 못했�
 _dictLast={eng:word,kor:kor||def};
 let h='<div class="dict-card">';
 h+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
-h+='<b style="font-size:17px">'+escapeHtml(word)+'</b>';
-if(phon) h+='<span style="color:var(--muted);font-size:13px">'+escapeHtml(phon)+'</span>';
+h+='<b style="font-size:var(--fs-xl)">'+escapeHtml(word)+'</b>';
+if(phon) h+='<span style="color:var(--muted);font-size:var(--fs-md)">'+escapeHtml(phon)+'</span>';
 h+='<button class="small" style="box-shadow:none;padding:4px 10px" onclick="'+(audio?('new Audio(\''+speakAttr(audio)+'\').play()'):('speakText(\''+speakAttr(word)+'\')'))+'">🔊 발음</button>';
 h+='</div>';
-if(kor) h+='<div style="margin-top:6px;font-size:16px;font-weight:700;color:var(--accent)">'+escapeHtml(kor)+'</div>';
-if(def) h+='<div style="margin-top:6px;font-size:13px;color:var(--muted);line-height:1.5">'+(pos?('<i>'+escapeHtml(pos)+'</i> · '):'')+escapeHtml(def)+'</div>';
-if(exam) h+='<div style="margin-top:4px;font-size:13px;color:var(--muted);font-style:italic">"'+escapeHtml(exam)+'"</div>';
+if(kor) h+='<div style="margin-top:6px;font-size:var(--fs-lg);font-weight:700;color:var(--accent)">'+escapeHtml(kor)+'</div>';
+if(def) h+='<div style="margin-top:6px;font-size:var(--fs-md);color:var(--muted);line-height:1.5">'+(pos?('<i>'+escapeHtml(pos)+'</i> · '):'')+escapeHtml(def)+'</div>';
+if(exam) h+='<div style="margin-top:4px;font-size:var(--fs-md);color:var(--muted);font-style:italic">"'+escapeHtml(exam)+'"</div>';
 h+='<button class="small" style="width:100%;margin-top:10px" onclick="dictAddWord()">➕ 현재 단어장에 추가</button>';
 h+='<div class="gs-links" style="margin-top:8px">'
 +'<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener">네이버 사전</a>'
 +'<a href="https://papago.naver.com/?sk=en&tk=ko&st='+encodeURIComponent(word)+'" target="_blank" rel="noopener">파파고</a>'
 +'<a href="https://www.google.com/search?q='+encodeURIComponent(word+' 뜻')+'" target="_blank" rel="noopener">구글 검색</a>'
 +'</div>';
-h+='<div style="margin-top:6px;font-size:11px;color:var(--muted);text-align:center">무료 사전이라 번역이 어색할 수 있어요 · 뜻은 추가 후 수정 가능</div>';
+h+='<div style="margin-top:6px;font-size:var(--fs-xs);color:var(--muted);text-align:center">무료 사전이라 번역이 어색할 수 있어요 · 뜻은 추가 후 수정 가능</div>';
 h+='</div>';
 area.innerHTML=h;
 }catch(e){
@@ -3788,7 +3794,7 @@ function lsRowHtml(w,i){
       <a class="ls-dict" href="https://en.dict.naver.com/#/search?query=${encodeURIComponent(w.eng)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="네이버 사전에서 보기" title="네이버 사전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
       <span class="kor-mean${lsPeeked.has(i)?' peek':''}" onclick="event.stopPropagation();lsTogglePeek(this,${i})">${escapeHtml(w.kor)}</span>
     </span>
-    ${exList(w).map(t=>`<span class="ls-ex" style="font-size:13px;color:var(--muted);font-style:italic;line-height:1.5">${escapeHtml(t)}</span>`).join('')}
+    ${exList(w).map(t=>`<span class="ls-ex" style="font-size:var(--fs-md);color:var(--muted);font-style:italic;line-height:1.5">${escapeHtml(t)}</span>`).join('')}
     <span class="btns" style="justify-content:flex-end;gap:6px">
       ${lsFilter==='all'?`<button onclick="lsStartEdit(${i})">✏️</button>`:''}
       <button onclick="toggleWrongFlag(${i})">${w.wrong?icon('check')+' 오답해제':icon('xcircle')+' 오답'}</button>
@@ -3895,8 +3901,8 @@ function renderDeckPanel(){
       <div class="deck-card-header">
         <span class="deck-name"><span class="deck-grip">⠿</span>${escapeHtml(d.name)}</span>
         <span class="deck-actions" onclick="event.stopPropagation()">
-          <button class="small" onclick="renameDeck('${d.id}')" style="padding:4px 10px;font-size:12px;box-shadow:none">✏️</button>
-          <button class="small danger" onclick="deleteDeck('${d.id}')" style="padding:4px 10px;font-size:12px;box-shadow:none">🗑</button>
+          <button class="small" onclick="renameDeck('${d.id}')" style="padding:4px 10px;font-size:var(--fs-sm);box-shadow:none">✏️</button>
+          <button class="small danger" onclick="deleteDeck('${d.id}')" style="padding:4px 10px;font-size:var(--fs-sm);box-shadow:none">🗑</button>
         </span>
       </div>
       <div class="deck-meta">${cnt}개 단어 · 학습완료 ${mastered}개 (${pct}%)</div>
