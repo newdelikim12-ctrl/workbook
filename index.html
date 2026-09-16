@@ -969,29 +969,90 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-07-19.65'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-09-16.66'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
-let words=JSON.parse(localStorage.getItem('words')||'[]');
-let stats=JSON.parse(localStorage.getItem('stats')||'{}');
+// Storage access can throw even on reads (private mode / browser policy).
+let storageWarningShown=false;
+const blockedStorageKeys=new Set();
+function warnStorage(){
+  if(storageWarningShown) return;
+  storageWarningShown=true;
+  setTimeout(()=>alert('데이터를 읽거나 저장하지 못했습니다. 변경 내용이 보존되지 않을 수 있으니 앱을 닫기 전에 백업을 내보내 주세요.'),0);
+}
+const safeStorage={
+  getItem(key){try{return localStorage.getItem(key);}catch(e){warnStorage();return null;}},
+  setItem(key,value){
+    try{
+      if(blockedStorageKeys.has(key)) throw new Error('Recovery backup required');
+      value=String(value);
+      if(localStorage.getItem(key)!==value) localStorage.setItem(key,value);
+      return true;
+    }catch(e){warnStorage();return false;}
+  },
+  removeItem(key){try{localStorage.removeItem(key);return true;}catch(e){warnStorage();return false;}}
+};
+function preserveStorage(key,raw){
+  if(raw===null) return;
+  try{
+    const backupKey=key+'.recovery';
+    if(localStorage.getItem(backupKey)!==raw) localStorage.setItem(backupKey,raw);
+  }catch(e){blockedStorageKeys.add(key);warnStorage();}
+}
+function readStoredJSON(key,fallback,normalize){
+  const raw=safeStorage.getItem(key);
+  if(raw===null) return fallback;
+  try{
+    const parsed=JSON.parse(raw), value=normalize(parsed);
+    if(JSON.stringify(parsed)!==JSON.stringify(value)) preserveStorage(key,raw);
+    return value;
+  }catch(e){preserveStorage(key,raw);warnStorage();return fallback;}
+}
+function isRecord(value){return value!==null&&typeof value==='object'&&!Array.isArray(value);}
+function normalizeStats(value){return isRecord(value)?value:{};}
+function normalizeWords(value){
+  return (Array.isArray(value)?value:[]).filter(w=>isRecord(w)&&typeof w.eng==='string'&&typeof w.kor==='string').map(w=>({
+    ...w,example:typeof w.example==='string'?w.example:'',
+    note:typeof w.note==='string'?w.note:undefined,
+    wrong:!!w.wrong,mastered:!!w.mastered
+  }));
+}
+function normalizeDupes(value){
+  return (Array.isArray(value)?value:[]).filter(d=>isRecord(d)&&typeof d.eng==='string').map(d=>({
+    ...d,sheets:Array.isArray(d.sheets)?d.sheets.filter(s=>typeof s==='string'):[],
+    n:Number.isFinite(d.n)&&d.n>=0?d.n:0
+  }));
+}
+function normalizeDecks(value){
+  const ids=new Set();
+  return (Array.isArray(value)?value:[]).filter(isRecord).map((d,i)=>{
+    let id=typeof d.id==='string'&&d.id?d.id:'recovered_'+i;
+    while(ids.has(id)) id+='_'+i;
+    ids.add(id);
+    return {...d,id,name:typeof d.name==='string'?d.name:'복구된 단어장',
+      words:normalizeWords(d.words),stats:normalizeStats(d.stats),dupes:normalizeDupes(d.dupes)};
+  });
+}
+let words=readStoredJSON('words',[],normalizeWords);
+let stats=readStoredJSON('stats',{},normalizeStats);
 let editIndex=-1;
-let dupes=JSON.parse(localStorage.getItem('dupes')||'[]');
-let decks = JSON.parse(localStorage.getItem('decks') || '[]');
-let activeDeckId = localStorage.getItem('activeDeckId') || '';
-let recentDeckIds = JSON.parse(localStorage.getItem('recentDeckIds')||'[]');
+let dupes=readStoredJSON('dupes',[],normalizeDupes);
+let decks = readStoredJSON('decks',[],normalizeDecks);
+let activeDeckId = safeStorage.getItem('activeDeckId') || '';
+let recentDeckIds = readStoredJSON('recentDeckIds',[],v=>Array.isArray(v)?v.filter(id=>typeof id==='string'):[]);
 if (!decks.length) {
   let d = {id: 'deck_'+Date.now(), name: '기본 단어장',
-            words: JSON.parse(localStorage.getItem('words')||'[]'),
-            stats: JSON.parse(localStorage.getItem('stats')||'{}'),
-            dupes: JSON.parse(localStorage.getItem('dupes')||'[]')};
+            words,stats,dupes};
   decks.push(d);
   activeDeckId = d.id;
-  localStorage.setItem('decks', JSON.stringify(decks));
-  localStorage.setItem('activeDeckId', activeDeckId);
+  const migrated=safeStorage.setItem('decks', JSON.stringify(decks));
+  safeStorage.setItem('activeDeckId', activeDeckId);
   // 덱으로 옮겼으니 옛 최상위 키 제거 (이후 저장은 모두 decks로 일원화)
-  localStorage.removeItem('words');
-  localStorage.removeItem('stats');
-  localStorage.removeItem('dupes');
+  if(migrated){
+    safeStorage.removeItem('words');
+    safeStorage.removeItem('stats');
+    safeStorage.removeItem('dupes');
+  }
 }
 // Load active deck into globals
 (function(){
@@ -1005,10 +1066,11 @@ if (!decks.length) {
 function _writeDecks(){
   invalidateWordIndex();
   try{
-    localStorage.setItem('decks',JSON.stringify(decks));
-    localStorage.setItem('activeDeckId',activeDeckId);
-    localStorage.setItem('recentDeckIds',JSON.stringify(recentDeckIds));
-  }catch(e){}
+    const saved=safeStorage.setItem('decks',JSON.stringify(decks));
+    const activeSaved=safeStorage.setItem('activeDeckId',activeDeckId);
+    const recentSaved=safeStorage.setItem('recentDeckIds',JSON.stringify(recentDeckIds));
+    return saved&&activeSaved&&recentSaved;
+  }catch(e){warnStorage();return false;}
 }
 let _saveTimer=null;
 // 뜻 확인·학습완료 등이 연달아 일어날 때 매번 전체 직렬화하지 않도록 잠시 모아서 저장
@@ -1113,8 +1175,8 @@ setTimeout(()=>s.remove(),3400);
 }
 
 // ===== 효과음 (Web Audio로 직접 합성, 음원 파일 없음) =====
-let soundOn=localStorage.getItem('soundOn')!=='0'; // 기본 켜짐
-let _sv=parseFloat(localStorage.getItem('sfxVol'));
+let soundOn=safeStorage.getItem('soundOn')!=='0'; // 기본 켜짐
+let _sv=parseFloat(safeStorage.getItem('sfxVol'));
 let sfxVol=Math.min(3,Math.max(0,isNaN(_sv)?1.8:_sv)); // 효과음 음량 배율(0~3, 기본 180%). 0%도 그대로 저장됨
 let audioCtx=null, masterGain=null;
 function getCtx(){
@@ -1137,7 +1199,7 @@ return audioCtx;
 function sfxOut(){ getCtx(); return masterGain||audioCtx.destination; }
 function setSfxVol(v){
 sfxVol=Math.min(3,Math.max(0,(parseFloat(v)||0)/100));
-localStorage.setItem('sfxVol',String(sfxVol));
+safeStorage.setItem('sfxVol',String(sfxVol));
 if(masterGain) masterGain.gain.value=sfxVol;
 updateVolUI();
 }
@@ -1237,7 +1299,7 @@ updateVolUI();
 }
 function toggleSound(){
 soundOn=!soundOn;
-localStorage.setItem('soundOn',soundOn?'1':'0');
+safeStorage.setItem('soundOn',soundOn?'1':'0');
 updateSoundBtn();
 if(soundOn) playSound('add'); // 켤 때 확인음
 }
@@ -1249,14 +1311,14 @@ if(m)m.setAttribute('content',isDark?'#101216':'#d9d4ca');
 }
 function toggleDark(){
 document.body.classList.toggle('dark');
-localStorage.setItem('darkMode',document.body.classList.contains('dark')?'1':'0');
+safeStorage.setItem('darkMode',document.body.classList.contains('dark')?'1':'0');
 applyTheme(document.body.classList.contains('dark'));
 updateDarkBtn();
 }
 function updateDarkBtn(){
 document.getElementById('darkBtn').innerHTML=document.body.classList.contains('dark')?icon('sun')+' 라이트모드':icon('moon')+' 다크모드';
 }
-if(localStorage.getItem('darkMode')==='1') document.body.classList.add('dark');
+if(safeStorage.getItem('darkMode')==='1') document.body.classList.add('dark');
 applyTheme(document.body.classList.contains('dark'));
 
 function saveOnly(){ saveDeckData(); }
@@ -1299,12 +1361,14 @@ if(!box.children.length){for(let i=0;i<3;i++) addBulkRow();}
 function bulkAdd(){
 let rows=document.querySelectorAll('#bulkRows .row');
 let added=0;
+const existing=new Set(words.map(w=>w.eng.toLowerCase()));
 rows.forEach(r=>{
 let eng=r.querySelector('.bulkEng').value.trim();
 let kor=r.querySelector('.bulkKor').value.trim();
 let example=(r.querySelector('.bulkEx')||{}).value||'';
 example=example.trim();
-if(eng&&kor&&!duplicate(eng)){
+if(eng&&kor&&!existing.has(eng.toLowerCase())){
+existing.add(eng.toLowerCase());
 words.push({eng,kor,example,wrong:false,mastered:false,wrongResult:null});
 added++;
 }
@@ -1630,20 +1694,20 @@ alert('불러오기 실패! 다음을 확인해 주세요.\n\n① 시트 공유 
 }
 
 let currentIndex=-1;
-let lastMode=localStorage.getItem('lastMode')||'all';
+let lastMode=safeStorage.getItem('lastMode')||'all';
 let cardHistory=[]; // 이전 카드 인덱스 스택
 let recentSeen=[]; // 최근 본 단어 인덱스 (중복 방지용)
-let bothMode=localStorage.getItem('bothMode')==='1';
-let cardDir=localStorage.getItem('cardDir')||'e2k'; // e2k: 영어 먼저, k2e: 한글 먼저
+let bothMode=safeStorage.getItem('bothMode')==='1';
+let cardDir=safeStorage.getItem('cardDir')||'e2k'; // e2k: 영어 먼저, k2e: 한글 먼저
 let rangeFrom=null,rangeTo=null;
 // 학습 범위는 단어장별로 기억한다 {deckId:[from,to]}
 let rangeMemo={};
-try{ rangeMemo=JSON.parse(localStorage.getItem('rangeMemo')||'{}')||{}; }catch(e){ rangeMemo={}; }
+rangeMemo=readStoredJSON('rangeMemo',{},normalizeStats);
 function saveRangeMemo(){
   try{
     if(rangeFrom||rangeTo) rangeMemo[activeDeckId]=[rangeFrom,rangeTo];
     else delete rangeMemo[activeDeckId];
-    localStorage.setItem('rangeMemo',JSON.stringify(rangeMemo));
+    safeStorage.setItem('rangeMemo',JSON.stringify(rangeMemo));
   }catch(e){}
 }
 // 저장해둔 범위를 현재 단어장에 복원 (단어 수가 줄었으면 자동 보정)
@@ -1664,7 +1728,7 @@ function restoreRangeMemo(){
 function speakWord(mode){
 if(currentIndex<0) return;
 if(!('speechSynthesis' in window)) return alert('이 기기에서는 음성 기능을 지원하지 않습니다');
-if(mode && mode!==speakMode){ speakMode=mode; localStorage.setItem('speakMode',speakMode); updateSpeakBtns(); }
+if(mode && mode!==speakMode){ speakMode=mode; safeStorage.setItem('speakMode',speakMode); updateSpeakBtns(); }
 let m=mode||speakMode;
 let w=words[currentIndex];
 // 카드 방향에 맞춰 앞/뒤 언어 결정 (한글 먼저면 한글부터 읽음)
@@ -1709,15 +1773,15 @@ if(speakMode==='both'){
 }
 }
 
-let autoSpeak=localStorage.getItem('autoSpeak')==='1';
-let speakMode=localStorage.getItem('speakMode')||'eng';
+let autoSpeak=safeStorage.getItem('autoSpeak')==='1';
+let speakMode=safeStorage.getItem('speakMode')||'eng';
 let autoPlay=false;
-let autoPlaySpeed=parseInt(localStorage.getItem('autoPlaySpeed')||'3');
+let autoPlaySpeed=parseInt(safeStorage.getItem('autoPlaySpeed')||'3');
 let autoPlayTimer=null;
 
 function toggleAutoSpeak(){
   autoSpeak=!autoSpeak;
-  localStorage.setItem('autoSpeak',autoSpeak?'1':'0');
+  safeStorage.setItem('autoSpeak',autoSpeak?'1':'0');
   updateAutoSpeakBtn();
   if(autoSpeak) speakWord();
 }
@@ -1738,7 +1802,7 @@ function updateAutoSpeakBtn(){
 
 function setAutoPlaySpeed(v){
   autoPlaySpeed=parseInt(v);
-  localStorage.setItem('autoPlaySpeed',autoPlaySpeed);
+  safeStorage.setItem('autoPlaySpeed',autoPlaySpeed);
   if(autoPlay) scheduleAutoPlay();
 }
 
@@ -1825,7 +1889,7 @@ if(autoPlay) scheduleAutoPlay();
 
 function toggleBothMode(){
 bothMode=!bothMode;
-localStorage.setItem('bothMode',bothMode?'1':'0');
+safeStorage.setItem('bothMode',bothMode?'1':'0');
 playSound(bothMode?'flip':'fold');
 updateBothModeBtn();
 if(currentIndex>=0 && words[currentIndex]) showWord(words[currentIndex],currentIndex,true); // 같은 카드 다시 그리기 → 히스토리에 쌓지 않음
@@ -1837,8 +1901,8 @@ if(!b) return;
 if(bothMode){b.style.background='linear-gradient(135deg,var(--on-1),var(--on-2))';b.style.color='#fff';}
 else{b.style.background='';b.style.color='';}
 }
-let meaningHidden=localStorage.getItem('meaningHidden')==='1';
-let lsFilter=localStorage.getItem('lsFilter')||'all'; // 목록학습 필터: all|unlearned|wrong|mastered
+let meaningHidden=safeStorage.getItem('meaningHidden')==='1';
+let lsFilter=safeStorage.getItem('lsFilter')||'all'; // 목록학습 필터: all|unlearned|wrong|mastered
 let lsPeeked=new Set(); // 목록학습에서 개별로 뜻을 펼쳐둔 단어 인덱스(재렌더 후에도 유지)
 let lsEditIndex=-1; // 목록학습(전체 필터)에서 수정 중인 단어 인덱스
 function applyMeaningHidden(){
@@ -1849,7 +1913,7 @@ b.innerHTML=meaningHidden?icon('eye')+' 뜻 보이기':icon('eyeoff')+' 뜻 가�
 }
 function toggleMeaning(){
 meaningHidden=!meaningHidden;
-localStorage.setItem('meaningHidden',meaningHidden?'1':'0');
+safeStorage.setItem('meaningHidden',meaningHidden?'1':'0');
 // 전체 토글 시 개별로 펼쳐둔 뜻(.peek) 초기화 → 전체 가리기/보이기가 모든 단어에 적용
 document.querySelectorAll('.wl-kor.peek,.kor-mean.peek').forEach(s=>s.classList.remove('peek'));
 applyMeaningHidden();
@@ -1857,7 +1921,7 @@ showToast(meaningHidden?'뜻을 가렸어요. 단어를 탭하면 잠깐 보여�
 }
 function toggleCardDir(){
 cardDir=cardDir==='e2k'?'k2e':'e2k';
-localStorage.setItem('cardDir',cardDir);
+safeStorage.setItem('cardDir',cardDir);
 updateCardDirBtn();
 updateSpeakBtns();
 if(currentIndex>=0 && words[currentIndex]) showWord(words[currentIndex],currentIndex,true); // 같은 카드 다시 그리기 → 히스토리에 쌓지 않음
@@ -1975,7 +2039,7 @@ showToast('전체 단어로 학습할게요');
 }
 const RANGE_STEPS=[10,20,30,40,50,60];
 let rangeStepIdx=(function(){
-  let i=RANGE_STEPS.indexOf(parseInt(localStorage.getItem('rangeStep')));
+  let i=RANGE_STEPS.indexOf(parseInt(safeStorage.getItem('rangeStep')));
   return i>=0?i:0;   // 기본 단위 10
 })();
 // 단위 라벨: 탭 = 다음 단위, 길게 누르기 = 목록에서 바로 고르기
@@ -2035,7 +2099,7 @@ function setRangeStep(step){
   let i=RANGE_STEPS.indexOf(step);
   if(i<0) return;
   rangeStepIdx=i;
-  try{ localStorage.setItem('rangeStep',String(step)); }catch(e){}
+  try{ safeStorage.setItem('rangeStep',String(step)); }catch(e){}
   document.getElementById('rangeStepLabel').textContent='단위 '+step;
   if(!words.length){ showToast('단위를 '+step+'개로 변경했어요'); return; }
   let curFrom=rangeFrom||1;
@@ -2075,7 +2139,7 @@ function openRangeJump(dir){
 function _applyJump(from,to,n,msg){
   rangeFrom=from; rangeTo=to;
   let i=RANGE_STEPS.indexOf(n);
-  if(i>=0){ rangeStepIdx=i; try{ localStorage.setItem('rangeStep',String(n)); }catch(e){} }  // 이후 ◀▶도 이 단위로
+  if(i>=0){ rangeStepIdx=i; try{ safeStorage.setItem('rangeStep',String(n)); }catch(e){} }  // 이후 ◀▶도 이 단위로
   document.getElementById('rangeFrom').value=from;
   document.getElementById('rangeTo').value=to;
   updateRangeCnt();
@@ -2423,7 +2487,7 @@ return arr.filter(x=>!x.w.mastered);
 
 function randomMode(mode){
 lastMode=mode;
-try{ localStorage.setItem('lastMode',mode); }catch(e){}
+try{ safeStorage.setItem('lastMode',mode); }catch(e){}
 let arr=getDeck(mode);
 if(!arr.length){
 if(mode==='wrong') return alert('복습할 오답노트 단어가 없어요! 👍');
@@ -3085,17 +3149,17 @@ function cardReveal(show){
 // 복사본은 독립적 — 오답노트 단어장 안에서만 삭제·관리하며 원본과 동기화하지 않음.
 // 오답노트 단어장 찾기: 저장된 id 우선, 없으면 이름('오답'으로 시작)으로 찾고 즉시 id 기억
 function findWrongDeck(){
-  let savedId=localStorage.getItem('wrongDeckId');
+  let savedId=safeStorage.getItem('wrongDeckId');
   let d=savedId?decks.find(x=>x.id===savedId):null;
   if(!d){
     d=decks.find(x=>(x.name||'').trim().startsWith('오답')); // 오답노트, 오답, 오답 노트 등
-    if(d) localStorage.setItem('wrongDeckId',d.id);
+    if(d) safeStorage.setItem('wrongDeckId',d.id);
   }
   return d||null;
 }
 function getWrongDeck(){
   let d=findWrongDeck();
-  if(!d){ d={id:'deck_wrong_'+Date.now(),name:'오답노트',words:[],stats:{},dupes:[]}; decks.push(d); localStorage.setItem('wrongDeckId',d.id); }
+  if(!d){ d={id:'deck_wrong_'+Date.now(),name:'오답노트',words:[],stats:{},dupes:[]}; decks.push(d); safeStorage.setItem('wrongDeckId',d.id); }
   return d;
 }
 function addToWrongDeck(w){
@@ -3398,12 +3462,12 @@ function toggle(id,el){
 function saveOpenSections(){
   try{
     let ids=[].slice.call(document.querySelectorAll('.section-content.open')).map(function(c){ return c.id; });
-    localStorage.setItem('openSections',JSON.stringify(ids));
+    safeStorage.setItem('openSections',JSON.stringify(ids));
   }catch(e){}
 }
 function restoreOpenSections(){
   let ids=[];
-  try{ ids=JSON.parse(localStorage.getItem('openSections')||'[]')||[]; }catch(e){ ids=[]; }
+  ids=readStoredJSON('openSections',[],v=>Array.isArray(v)?v.filter(id=>typeof id==='string'):[]);
   ids.forEach(function(id){
     let c=document.getElementById(id);
     if(!c||c.classList.contains('open')) return;
@@ -3788,7 +3852,7 @@ function lsBulk(action){
 function lsSetFilter(name){
   lsFilter=name;
   lsEditIndex=-1;
-  localStorage.setItem('lsFilter',lsFilter);
+  safeStorage.setItem('lsFilter',lsFilter);
   renderListStudy();
 }
 function lsToggleHideAll(){
@@ -3896,10 +3960,10 @@ setExList(words[i],[ex].concat(exList(words[i]).slice(1)));   // 첫 예문만 �
   save();
   showToast('단어를 수정했어요 ✏️');
 }
-let lsAutoSpeak=localStorage.getItem('lsAutoSpeak')==='1';
+let lsAutoSpeak=safeStorage.getItem('lsAutoSpeak')==='1';
 function lsToggleAutoSpeak(){
   lsAutoSpeak=!lsAutoSpeak;
-  localStorage.setItem('lsAutoSpeak',lsAutoSpeak?'1':'0');
+  safeStorage.setItem('lsAutoSpeak',lsAutoSpeak?'1':'0');
   updateLsSpeakBtn();
   showToast(lsAutoSpeak?'뜻을 밝히면 발음을 읽어줘요 🔊':'발음 자동읽기 끔');
 }
@@ -3982,10 +4046,11 @@ function lsRowHtml(w,i){
 }
 
 function switchDeck(id,targetTab){
+  let d = decks.find(x=>x.id===id);
+  if(!d){showToast('존재하지 않는 단어장입니다.');return false;}
   saveDeckData();
   activeDeckId = id;
   invalidateWordIndex();   // 활성 단어장이 바뀌면 색인 갱신
-  let d = decks.find(x=>x.id===id) || decks[0];
   words = d.words||[]; stats = d.stats||{}; dupes = d.dupes||[];
   currentIndex=-1; editIndex=-1; cardHistory=[]; recentSeen=[];
   restoreRangeMemo();   // 단어장별로 기억해둔 학습 범위 복원
@@ -4004,7 +4069,7 @@ function switchDeck(id,targetTab){
   card.classList.remove('revealed');
   showCardActions();
   // 단어장 바에서 고르면 현재 탭 유지, 단어장 관리에서 고르면 학습으로 이동
-  showTab(targetTab || localStorage.getItem('activeTab') || 'study');
+  showTab(targetTab || safeStorage.getItem('activeTab') || 'study');
   showToast('📚 '+d.name);
 }
 
@@ -4063,7 +4128,7 @@ function showTab(tab){
   let lock=(tab!=='study');
   document.documentElement.classList.toggle('lock-refresh',lock);
   document.body.classList.toggle('lock-refresh',lock);
-  try{ localStorage.setItem('activeTab',tab); }catch(e){}
+  try{ safeStorage.setItem('activeTab',tab); }catch(e){}
 }
 
 function renderDeckPanel(){
@@ -4171,7 +4236,7 @@ restoreOpenSections();       // 지난번에 펼쳐둔 섹션 복원
 restoreRangeMemo();          // 지난번 학습 범위 복원
 render();                    // 복원된 섹션 내용 채우기
 // 새로고침(당겨서 새로고침 등) 후에도 마지막으로 보던 탭 복원
-let savedTab=localStorage.getItem('activeTab');
+let savedTab=safeStorage.getItem('activeTab');
 if(savedTab==='list'||savedTab==='decks') showTab(savedTab);
 
 // 모든 버튼에 공통 탭 효과음
@@ -4249,7 +4314,7 @@ function stepDeck(dir){
   showToast('📚 '+d.name+' ('+(n+1)+'/'+decks.length+')');
 }
 function stepTab(dir){
-  let cur=localStorage.getItem('activeTab')||'study';
+  let cur=safeStorage.getItem('activeTab')||'study';
   let i=TAB_ORDER.indexOf(cur); if(i<0) i=0;
   let next=TAB_ORDER[(i+dir+TAB_ORDER.length)%TAB_ORDER.length];
   if(next===cur) return;
@@ -4261,7 +4326,7 @@ function stepTab(dir){
 (function(){
 const ORDER=TAB_ORDER;
 let tx=0,ty=0,valid=false;
-function currentTab(){ return localStorage.getItem('activeTab')||'study'; }
+function currentTab(){ return safeStorage.getItem('activeTab')||'study'; }
 document.addEventListener('touchstart',function(e){
   let t=e.touches[0];
   tx=t.clientX; ty=t.clientY;
@@ -4329,7 +4394,7 @@ function cardOpenInList(){
   let i=currentIndex;
   // 현재 필터에서 그 단어가 안 보이면 전체 필터로 전환
   showTab('list');
-  if(!lsCurrentList().some(x=>x.i===i)){ lsFilter='all'; localStorage.setItem('lsFilter','all'); let s=document.getElementById('lsSearch'); if(s) s.value=''; }
+  if(!lsCurrentList().some(x=>x.i===i)){ lsFilter='all'; safeStorage.setItem('lsFilter','all'); let s=document.getElementById('lsSearch'); if(s) s.value=''; }
   renderListStudy();
   let r=document.querySelector('#lsList .ls-row[data-i="'+i+'"]');
   if(r){
@@ -4433,7 +4498,7 @@ let lsRowSwiping=false; // 목록 행 가로 스와이프 진행 중 → 탭 전
 // 화면을 당겨서 새로고침한 것과 같은 동작 (저장한 뒤 다시 불러오기)
 // W: '단어 추가'를 펼치고 영어 칸에 바로 커서
 function openAddWord(){
-  if((localStorage.getItem('activeTab')||'study')!=='study') showTab('study');
+  if((safeStorage.getItem('activeTab')||'study')!=='study') showTab('study');
   let box=document.getElementById('addWord');
   if(!box) return;
   if(!box.classList.contains('open')){
@@ -4520,7 +4585,7 @@ document.addEventListener('keydown',function(e){
   }
   // W : 단어 추가 (어느 탭에서든)
   if(e.key==='w'||e.key==='W'||e.key==='ㅈ'){ e.preventDefault(); openAddWord(); return; }
-  if((localStorage.getItem('activeTab')||'study')!=='study') return;
+  if((safeStorage.getItem('activeTab')||'study')!=='study') return;
   let k=e.key;
   if(!k) return;
   // 범위·진도 단축키는 퀴즈 중에도 동작
