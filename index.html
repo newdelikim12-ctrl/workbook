@@ -616,6 +616,11 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
   box-shadow:0 8px 24px rgba(76,86,128,.3);opacity:0;pointer-events:none;
   transition:transform .3s cubic-bezier(.2,.8,.3,1),opacity .3s}
 #updateBanner.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
+/* Preserve deliberately entered meaning line breaks in every reading view. */
+#front,#back,.wl-row .wl-kor,.ls-row .kor-mean,.gs-kor{white-space:pre-wrap;overflow-wrap:anywhere}
+body.hide-mean .wl-kor.peek,#lsList.ls-hideMean .kor-mean.peek{white-space:pre-wrap}
+#card.multiline-meaning{height:auto;min-height:280px;max-height:none}
+#kor,#wordEditKor,#editKor,#lsEditKor,.bulkKor{height:auto;min-height:80px;line-height:1.6;resize:vertical;box-sizing:border-box}
 </style>
 </head>
 <body>
@@ -831,7 +836,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
   <div style="color:var(--text-title);font-weight:800;font-size:var(--fs-md);margin-bottom:8px">단일 추가</div>
   <div class="row">
     <input id="eng" placeholder="English">
-    <input id="kor" placeholder="뜻">
+    <textarea id="kor" placeholder="뜻 (Enter로 줄바꿈)" rows="3"></textarea>
   </div>
   <div class="row" style="margin-top:4px">
     <input id="exampleInput" placeholder="예문 (선택사항)">
@@ -935,7 +940,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
     <div class="cf-msg">단어 수정</div>
     <div style="font-size:var(--fs-xs);color:rgba(255,255,255,.55);text-align:center;margin-top:6px">영어·뜻·예문을 고칩니다 (예문은 비우면 삭제돼요)</div>
     <input id="wordEditEng" placeholder="영어" class="note-in">
-    <input id="wordEditKor" placeholder="뜻" class="note-in">
+    <textarea id="wordEditKor" placeholder="뜻 (Enter로 줄바꿈)" class="note-in" rows="3"></textarea>
     <div id="wordEditExRows" style="max-height:34vh;overflow-y:auto"></div>
     <button id="wordEditAddEx" onclick="addExRow()" style="width:100%;margin-top:8px;padding:8px;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.22);border-radius:12px;color:rgba(255,255,255,.7);font-size:var(--fs-sm);font-weight:700;box-shadow:none;cursor:pointer">＋ 예문 추가</button>
     <div class="cf-btns">
@@ -969,7 +974,7 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-09-16.66'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-09-25.67'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 // Storage access can throw even on reads (private mode / browser policy).
@@ -996,7 +1001,7 @@ function preserveStorage(key,raw){
   if(raw===null) return;
   try{
     const backupKey=key+'.recovery';
-    if(localStorage.getItem(backupKey)!==raw) localStorage.setItem(backupKey,raw);
+    if(localStorage.getItem(backupKey)===null) localStorage.setItem(backupKey,raw);
   }catch(e){blockedStorageKeys.add(key);warnStorage();}
 }
 function readStoredJSON(key,fallback,normalize){
@@ -1010,10 +1015,20 @@ function readStoredJSON(key,fallback,normalize){
 }
 function isRecord(value){return value!==null&&typeof value==='object'&&!Array.isArray(value);}
 function normalizeStats(value){return isRecord(value)?value:{};}
+function normalizeExamples(value){
+  if(typeof value==='string') return value;
+  return Array.isArray(value)?value.filter(x=>typeof x==='string'):'';
+}
+function normalizeNotes(value){
+  if(typeof value==='string') return value;
+  if(Array.isArray(value)) return value.filter(isRecord).map(n=>({eng:typeof n.eng==='string'?n.eng:'',kor:typeof n.kor==='string'?n.kor:''}));
+  if(isRecord(value)) return {eng:typeof value.eng==='string'?value.eng:'',kor:typeof value.kor==='string'?value.kor:''};
+  return undefined;
+}
 function normalizeWords(value){
   return (Array.isArray(value)?value:[]).filter(w=>isRecord(w)&&typeof w.eng==='string'&&typeof w.kor==='string').map(w=>({
-    ...w,example:typeof w.example==='string'?w.example:'',
-    note:typeof w.note==='string'?w.note:undefined,
+    ...w,example:normalizeExamples(w.example),
+    note:normalizeNotes(w.note),
     wrong:!!w.wrong,mastered:!!w.mastered
   }));
 }
@@ -1054,6 +1069,34 @@ if (!decks.length) {
     safeStorage.removeItem('dupes');
   }
 }
+// Recover into separate decks: never replace current edits or delete the original snapshot.
+const recoveryReceiptKeys=[];
+function recoverSavedCopies(){
+  let count=0;
+  for(const key of ['decks.recovery','words.recovery']){
+    const raw=safeStorage.getItem(key);
+    if(!raw) continue;
+    let source;
+    try{source=JSON.parse(raw);}catch(e){continue;}
+    const candidates=key==='decks.recovery'?normalizeDecks(source):[{name:'이전 단어',words:normalizeWords(source),stats:{},dupes:[]}];
+    let hash=2166136261;
+    for(let i=0;i<raw.length;i++) hash=Math.imul(hash^raw.charCodeAt(i),16777619);
+    candidates.forEach((d,i)=>{
+      if(!d.words.length) return;
+      if(decks.some(x=>x.id===d.id&&JSON.stringify(x.words)===JSON.stringify(d.words))) return;
+      const id='recovery_'+key.split('.')[0]+'_'+(hash>>>0).toString(16)+'_'+i;
+      if(decks.some(x=>x.id===id)||safeStorage.getItem('workbook.recovered.'+id)==='1') return;
+      recoveryReceiptKeys.push('workbook.recovered.'+id);
+      decks.push({...d,id,name:'복구 사본 · '+d.name});count++;
+    });
+  }
+  return count;
+}
+const recoveredDeckCount=recoverSavedCopies();
+if(recoveredDeckCount){
+  if(safeStorage.setItem('decks',JSON.stringify(decks))) recoveryReceiptKeys.forEach(key=>safeStorage.setItem(key,'1'));
+  setTimeout(()=>alert('남아 있던 복구 데이터에서 '+recoveredDeckCount+'개 단어장을 찾았습니다. 단어장 관리의 “복구 사본”에서 예문과 메모를 확인해 주세요. 현재 단어장은 그대로 유지했습니다.'),0);
+}
 // Load active deck into globals
 (function(){
   let d = decks.find(x=>x.id===activeDeckId) || decks[0];
@@ -1063,19 +1106,38 @@ if (!decks.length) {
   dupes = d.dupes || [];
 })();
 
+// Compare against the last disk snapshot before every write. A stale window must not overwrite it.
+let _diskDecks=safeStorage.getItem('decks');
+let _savedModel=_diskDecks;
+let _conflictWarned=false;
+const _conflictKey='workbook.unsaved.'+Date.now()+'.'+Math.random().toString(36).slice(2);
 function _writeDecks(){
   invalidateWordIndex();
   try{
-    const saved=safeStorage.setItem('decks',JSON.stringify(decks));
-    const activeSaved=safeStorage.setItem('activeDeckId',activeDeckId);
-    const recentSaved=safeStorage.setItem('recentDeckIds',JSON.stringify(recentDeckIds));
-    return saved&&activeSaved&&recentSaved;
+    const model=JSON.stringify(decks);
+    if(model===_savedModel) return true;
+    if(safeStorage.getItem('decks')!==_diskDecks){
+      const backedUp=safeStorage.setItem(_conflictKey,model);
+      if(!_conflictWarned){
+        _conflictWarned=true;
+        setTimeout(()=>alert('다른 창에서 단어장이 변경되어 덮어쓰기를 중단했습니다. 이 창의 변경 내용은 '+(backedUp?'별도 보관했습니다.':'저장하지 못했습니다.')+' 이 창에서 백업 내보내기를 한 뒤 다른 창을 닫고 다시 열어 주세요.'),0);
+      }
+      return false;
+    }
+    const saved=safeStorage.setItem('decks',model);
+    if(saved){_diskDecks=model;_savedModel=model;}
+    return saved;
   }catch(e){warnStorage();return false;}
 }
 let _saveTimer=null;
-// 뜻 확인·학습완료 등이 연달아 일어날 때 매번 전체 직렬화하지 않도록 잠시 모아서 저장
-function saveDecks(){ invalidateWordIndex(); clearTimeout(_saveTimer); _saveTimer=setTimeout(()=>{ _saveTimer=null; _writeDecks(); },250); }
-function flushDecks(){ if(_saveTimer){ clearTimeout(_saveTimer); _saveTimer=null; } _writeDecks(); }
+// Persist user edits immediately; a process termination must not lose pending edits.
+function saveDecks(){
+  invalidateWordIndex();
+  const saved=_writeDecks();
+  if(saved){safeStorage.setItem('activeDeckId',activeDeckId);safeStorage.setItem('recentDeckIds',JSON.stringify(recentDeckIds));}
+  return saved;
+}
+function flushDecks(){return _writeDecks();}
 window.addEventListener('pagehide',flushDecks);
 window.addEventListener('beforeunload',flushDecks);
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden') flushDecks(); });
@@ -1348,7 +1410,7 @@ div.className='row';
 div.style.margin='6px 0';
 div.style.flexWrap='nowrap';
 div.innerHTML=`<input type="text" class="bulkEng" placeholder="English" value="${escapeHtml(eng)}" style="min-width:0;flex:2">`+
-`<input type="text" class="bulkKor" placeholder="뜻" value="${escapeHtml(kor)}" style="min-width:0;flex:2">`+
+`<textarea class="bulkKor" placeholder="뜻" rows="2" style="min-width:0;flex:2">${escapeHtml(kor)}</textarea>`+
 `<input type="text" class="bulkEx" placeholder="예문(선택)" value="${escapeHtml(example)}" style="min-width:0;flex:3">`+
 `<button class="small" onclick="this.parentElement.remove()" style="flex:0 0 auto">🗑</button>`;
 box.appendChild(div);
@@ -1449,7 +1511,10 @@ ex.src=label;
 }
 // 시트에서 뜻/예문이 바뀌었으면 반영(학습 진도·오답 기록은 유지)
 if(ex.kor!==kor){ ex.kor=kor; updated++; }
-if(example && ex.example!==example) ex.example=example;
+if(example){
+  const examples=exList(ex);
+  if(!examples.includes(example)){setExList(ex,examples.concat(example));updated++;}
+}
 seen.set(engL,idx+1);
 return;
 }
@@ -2423,7 +2488,7 @@ function closeWordEditor(save_){
 document.addEventListener('keydown',function(e){
   if(!wordEditorOpen()) return;
   let inTextarea=e.target&&e.target.tagName==='TEXTAREA';
-  if(e.key==='Enter'&&!(inTextarea&&!e.ctrlKey)){ e.preventDefault(); e.stopPropagation(); closeWordEditor(true); }
+  if(e.key==='Enter'&&!e.isComposing&&!(inTextarea&&!e.ctrlKey&&!e.metaKey)){ e.preventDefault(); e.stopPropagation(); closeWordEditor(true); }
   else if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); closeWordEditor(false); }
 },true);
 function noteEditorOpen(){ let b=document.getElementById('noteBack'); return !!b&&b.classList.contains('show'); }
@@ -2904,6 +2969,9 @@ function _fitCardOnce(){
   if(note) note.style.fontSize='';
   if(!card) return;
   // 예문 영역이 없거나 숨겨져 있어도 영단어·뜻·메모 크기는 항상 맞춘다
+  const multiline=[front,back].some(n=>n&&n.innerText.includes('\n'));
+  card.classList.toggle('multiline-meaning',multiline);
+  if(multiline) return;
   preferOneLine(front,29); preferOneLine(back,17.5);
   fitLines(front,3,24); fitLines(back,3,15); fitLines(note,4,10);
   if(!el||el.style.display==='none') return;
@@ -3169,7 +3237,7 @@ function addToWrongDeck(w){
     if(d.id===activeDeckId) return; // 오답노트 단어장 안에서의 오답 표시는 복사 불필요
     let eng=w.eng.toLowerCase();
     if(d.words.some(x=>(x.eng||'').toLowerCase()===eng)) return; // 이미 있으면 중복 방지
-    d.words.push({eng:w.eng,kor:w.kor,example:w.example||'',note:w.note||undefined,src:w.src,wrong:false,mastered:false,lastResult:null,wrongResult:null});
+    d.words.push({eng:w.eng,kor:w.kor,example:normalizeExamples(w.example),note:normalizeNotes(w.note),src:w.src,wrong:false,mastered:false,lastResult:null,wrongResult:null});
     saveDecks();
     renderDeckPanel(); // 단어장 목록의 단어 수 갱신 (스크롤 부작용 없음)
   }catch(e){}
@@ -3521,7 +3589,7 @@ let raw=document.getElementById('backupBox').value.trim();
 if(!raw) return alert('복원할 백업 데이터를 붙여넣어 주세요');
 let data;
 try{data=JSON.parse(raw);}catch(e){return alert('백업 데이터 형식이 올바르지 않습니다');}
-let mapWord=w=>({eng:w.eng||'',kor:w.kor||'',example:w.example||'',note:w.note||undefined,wrong:!!w.wrong,mastered:!!w.mastered,lastResult:w.lastResult,wrongResult:w.wrongResult||null,src:w.src});
+let mapWord=w=>({eng:w.eng||'',kor:w.kor||'',example:normalizeExamples(w.example),note:normalizeNotes(w.note),wrong:!!w.wrong,mastered:!!w.mastered,lastResult:w.lastResult,wrongResult:w.wrongResult||null,src:w.src});
 // 신형(v2): 모든 단어장 복원
 if(data&&Array.isArray(data.decks)&&data.decks.length){
   if(!needConfirm2(()=>restoreBackup(),'모든 단어장을 백업 데이터로 덮어쓸까요? (지금 단어장들은 사라집니다)')) return;
@@ -3701,7 +3769,7 @@ if(sb) sb.style.display=(isWD&&wlSelMode)?'flex':'none';
 updateWlSelBar();
 if(sectionOpen('allWords')) all.innerHTML='<ul>'+list.map(({w,i})=>{
 if(i===editIndex&&!wlSel){
-return `<li class="wl-row" style="flex-direction:column;gap:6px"><div style="display:flex;gap:6px;width:100%;align-items:center"><span class="wl-num">${i+1}</span><div class="input-clear" style="flex:1;min-width:0"><input id="editEng" placeholder="영어" value="${escapeHtml(w.eng)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editEng').value='';document.getElementById('editEng').focus()" aria-label="지우기">✕</button></div><div class="input-clear" style="flex:1;min-width:0"><input id="editKor" placeholder="뜻" value="${escapeHtml(w.kor)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editKor').value='';document.getElementById('editKor').focus()" aria-label="지우기">✕</button></div></div><div style="display:flex;gap:6px"><div class="input-clear" style="flex:1;min-width:0"><input id="editEx" placeholder="예문 (선택사항)" value="${escapeHtml(exList(w)[0]||'')}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editEx').value='';document.getElementById('editEx').focus()" aria-label="지우기">✕</button></div><button onclick="exampleFill('editEx','${speakAttr(w.eng)}')" style="flex:0 0 auto;box-shadow:none;padding:8px 10px">${icon('msg')}</button></div><span class="btns" style="justify-content:center"><button onclick="saveEdit(${i})">💾 저장</button><button onclick="cancelEdit()">↩️ 취소</button></span></li>`;
+return `<li class="wl-row" style="flex-direction:column;gap:6px"><div style="display:flex;gap:6px;width:100%;align-items:center"><span class="wl-num">${i+1}</span><div class="input-clear" style="flex:1;min-width:0"><input id="editEng" placeholder="영어" value="${escapeHtml(w.eng)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editEng').value='';document.getElementById('editEng').focus()" aria-label="지우기">✕</button></div><div class="input-clear" style="flex:1;min-width:0"><textarea id="editKor" placeholder="뜻" rows="3" style="width:100%">${escapeHtml(w.kor)}</textarea><button class="clear-x" onclick="document.getElementById('editKor').value='';document.getElementById('editKor').focus()" aria-label="지우기">✕</button></div></div><div style="display:flex;gap:6px"><div class="input-clear" style="flex:1;min-width:0"><input id="editEx" placeholder="예문 (선택사항)" value="${escapeHtml(exList(w)[0]||'')}" style="width:100%"><button class="clear-x" onclick="document.getElementById('editEx').value='';document.getElementById('editEx').focus()" aria-label="지우기">✕</button></div><button onclick="exampleFill('editEx','${speakAttr(w.eng)}')" style="flex:0 0 auto;box-shadow:none;padding:8px 10px">${icon('msg')}</button></div><span class="btns" style="justify-content:center"><button onclick="saveEdit(${i})">💾 저장</button><button onclick="cancelEdit()">↩️ 취소</button></span></li>`;
 }
 let tint=w.lastResult==='correct'?'result-correct':w.lastResult==='wrong'?'result-wrong':'';
 let btns=`<button onclick="toggleWrongFlag(${i})">${w.wrong?icon('check'):icon('xcircle')}</button><button onclick="toggleMaster(${i})">${w.mastered?icon('repeat'):icon('check')}</button><button onclick="startEdit(${i})">✏️</button><button onclick="markCorrect(${i})">정답</button><button onclick="markWrong(${i})">오답</button><button onclick="del(${i})">🗑</button>`;
@@ -4021,7 +4089,7 @@ function lsRowHtml(w,i){
   let tint=w.mastered?'result-correct':(w.wrong&&w.wrongResult!=='correct')?'result-wrong':'';
   if(lsFilter==='all' && i===lsEditIndex){
     return `<li class="ls-row" data-i="${i}" style="flex-direction:column;align-items:stretch;gap:8px;padding:14px 14px">
-      <div style="display:flex;gap:6px;align-items:center"><span class="ls-num">${i+1}</span><div class="input-clear" style="flex:1;min-width:0"><input id="lsEditEng" placeholder="영어" value="${escapeHtml(w.eng)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('lsEditEng').value='';document.getElementById('lsEditEng').focus()" aria-label="지우기">✕</button></div><div class="input-clear" style="flex:1;min-width:0"><input id="lsEditKor" placeholder="뜻" value="${escapeHtml(w.kor)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('lsEditKor').value='';document.getElementById('lsEditKor').focus()" aria-label="지우기">✕</button></div></div>
+      <div style="display:flex;gap:6px;align-items:center"><span class="ls-num">${i+1}</span><div class="input-clear" style="flex:1;min-width:0"><input id="lsEditEng" placeholder="영어" value="${escapeHtml(w.eng)}" style="width:100%"><button class="clear-x" onclick="document.getElementById('lsEditEng').value='';document.getElementById('lsEditEng').focus()" aria-label="지우기">✕</button></div><div class="input-clear" style="flex:1;min-width:0"><textarea id="lsEditKor" placeholder="뜻" rows="3" style="width:100%">${escapeHtml(w.kor)}</textarea><button class="clear-x" onclick="document.getElementById('lsEditKor').value='';document.getElementById('lsEditKor').focus()" aria-label="지우기">✕</button></div></div>
       <div style="display:flex;gap:6px"><div class="input-clear" style="flex:1;min-width:0"><input id="lsEditEx" placeholder="예문 (선택사항)" value="${escapeHtml(exList(w)[0]||'')}" style="width:100%"><button class="clear-x" onclick="document.getElementById('lsEditEx').value='';document.getElementById('lsEditEx').focus()" aria-label="지우기">✕</button></div><button onclick="exampleFill('lsEditEx','${speakAttr(w.eng)}')" style="flex:0 0 auto;box-shadow:none;padding:8px 10px">${icon('msg')}</button></div>
       <span class="btns" style="justify-content:center;gap:6px"><button onclick="lsSaveEdit(${i})">💾 저장</button><button onclick="lsCancelEdit()">↩️ 취소</button></span>
     </li>`;
@@ -4253,7 +4321,7 @@ else if(autoPlay && currentIndex>=0) scheduleAutoPlay();
 // 영어/뜻 입력칸에서 Enter 키로 바로 추가
 ['eng','kor'].forEach(id=>{
 let el=document.getElementById(id);
-if(el) el.addEventListener('keydown',e=>{if(e.key==='Enter')addWord();});
+if(el) el.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing&&(el.tagName!=='TEXTAREA'||e.ctrlKey||e.metaKey)){e.preventDefault();addWord();}});
 });
 
 // 목록학습 페이지에서 스크롤 시 '맨 위로/맨 아래로' 버튼 표시

@@ -72,3 +72,43 @@ test('bulk add rejects existing and same-batch case-insensitive duplicates',()=>
   vm.runInContext(app.slice(app.indexOf('function bulkAdd('),app.indexOf('function parseCsv(')),s.context);
   s.run('bulkAdd()');assert.equal(s.run('words.map(w=>w.eng).join(",")'),'cat,dog,bird');
 });
+
+test('multiple examples and structured notes survive save and reopen',()=>{
+  const original=[{eng:'test',kor:'시험',example:['First.','Second.'],note:[{eng:'take a test',kor:'시험을 보다'}]}];
+  const s=setup({decks:JSON.stringify([{id:'a',name:'A',words:original,stats:{},dupes:[]}]),activeDeckId:'a'});
+  s.run('saveDecks()');
+  const again=setup(Object.fromEntries(s.data));
+  assert.deepEqual(JSON.parse(again.run('JSON.stringify(words[0].example)')),original[0].example);
+  assert.deepEqual(JSON.parse(again.run('JSON.stringify(words[0].note)')),original[0].note);
+});
+test('recovery preserves current edits and restores the original in a separate deck once',()=>{
+  const original=JSON.stringify([{id:'a',name:'A',words:[{eng:'cat',kor:'고양이',example:['one','two'],note:[{eng:'kitten',kor:'새끼 고양이'}]}]}]);
+  const current=JSON.stringify([{id:'a',name:'A',words:[{eng:'cat',kor:'수정한 뜻',example:''},{eng:'dog',kor:'개'}]}]);
+  const s=setup({decks:current,'decks.recovery':original,activeDeckId:'a'});
+  assert.equal(s.run('words[0].kor'),'수정한 뜻');assert.equal(s.run('words.length'),2);
+  assert.equal(s.run('decks.length'),2);assert.equal(s.run('decks[1].words[0].example.length'),2);
+  assert.equal(s.data.get('decks.recovery'),original);
+  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('decks.length'),2);
+});
+test('stale unchanged window cannot erase newer words; conflicting edits are preserved separately',()=>{
+  const s=setup();
+  const latest=JSON.parse(s.data.get('decks'));latest[0].words.push({eng:'new',kor:'새 단어'});
+  const raw=JSON.stringify(latest);s.data.set('decks',raw);
+  s.run('flushDecks()');assert.equal(s.data.get('decks'),raw);
+  s.run('words.push({eng:"local",kor:"이 창의 단어"})');
+  assert.equal(s.run('saveDecks()'),false);assert.equal(s.data.get('decks'),raw);
+  const key=[...s.data.keys()].find(k=>k.startsWith('workbook.unsaved.'));
+  assert.equal(JSON.parse(s.data.get(key))[0].words[0].eng,'local');
+});
+test('user edits persist immediately without running timers',()=>{
+  const s=setup();s.run('words.push({eng:"now",kor:"지금"});saveDeckData()');
+  assert.equal(JSON.parse(s.data.get('decks'))[0].words[0].eng,'now');
+});
+test('sheet reload retains all saved examples and does not remove manually added words',()=>{
+  const s=setup();Object.assign(s.context,{save(){}});
+  vm.runInContext(app.slice(app.indexOf('function parseCsv('),app.indexOf('// ===== 중복 단어 기록')),s.context);
+  vm.runInContext(app.slice(app.indexOf('function exList('),app.indexOf('function showExample(')),s.context);
+  s.run('words.push({eng:"cat",kor:"고양이",example:["local one","local two"]},{eng:"manual",kor:"직접 추가"});addFromCsvText("cat,고양이,sheet example","Sheet")');
+  assert.equal(s.run('words.length'),2);assert.equal(s.run('words[0].example.join("|")'),'local one|local two|sheet example');
+  s.run('addFromCsvText("cat,고양이,sheet example","Sheet")');assert.equal(s.run('words[0].example.length'),3);
+});
