@@ -81,14 +81,29 @@ test('multiple examples and structured notes survive save and reopen',()=>{
   assert.deepEqual(JSON.parse(again.run('JSON.stringify(words[0].example)')),original[0].example);
   assert.deepEqual(JSON.parse(again.run('JSON.stringify(words[0].note)')),original[0].note);
 });
-test('recovery preserves current edits and restores the original in a separate deck once',()=>{
-  const original=JSON.stringify([{id:'a',name:'A',words:[{eng:'cat',kor:'고양이',example:['one','two'],note:[{eng:'kitten',kor:'새끼 고양이'}]}]}]);
-  const current=JSON.stringify([{id:'a',name:'A',words:[{eng:'cat',kor:'수정한 뜻',example:''},{eng:'dog',kor:'개'}]}]);
-  const s=setup({decks:current,'decks.recovery':original,activeDeckId:'a'});
-  assert.equal(s.run('words[0].kor'),'수정한 뜻');assert.equal(s.run('words.length'),2);
-  assert.equal(s.run('decks.length'),2);assert.equal(s.run('decks[1].words[0].example.length'),2);
-  assert.equal(s.data.get('decks.recovery'),original);
-  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('decks.length'),2);
+test('refresh never recreates recovery decks or replays old snapshots',()=>{
+  const original=JSON.stringify([{id:'a',name:'A',words:[{eng:'cat',kor:'옛 뜻',example:['old one','old two']}]}]);
+  const current=JSON.stringify([{id:'a',name:'A',words:[{eng:'cat',kor:'수정한 뜻\n둘째 줄',example:['new one','new two'],note:[{eng:'kitten',kor:'새끼 고양이'}]},{eng:'dog',kor:'개'}]}]);
+  let state={decks:current,'decks.recovery':original,'words.recovery':JSON.stringify([{eng:'old',kor:'옛 단어'}]),activeDeckId:'a'};
+  for(let i=0;i<5;i++){
+    const s=setup(state);
+    assert.equal(s.run('decks.length'),1);
+    assert.equal(s.run('words[0].kor'),'수정한 뜻\n둘째 줄');
+    assert.equal(s.run('words[0].example.join("|")'),'new one|new two');
+    assert.equal(s.run('words[0].note[0].eng'),'kitten');
+    assert.equal(s.run('words.length'),2);
+    s.run('flushDecks()');s.timers.forEach(fn=>fn());
+    assert.equal(s.alerts.length,0);
+    assert.equal(s.data.get('decks.recovery'),original);
+    state=Object.fromEntries(s.data);
+  }
+});
+test('existing recovery deck data stays intact, and deleting it stays deleted',()=>{
+  const raw=JSON.stringify([{id:'a',name:'A',words:[]},{id:'recovery_decks_123_0',name:'복구 사본 · A',words:[{eng:'cat',kor:'고양이',example:['one','two']}]}]);
+  const s=setup({decks:raw,'decks.recovery':raw,activeDeckId:'a'});
+  assert.equal(s.run('decks[1].words[0].example.length'),2);
+  s.run('decks.splice(1,1);saveDecks()');
+  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('decks.length'),1);
 });
 test('stale unchanged window cannot erase newer words; conflicting edits are preserved separately',()=>{
   const s=setup();
