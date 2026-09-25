@@ -1,5 +1,5 @@
 // 단어 연습장 서비스워커
-const CACHE='wordbook-v12';
+const CACHE='wordbook-v13';
 const SHELL=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',e=>{
@@ -16,6 +16,8 @@ self.addEventListener('fetch',e=>{
   const req=e.request;
   if(req.method!=='GET') return;
   const url=new URL(req.url);
+  // Dictionary results have their own bounded cache; do not serve stale API responses.
+  if(url.hostname==='api.datamuse.com'||url.hostname==='api.dictionaryapi.dev') return;
   // 페이지(HTML): 네트워크 우선 → 수정사항이 온라인에서 항상 바로 반영, 오프라인이면 캐시
   if(req.mode==='navigate'||req.destination==='document'){
     e.respondWith(

@@ -1000,7 +1000,7 @@ body.hide-mean .wl-kor.peek,#lsList.ls-hideMean .kor-mean.peek{white-space:pre-w
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-09-25.72'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-09-25.73'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 // Storage access can throw even on reads (private mode / browser policy).
@@ -2642,7 +2642,7 @@ function analyzeRoots(word){
     for(let sk of sufCands){
       let c2=sk?core.slice(0,core.length-sk.length):core;
       let root=null;
-      for(let k of _ROOTKEYS){ if(k.length>=3&&c2.startsWith(k)){ root={t:'root',p:k,g:_ROOT[k]}; break; } }
+      for(let k of _ROOTKEYS){ if(k.length>=3&&c2===k){ root={t:'root',p:k,g:_ROOT[k]}; break; } }
       if(root){
         let parts=[]; if(pre) parts.push(pre);
         parts.push(root); if(sk) parts.push({t:'suf',p:sk,g:_SUF[sk]});
@@ -2816,7 +2816,7 @@ function rootsHtml(word){
   } else {
     lines=entries.map(e=>(multi&&!e.simple?('<span style="opacity:.85">'+escapeHtml(e.t)+'</span> = '):'')+e.seg);
   }
-  return '<div class="roots-line" style="margin-top:8px;font-size:13.5px;font-style:normal;color:rgba(255,255,255,.85);line-height:1.45">🧩 '+lines.join('<br>')+'</div>';
+  return '<div class="roots-line" style="margin-top:8px;font-size:13.5px;font-style:normal;color:rgba(255,255,255,.85);line-height:1.45">🧩 구성 추정 · '+lines.join('<br>')+'</div>';
 }
 
 // ===== 기본형(원형) 단어 찾기 — 어근이 안 잡히는 파생어용 (예: confidential→confide, dangerous→danger) =====
@@ -2874,6 +2874,21 @@ function _baseFromDecks(w){
   }catch(err){}
   return best?{eng:best.eng,kor:best.kor}:null;
 }
+const _dictionaryChecks=new Map(),_dictionaryPending=new Map();
+async function dictionaryHasWord(word){
+  const cached=_dictionaryChecks.get(word);
+  if(cached&&cached.until>Date.now()) return cached.value;
+  if(_dictionaryPending.has(word)) return _dictionaryPending.get(word);
+  const task=(async()=>{
+    const r=await fetchT('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(word),4000);
+    if(!r.ok&&r.status!==404) throw new Error('Dictionary unavailable');
+    const value=r.ok;
+    if(_dictionaryChecks.size>=300) _dictionaryChecks.delete(_dictionaryChecks.keys().next().value);
+    _dictionaryChecks.set(word,{value,until:Date.now()+3600000});return value;
+  })();
+  _dictionaryPending.set(word,task);
+  try{return await task;}finally{_dictionaryPending.delete(word);}
+}
 async function findBaseWord(word){
   if(/[a-z][^a-z]+[a-z]/i.test(String(word||'').trim())) return null; // 숙어(여러 단어)는 기본형 탐색 안 함
   let w=String(word||'').toLowerCase().replace(/[^a-z]/g,'');
@@ -2884,13 +2899,16 @@ async function findBaseWord(word){
   if(mine){ _baseCache.set(w,mine); return mine; }
   let cands=_baseCandidates(w).slice(0,8);
   if(!cands.length){ _baseCache.set(w,null); return null; }
-  let checks=await Promise.all(cands.map(async o=>{
-    try{ let r=await fetchT('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(o.c),2500); return r.ok?o:null; }
-    catch(err){ return null; }
-  }));
-  let valid=checks.filter(Boolean).sort((a,b)=>b.len-a.len);
-  if(!valid.length){ _baseCache.set(w,null); return null; }
-  let base=valid[0].c;
+  let base=null,failed=false;
+  cands.sort((a,b)=>b.len-a.len);
+  for(let i=0;i<cands.length&&!base;i+=2){
+    const batch=cands.slice(i,i+2);
+    const results=await Promise.allSettled(batch.map(o=>dictionaryHasWord(o.c)));
+    failed=failed||results.some(x=>x.status==='rejected');
+    const hit=results.findIndex(x=>x.status==='fulfilled'&&x.value);
+    if(hit>=0) base=batch[hit].c;
+  }
+  if(!base){if(!failed) _baseCache.set(w,null);return null;}
   let kor=_phrKnown(base); // 내 단어장에 있으면 그 뜻만 사용(기계번역 사용 안 함)
   let res={eng:base,kor:kor};
   _baseCache.set(w,res); return res;
@@ -2912,7 +2930,7 @@ function baseWordFill(word){
     if(!b){ el2.style.display='none'; return; }
     let kor=b.kor?(' <span style="opacity:.8">('+escapeHtml(b.kor)+')</span>')
       :(' <a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(b.eng)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--link);text-decoration:underline">뜻 보기</a>');
-    el2.innerHTML='🔤 기본형 <b style="color:var(--gold);cursor:pointer" onclick="event.stopPropagation();speakText(\''+speakAttr(b.eng)+'\')">'+escapeHtml(b.eng)+'</b>'+kor;
+    el2.innerHTML='🔤 원형 후보 <b style="color:var(--gold);cursor:pointer" onclick="event.stopPropagation();speakText(\''+speakAttr(b.eng)+'\')">'+escapeHtml(b.eng)+'</b>'+kor;
     el2.style.display='block';
     fitCardExample();
   }).catch(()=>{});
@@ -3055,46 +3073,54 @@ function openNaverExample(){
   showToast('네이버 예문을 새 창에서 열었어요');
 }
 
-// ===== 유의어/반의어 (Datamuse) =====
-let _synCache=new Map();
+// ===== Explicit lexical relations only; semantic similarity is not an antonym. =====
+let _synCache=new Map(),_synPending=new Map();
 let _synSeq=0;
+function cleanRelations(rows,word){
+  return [...new Set(rows.filter(x=>x&&typeof x.word==='string').map(x=>x.word.trim().toLowerCase()).filter(x=>x&&x!==word))].slice(0,3);
+}
+async function lookupRelations(word){
+  word=String(word||'').trim().toLowerCase();
+  const cached=_synCache.get(word);
+  if(cached&&cached.until>Date.now()) return cached.data;
+  if(_synPending.has(word)) return _synPending.get(word);
+  const task=(async()=>{
+    const read=async rel=>{
+      const response=await fetchT('https://api.datamuse.com/words?rel_'+rel+'='+encodeURIComponent(word)+'&max=8',4500);
+      if(!response.ok) throw new Error('HTTP '+response.status);
+      const rows=await response.json();if(!Array.isArray(rows)) throw new Error('Invalid response');
+      return cleanRelations(rows,word);
+    };
+    const results=await Promise.allSettled([read('syn'),read('ant')]);
+    const data={syn:results[0].status==='fulfilled'?results[0].value:[],ant:results[1].status==='fulfilled'?results[1].value:[],failed:results.some(x=>x.status==='rejected')};
+    if(!data.failed){
+      if(_synCache.size>=300) _synCache.delete(_synCache.keys().next().value);
+      _synCache.set(word,{data,until:Date.now()+(data.syn.length||data.ant.length?3600000:300000)});
+    }
+    return data;
+  })();
+  _synPending.set(word,task);
+  try{return await task;}finally{_synPending.delete(word);}
+}
 async function cardSynLookup(){
   if(currentIndex<0||!words[currentIndex]) return;
-  let el=document.getElementById('cardExample');
-  let word=words[currentIndex].eng.toLowerCase();
-  let seq=++_synSeq;
-  el.innerHTML='<span style="font-size:var(--fs-sm);color:rgba(255,255,255,.7)">유의어·반의어를 찾는 중... ⏳</span>';
-  try{
-    if(_synCache.size>500) _synCache.clear(); // 메모리 상한
-    let data=_synCache.get(word);
-    if(!data){
-      let dm=q=>fetchT('https://api.datamuse.com/words?'+q+'&max=5',2500).then(r=>r.json()).then(a=>Array.isArray(a)?a.map(x=>x.word):[]).catch(()=>[]);
-      let [sy,an,ml,op]=await Promise.all([
-        dm('rel_syn='+encodeURIComponent(word)),
-        dm('rel_ant='+encodeURIComponent(word)),
-        dm('ml='+encodeURIComponent(word)),
-        dm('ml='+encodeURIComponent('opposite of '+word))
-      ]);
-      data={syn:(sy.length?sy:ml.filter(w2=>w2!==word)).slice(0,3),
-            ant:(an.length?an:op.filter(w2=>w2!==word&&!sy.includes(w2))).slice(0,3)};
-      if(data.syn.length||data.ant.length) _synCache.set(word,data);
-    }
-    // 찾는 동안 카드가 바뀌었거나 화면이 다시 그려졌으면 덮어쓰지 않기
-    if(seq!==_synSeq) return;
-    if(currentIndex<0||!words[currentIndex]||words[currentIndex].eng.toLowerCase()!==word) return;
-    if(!data.syn.length&&!data.ant.length){
-      el.innerHTML='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:var(--fs-md);color:var(--link);text-decoration:underline;font-style:normal">네이버 사전에서 보기</a>';
-      return;
-    }
-    let chip=w=>'<span onclick="event.stopPropagation();speakText(\''+speakAttr(w)+'\')" style="display:inline-block;background:rgba(255,255,255,.12);border-radius:999px;padding:4px 11px;margin:3px 2px;font-size:var(--fs-md);font-style:normal;cursor:pointer">'+escapeHtml(w)+'</span>';
-    let h='<div style="font-style:normal;text-align:center">';
-    if(data.syn.length) h+='<div style="font-size:var(--fs-xs);color:rgba(255,255,255,.6);margin-bottom:2px">유의어</div><div>'+data.syn.map(chip).join('')+'</div>';
-    if(data.ant.length) h+='<div style="font-size:var(--fs-xs);color:rgba(255,255,255,.6);margin:6px 0 2px">반의어</div><div>'+data.ant.map(chip).join('')+'</div>';
-    h+='<div style="margin-top:8px"><button onclick="event.stopPropagation();showExample(words[currentIndex]?exList(words[currentIndex]):[])" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);border:none;box-shadow:none;padding:4px 12px;border-radius:999px;font-size:var(--fs-xs)">닫기</button></div></div>';
-    el.innerHTML=h;
-  }catch(e){
-    el.innerHTML='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:var(--fs-md);color:var(--link);text-decoration:underline;font-style:normal">네이버 사전에서 보기</a>';
+  const el=document.getElementById('cardExample');
+  const word=words[currentIndex].eng.trim().toLowerCase(),seq=++_synSeq;
+  const close='<button onclick="event.stopPropagation();showExample(words[currentIndex]?exList(words[currentIndex]):[])" class="small">예문으로</button>';
+  el.style.display='block';
+  el.innerHTML='<div>유의어·반의어 조회 중…</div>'+close;fitCardExample();
+  const data=await lookupRelations(word);
+  if(seq!==_synSeq||currentIndex<0||!words[currentIndex]||words[currentIndex].eng.trim().toLowerCase()!==word) return;
+  const chip=w=>'<button class="small" style="margin:3px;padding:5px 10px" onclick="event.stopPropagation();speakText(\''+speakAttr(w)+'\')">'+escapeHtml(w)+'</button>';
+  let h='<div style="font-style:normal">';
+  for(const [key,title] of [['syn','유의어'],['ant','반의어']]){
+    if(data[key].length) h+='<div>'+title+'</div><div>'+data[key].map(chip).join('')+'</div>';
   }
+  if(data.failed) h+='<div>일부 조회에 실패했습니다. 연결 후 다시 시도해 주세요.</div><button class="small" onclick="event.stopPropagation();cardSynLookup()">다시 조회</button>';
+  else if(!data.syn.length||!data.ant.length) h+='<div style="font-size:12px">'+(!data.syn.length?'유의어 ':'')+(!data.ant.length?'반의어 ':'')+'등록 결과 없음</div>';
+  h+='<div style="font-size:11px;margin-top:5px">출처: Datamuse · 단어의 뜻·품사에 따라 관계가 달라집니다.</div>';
+  h+='<a href="https://en.dict.naver.com/#/search?query='+encodeURIComponent(word)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">사전에서 확인</a> '+close+'</div>';
+  el.innerHTML=h;fitCardExample();
 }
 
 // ===== 예문 찾기 (Free Dictionary + Tatoeba) =====

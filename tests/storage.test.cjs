@@ -127,3 +127,35 @@ test('sheet reload retains all saved examples and does not remove manually added
   assert.equal(s.run('words.length'),2);assert.equal(s.run('words[0].example.join("|")'),'local one|local two|sheet example');
   s.run('addFromCsvText("cat,고양이,sheet example","Sheet")');assert.equal(s.run('words[0].example.length'),3);
 });
+
+function lexicalContext(fetcher){
+  const c=vm.createContext({fetchT:fetcher,console});
+  vm.runInContext(app.slice(app.indexOf('// ===== Explicit lexical relations'),app.indexOf('// ===== 예문 찾기')),c);
+  vm.runInContext(app.slice(app.indexOf('const _dictionaryChecks='),app.indexOf('async function findBaseWord(')),c);
+  return s=>vm.runInContext(s,c);
+}
+test('relations use two explicit endpoints, deduplicate taps and cache successful results',async()=>{
+  const urls=[];const run=lexicalContext(async url=>{urls.push(url);return {ok:true,json:async()=>url.includes('rel_syn')?[{word:'happy'},{word:'Glad'},{word:'glad'},{}]:[{word:'sad'}]};});
+  const results=await run('Promise.all([lookupRelations(" Happy "),lookupRelations("happy")])');
+  assert.equal(urls.length,2);assert.ok(urls.every(u=>!u.includes('ml=')));
+  assert.equal(results[0].syn.join(','),'glad');assert.equal(results[0].ant.join(','),'sad');
+  await run('lookupRelations("happy")');assert.equal(urls.length,2);
+});
+test('temporary errors remain retryable and are not reported as confirmed empty results',async()=>{
+  let calls=0,fail=true;const run=lexicalContext(async()=>{calls++;if(fail)return {ok:false,status:429};return {ok:true,json:async()=>[]};});
+  assert.equal((await run('lookupRelations("unknown")')).failed,true);
+  fail=false;assert.equal((await run('lookupRelations("unknown")')).failed,false);assert.equal(calls,4);
+  await run('lookupRelations("unknown")');assert.equal(calls,4);
+});
+test('dictionary checks share pending work and do not cache transport errors',async()=>{
+  let calls=0,fail=true;const run=lexicalContext(async()=>{calls++;if(fail)throw Error('offline');return {ok:true,status:200};});
+  await assert.rejects(run('dictionaryHasWord("happy")'));
+  fail=false;await run('Promise.all([dictionaryHasWord("happy"),dictionaryHasWord("happy")])');assert.equal(calls,2);
+  await run('dictionaryHasWord("happy")');assert.equal(calls,2);
+});
+test('root heuristic does not silently discard unmatched letters',()=>{
+  const c=vm.createContext({_ROOTSKIP:new Set(),_ROOTKEYS:['port'],_ROOT:{port:'carry'},_PREKEYS:[],_PRE:{},_SUFKEYS:['able'],_SUF:{able:'able'}});
+  vm.runInContext(app.slice(app.indexOf('function analyzeRoots('),app.indexOf('// ===== 합성어 분해')),c);
+  assert.equal(vm.runInContext('analyzeRoots("portable").length',c),2);
+  assert.equal(vm.runInContext('analyzeRoots("portfolio").length',c),0);
+});
