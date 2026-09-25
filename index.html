@@ -619,7 +619,12 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
 /* Preserve deliberately entered meaning line breaks in every reading view. */
 #front,#back,.wl-row .wl-kor,.ls-row .kor-mean,.gs-kor{white-space:pre-wrap;overflow-wrap:anywhere}
 body.hide-mean .wl-kor.peek,#lsList.ls-hideMean .kor-mean.peek{white-space:pre-wrap}
-#card.multiline-meaning{height:auto;min-height:280px;max-height:none}
+#card{height:356px;min-height:356px;max-height:356px;transform:none}
+#card:hover,#card:active{transform:none}
+#cardContent{width:100%;min-height:0;flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable both-edges;display:flex;flex-direction:column}
+.card-content-inner{width:100%;margin-block:auto;flex-shrink:0}
+#cardContent #cardExample,#cardContent #cardNote{max-height:none!important;overflow:visible!important}
+@media(max-width:480px){#card{height:344px;min-height:344px;max-height:344px}}
 #kor,#wordEditKor,#editKor,#lsEditKor,.bulkKor{height:auto;min-height:80px;line-height:1.6;resize:vertical;box-sizing:border-box}
 </style>
 </head>
@@ -681,11 +686,13 @@ body.hide-mean .wl-kor.peek,#lsList.ls-hideMean .kor-mean.peek{white-space:pre-w
 <button id="cardListBtn" onclick="event.stopPropagation();cardOpenInList()" title="목록학습에서 이 단어 보기"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> <span class="lbl">목록</span></button><button id="cardDirBtn" onclick="event.stopPropagation();toggleCardDir()" title="영어/한글 먼저 보기 전환"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> <span class="lbl">영→한</span></button>
 <div id="cardTimer" aria-hidden="true"></div>
 <button id="cardNoteAdd" onclick="event.stopPropagation();openNoteEditor()" title="헷갈리는 단어·뜻 메모하기" aria-label="메모"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="12" y1="5.5" x2="12" y2="18.5"/><line x1="5.5" y1="12" x2="18.5" y2="12"/></svg></button>
+<div id="cardContent" tabindex="0" aria-label="단어와 뜻, 긴 내용은 스크롤"><div class="card-content-inner">
 <div id="front">단어를 선택하세요</div>
 <div id="back">뜻</div>
 <div id="cardNote" onclick="event.stopPropagation();openNoteEditor()" title="탭하면 내 메모를 쓰거나 고칠 수 있어요"></div>
 <div id="cardExample" style="display:none;margin-top:10px;font-size:var(--fs-md);font-style:italic;color:rgba(255,255,255,.65);line-height:1.5;text-align:center;max-height:76px;overflow-y:auto;width:100%"></div>
 <div class="hint" id="cardHint">카드를 클릭하면 뜻이 표시됩니다</div>
+</div></div>
 <button id="cardNextMini" onclick="event.stopPropagation();nextCard(false)" title="학습완료 없이 다음 단어로 (다음에 또 나옵니다)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg> 다음 단어</button>
 <button id="cardEditBtn" onclick="event.stopPropagation();openWordEditor()" title="이 단어와 뜻 고치기" aria-label="단어 수정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
 <button id="cardUndoBtn" onclick="event.stopPropagation();cardUndoMaster()" title="방금 학습완료된 단어를 되돌립니다"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> 학습취소</button>
@@ -974,7 +981,7 @@ body.hide-mean .wl-kor.peek,#lsList.ls-hideMean .kor-mean.peek{white-space:pre-w
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-09-25.68'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-09-25.69'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 // Storage access can throw even on reads (private mode / browser policy).
@@ -1902,6 +1909,7 @@ function startCardTimer(){
   },1000);
 }
 function showWord(w,i,skipHistory){
+const content=document.getElementById("cardContent");if(content) content.scrollTop=0;
 if(!skipHistory && currentIndex>=0) cardHistory.push(currentIndex);
 if(cardHistory.length>50) cardHistory.shift();
 // recentSeen 갱신
@@ -2934,54 +2942,13 @@ function fitCardExample(){
   requestAnimationFrame(function(){ _fitPending=false; _fitCardOnce(); });
 }
 function _fitCardOnce(){
-  let card=document.getElementById('card'), el=document.getElementById('cardExample');
-  let front=document.getElementById('front'), back=document.getElementById('back');
-  let note=document.getElementById('cardNote');
-  // 이전 카드에서 줄인 값이 남지 않도록 항상 초기화
-  if(front) front.style.fontSize='';
-  if(back) back.style.fontSize='';
-  if(note) note.style.fontSize='';
-  if(!card) return;
-  // 예문 영역이 없거나 숨겨져 있어도 영단어·뜻·메모 크기는 항상 맞춘다
-  const multiline=[front,back].some(n=>n&&n.innerText.includes('\n'));
-  card.classList.toggle('multiline-meaning',multiline);
-  if(multiline) return;
-  preferOneLine(front,29); preferOneLine(back,17.5);
-  fitLines(front,3,24); fitLines(back,3,15); fitLines(note,4,10);
-  if(!el||el.style.display==='none') return;
-  el.style.fontSize='';
-  let cs=getComputedStyle(card);
-  let inner=card.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
-  let h=n=>{ if(!n||getComputedStyle(n).display==='none') return 0;
-             return n.offsetHeight+parseFloat(getComputedStyle(n).marginTop||0); };
-  let mt=parseFloat(getComputedStyle(el).marginTop||0);
-  let calc=()=>{ let a=Math.max(44, inner-h(front)-h(back)-h(note)-mt-2); el.style.maxHeight=a+'px'; };
-  let over=()=>el.scrollHeight>el.clientHeight+1 || (note&&note.scrollHeight>note.clientHeight+1);
-  calc();
-  if(!over()) return;
-  // 덜 중요한 것부터 차례로 줄인다: 어근 줄 → 예문 → 메모 → 영단어·뜻
-  let rl=el.querySelector('.roots-line');
-  if(rl){
-    for(let sz of [13.5,12.5,11.5,10.5,9.5]){
-      rl.style.fontSize=sz+'px'; calc();
-      if(!over()) return;
-    }
+  // The shell stays fixed; long content scrolls instead of resizing or shrinking away.
+  const front=document.getElementById('front'),back=document.getElementById('back');
+  for(const id of ['front','back','cardNote','cardExample']){
+    const el=document.getElementById(id);if(el) el.style.fontSize='';
   }
-  for(let sz of [12.5,11.5,10.5,9.5,9]){
-    el.style.fontSize=sz+'px'; calc();
-    if(!over()) return;
-  }
-  if(note){
-    for(let sz of [12,11,10,9.5]){
-      note.style.fontSize=sz+'px'; calc();
-      if(!over()) return;
-    }
-  }
-  for(let k=0;k<7 && over();k++){
-    front.style.fontSize=(parseFloat(getComputedStyle(front).fontSize)*0.90)+'px';
-    back.style.fontSize=(parseFloat(getComputedStyle(back).fontSize)*0.92)+'px';
-    calc();
-  }
+  if(front&&!front.innerText.includes('\n')) preferOneLine(front,29);
+  if(back&&!back.innerText.includes('\n')) preferOneLine(back,17.5);
 }
 // 예문은 1개면 문자열, 여러 개면 배열로 저장한다 (예전 데이터도 그대로 읽힘)
 function exList(w){
