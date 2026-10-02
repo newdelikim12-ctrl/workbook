@@ -159,3 +159,32 @@ test('root heuristic does not silently discard unmatched letters',()=>{
   assert.equal(vm.runInContext('analyzeRoots("portable").length',c),2);
   assert.equal(vm.runInContext('analyzeRoots("portfolio").length',c),0);
 });
+
+function installEditHelpers(s){
+  s.context.render=()=>{};
+  vm.runInContext(app.slice(app.indexOf('function saveOnly('),app.indexOf('function duplicate(')),s.context);
+  vm.runInContext(app.slice(app.indexOf('function exList('),app.indexOf('function showExample(')),s.context);
+}
+test('failed word edits restore all fields including multiple examples and missing properties',()=>{
+  const s=setup();installEditHelpers(s);
+  s.run('words.push({eng:"cat",kor:"고양이",example:["one","two"],note:[{eng:"kitten",kor:"새끼"}]});saveOnly()');
+  const disk=s.data.get('decks');
+  s.context.localStorage.setItem=()=>{throw Error('quota');};
+  assert.equal(s.run('persistWordEdit(words[0],"dog","개",["new"])'),false);
+  assert.equal(s.run('words[0].eng'),'cat');assert.equal(s.run('words[0].kor'),'고양이');
+  assert.equal(s.run('words[0].example.join("|")'),'one|two');assert.equal(s.data.get('decks'),disk);
+  s.run('words.push({eng:"bird",kor:"새"})');
+  assert.equal(s.run('persistWordEdit(words[1],"bird","새",["new"])'),false);
+  assert.equal(s.run('Object.hasOwn(words[1],"example")'),false);
+});
+test('conflicting edits roll back memory without overwriting newer disk data',()=>{
+  const s=setup();installEditHelpers(s);s.run('words.push({eng:"cat",kor:"고양이",example:"old"});saveOnly()');
+  const latest=JSON.parse(s.data.get('decks'));latest[0].words[0].example='other tab';const raw=JSON.stringify(latest);s.data.set('decks',raw);
+  assert.equal(s.run('persistWordEdit(words[0],"cat","고양이",["unsaved"])'),false);
+  assert.equal(s.run('words[0].example'),'old');assert.equal(s.data.get('decks'),raw);
+});
+test('successful word edits persist and remain after reopening',()=>{
+  const s=setup();installEditHelpers(s);s.run('words.push({eng:"cat",kor:"고양이"});saveOnly()');
+  assert.equal(s.run('persistWordEdit(words[0],"cat","새 뜻",["first","second"])'),true);
+  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words[0].example.join("|")'),'first|second');assert.equal(again.run('words[0].kor'),'새 뜻');
+});
