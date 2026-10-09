@@ -232,3 +232,37 @@ test('gesture and app return unlock audio without playing a sound',async()=>{
   const pending=s.run('resumeAudio(audioCtx)');s.instances[0].finish();await pending;assert.equal(s.played.length,0);
   s.run('soundOn=false');s.instances[0].state='suspended';s.listeners.touchend();assert.equal(s.instances[0].resumes,2);
 });
+
+function fullscreenSetup({installed=true,android=true,supported=true}={}){
+  const listeners={},requests=[],toasts=[];
+  const button={hidden:true,setAttribute(){}};
+  const document={fullscreenEnabled:supported,fullscreenElement:null,hidden:false,getElementById:()=>button,addEventListener:(name,fn)=>listeners[name]=fn,
+    documentElement:{async requestFullscreen(options){requests.push(options);document.fullscreenElement=this;}},
+    async exitFullscreen(){document.fullscreenElement=null;}};
+  const context=vm.createContext({document,navigator:{userAgent:android?'Android':'Desktop'},window:{matchMedia:q=>({matches:installed&&q.includes('standalone')})},showToast:m=>toasts.push(m)});
+  vm.runInContext(app.slice(app.indexOf('// ===== 설치 앱 전체 화면'),app.indexOf('// ===== 효과음')),context);
+  return {document,listeners,requests,button,toasts,run:s=>vm.runInContext(s,context),click:(excluded=false)=>listeners.click({target:{closest:()=>excluded}})};
+}
+test('installed Android app requests hidden navigation UI on an ordinary tap',async()=>{
+  const s=fullscreenSetup();s.click();await Promise.resolve();
+  assert.equal(s.requests.length,1);assert.equal(s.requests[0].navigationUI,'hide');assert.ok(s.document.fullscreenElement);
+});
+test('ordinary browser tabs and other platforms do not automatically enter fullscreen',()=>{
+  for(const config of [{installed:false},{android:false},{supported:false}]){
+    const s=fullscreenSetup(config);s.click();assert.equal(s.requests.length,0);
+  }
+});
+test('editing fields and links do not trigger automatic fullscreen',()=>{
+  const s=fullscreenSetup();s.click(true);assert.equal(s.requests.length,0);s.click();assert.equal(s.requests.length,1);
+});
+test('manual fullscreen exit is respected until the app returns to foreground',async()=>{
+  const s=fullscreenSetup();await s.run('toggleFullscreen()');await s.run('toggleFullscreen()');
+  s.click();assert.equal(s.document.fullscreenElement,null);assert.equal(s.requests.length,1);
+  s.listeners.visibilitychange();s.click();assert.equal(s.requests.length,2);
+});
+test('failed fullscreen request leaves a working manual retry button',async()=>{
+  const s=fullscreenSetup();s.document.documentElement.requestFullscreen=async()=>{throw Error('denied');};
+  await s.run('toggleFullscreen()');assert.equal(s.toasts.length,1);assert.equal(s.button.hidden,false);
+  s.document.documentElement.requestFullscreen=async()=>{s.document.fullscreenElement=s.document.documentElement;};
+  await s.run('toggleFullscreen()');assert.ok(s.document.fullscreenElement);assert.equal(s.button.textContent,'전체 화면 해제');
+});
