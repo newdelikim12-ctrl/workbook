@@ -266,3 +266,67 @@ test('failed fullscreen request leaves a working manual retry button',async()=>{
   s.document.documentElement.requestFullscreen=async()=>{s.document.fullscreenElement=s.document.documentElement;};
   await s.run('toggleFullscreen()');assert.ok(s.document.fullscreenElement);assert.equal(s.button.textContent,'전체 화면 해제');
 });
+
+function themeDocument(){
+  const root={dataset:{},style:{}};
+  const metas=Object.fromEntries(['theme-color','color-scheme'].map(name=>[name,{content:'',setAttribute(key,value){this[key]=value;}}]));
+  const document={documentElement:root,querySelector:selector=>{
+    const name=selector.match(/meta\[name=["']([^"']+)["']\]/)?.[1];
+    return metas[name]??null;
+  }};
+  return {document,root,metas};
+}
+function assertTheme(s,isDark){
+  const scheme=isDark?'dark':'light',color=isDark?'#101216':'#e8eaed';
+  assert.equal(s.root.dataset.theme,scheme);
+  assert.equal(s.root.style.colorScheme,scheme);
+  assert.equal(s.root.style.backgroundColor,color);
+  assert.equal(s.metas['theme-color'].content,color);
+  assert.equal(s.metas['color-scheme'].content,scheme);
+}
+function initialTheme({saved=null,systemDark=false,denied=false}={}){
+  const s=themeDocument();
+  const bootstrap=scripts.find(script=>script.includes('첫 화면 테마'));
+  assert.ok(bootstrap,'the first-paint theme must initialize in the document head');
+  assert.ok(html.indexOf('첫 화면 테마')<html.indexOf('<style'),'theme must be selected before styles render');
+  const localStorage={getItem(key){assert.equal(key,'darkMode');if(denied)throw Error('denied');return saved;}};
+  const window={localStorage,matchMedia:query=>{
+    assert.equal(query,'(prefers-color-scheme: dark)');return {matches:systemDark};
+  }};
+  vm.runInContext(bootstrap,vm.createContext({localStorage,window,document:s.document}));
+  return s;
+}
+test('saved app theme sets system UI colors before first paint and overrides the phone theme',()=>{
+  assertTheme(initialTheme({saved:'1',systemDark:false}),true);
+  assertTheme(initialTheme({saved:'0',systemDark:true}),false);
+});
+test('first launch follows the phone theme when no app preference has been saved',()=>{
+  assertTheme(initialTheme({systemDark:true}),true);
+  assertTheme(initialTheme({systemDark:false}),false);
+});
+test('unavailable storage still applies the phone theme before first paint',()=>{
+  assertTheme(initialTheme({denied:true,systemDark:true}),true);
+  assertTheme(initialTheme({denied:true,systemDark:false}),false);
+});
+test('changing app theme keeps document background and system UI metadata in sync',()=>{
+  const s=themeDocument();
+  const classes=new Set();
+  s.document.body={classList:{
+    add:name=>classes.add(name),remove:name=>classes.delete(name),contains:name=>classes.has(name),
+    toggle(name,force){const active=force??!classes.has(name);if(active)classes.add(name);else classes.delete(name);return active;}
+  }};
+  const context=vm.createContext({document:s.document});
+  vm.runInContext(app.slice(app.indexOf('function applyTheme('),app.indexOf('function toggleDark(')),context);
+  vm.runInContext('applyTheme(true)',context);assertTheme(s,true);
+  vm.runInContext('applyTheme(false)',context);assertTheme(s,false);
+});
+test('installed Android touch controls enter fullscreen even when no click is emitted',async()=>{
+  for(const event of ['pointerup','touchend']){
+    const s=fullscreenSetup();
+    assert.equal(typeof s.listeners[event],'function');
+    s.listeners[event]({target:{closest:()=>false}});
+    await Promise.resolve();
+    assert.equal(s.requests.length,1);assert.equal(s.requests[0].navigationUI,'hide');
+    assert.ok(s.document.fullscreenElement);
+  }
+});
