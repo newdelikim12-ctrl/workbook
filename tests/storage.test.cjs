@@ -188,3 +188,47 @@ test('successful word edits persist and remain after reopening',()=>{
   assert.equal(s.run('persistWordEdit(words[0],"cat","새 뜻",["first","second"])'),true);
   const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words[0].example.join("|")'),'first|second');assert.equal(again.run('words[0].kor'),'새 뜻');
 });
+
+function audioSetup(state='suspended'){
+  const instances=[],listeners={},played=[];
+  const param=()=>({value:0,setValueAtTime(){},exponentialRampToValueAtTime(){}});
+  class AudioContext{
+    constructor(){this.state=state;this.currentTime=10;this.destination={};this.resumes=0;instances.push(this);}
+    createGain(){return {gain:param(),connect(){}};}
+    createDynamicsCompressor(){return {threshold:param(),knee:param(),ratio:param(),attack:param(),release:param(),connect(){}};}
+    createOscillator(){return {frequency:param(),connect(){},start:()=>played.push(this.state),stop(){}};}
+    resume(){this.resumes++;return new Promise((resolve,reject)=>{this.finish=()=>{this.state='running';resolve();};this.fail=()=>reject(Error('blocked'));});}
+  }
+  const context=vm.createContext({window:{AudioContext},safeStorage:{getItem:()=>null},document:{hidden:false,addEventListener:(name,fn)=>listeners[name]=fn}});
+  vm.runInContext(app.slice(app.indexOf('// ===== 효과음'),app.indexOf('function applyTheme(')),context);
+  return {instances,listeners,played,run:s=>vm.runInContext(s,context)};
+}
+test('effects wait for mobile audio resume before scheduling sound',async()=>{
+  const s=audioSetup();const pending=s.run('playSound("tap")');
+  assert.equal(s.played.length,0);s.instances[0].finish();await pending;
+  assert.deepEqual(s.played,['running']);
+});
+test('interrupted audio resumes and concurrent effects share the request',async()=>{
+  const s=audioSetup('interrupted');const first=s.run('playSound("tap")'),second=s.run('playSound("tap")');
+  assert.equal(s.instances[0].resumes,1);s.instances[0].finish();await Promise.all([first,second]);
+  assert.deepEqual(s.played,['running','running']);
+});
+test('failed audio resume stays retryable without rejecting button handlers',async()=>{
+  const s=audioSetup();const first=s.run('playSound("tap")');s.instances[0].fail();await first;
+  assert.equal(s.played.length,0);const second=s.run('playSound("tap")');
+  assert.equal(s.instances[0].resumes,2);s.instances[0].finish();await second;assert.equal(s.played.length,1);
+});
+test('muting during audio resume prevents delayed playback',async()=>{
+  const s=audioSetup();const pending=s.run('playSound("tap")');s.run('soundOn=false');s.instances[0].finish();await pending;
+  assert.equal(s.played.length,0);
+});
+test('closed audio context is replaced and effects work again',async()=>{
+  const s=audioSetup('running');await s.run('playSound("tap")');s.instances[0].state='closed';await s.run('playSound("tap")');
+  assert.equal(s.instances.length,2);assert.deepEqual(s.played,['running','running']);
+});
+test('gesture and app return unlock audio without playing a sound',async()=>{
+  const s=audioSetup();const first=s.listeners.pointerdown();s.instances[0].finish();await first;
+  s.instances[0].state='interrupted';s.listeners.visibilitychange();assert.equal(s.instances[0].resumes,2);
+  const pending=s.run('resumeAudio(audioCtx)');s.instances[0].finish();await pending;assert.equal(s.played.length,0);
+  s.run('soundOn=false');s.instances[0].state='suspended';s.listeners.touchend();assert.equal(s.instances[0].resumes,2);
+});
