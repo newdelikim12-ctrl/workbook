@@ -3,7 +3,7 @@
   "short_name": "화이팅 단어장",
   "start_url": ".",
   "scope": ".",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "portrait",
   "background_color": "#101216",
   "theme_color": "#101216",
