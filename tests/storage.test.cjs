@@ -189,19 +189,25 @@ test('successful word edits persist and remain after reopening',()=>{
   const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words[0].example.join("|")'),'first|second');assert.equal(again.run('words[0].kor'),'새 뜻');
 });
 
-function audioSetup(state='suspended'){
+function audioSetup(state='suspended',options={}){
   const instances=[],listeners={},played=[];
   const param=()=>({value:0,setValueAtTime(){},exponentialRampToValueAtTime(){}});
   class AudioContext{
-    constructor(){this.state=state;this.currentTime=10;this.destination={};this.resumes=0;instances.push(this);}
+    constructor(){this.state=state;this.currentTime=10;this.destination={};this.resumes=0;this.requests=[];instances.push(this);}
     createGain(){return {gain:param(),connect(){}};}
     createDynamicsCompressor(){return {threshold:param(),knee:param(),ratio:param(),attack:param(),release:param(),connect(){}};}
     createOscillator(){return {frequency:param(),connect(){},start:()=>played.push(this.state),stop(){}};}
-    resume(){this.resumes++;return new Promise((resolve,reject)=>{this.finish=()=>{this.state='running';resolve();};this.fail=()=>reject(Error('blocked'));});}
+    resume(){this.resumes++;return new Promise((resolve,reject)=>{
+      const request={finish:()=>{this.state='running';resolve();},fail:()=>reject(Error('blocked'))};
+      this.requests.push(request);this.finish=request.finish;this.fail=request.fail;
+    });}
   }
-  const context=vm.createContext({window:{AudioContext},safeStorage:{getItem:()=>null},document:{hidden:false,addEventListener:(name,fn)=>listeners[name]=fn}});
+  const document={hidden:!!options.hidden,addEventListener:(name,fn)=>listeners[name]=fn};
+  const globals={window:{AudioContext,addEventListener:(name,fn)=>listeners[name]=fn},safeStorage:{getItem:()=>null},document};
+  if(Object.hasOwn(options,'navigator'))globals.navigator=options.navigator;
+  const context=vm.createContext(globals);
   vm.runInContext(app.slice(app.indexOf('// ===== 효과음'),app.indexOf('function applyTheme(')),context);
-  return {instances,listeners,played,run:s=>vm.runInContext(s,context)};
+  return {instances,listeners,played,document,run:s=>vm.runInContext(s,context)};
 }
 test('effects wait for mobile audio resume before scheduling sound',async()=>{
   const s=audioSetup();const pending=s.run('playSound("tap")');
@@ -226,11 +232,106 @@ test('closed audio context is replaced and effects work again',async()=>{
   const s=audioSetup('running');await s.run('playSound("tap")');s.instances[0].state='closed';await s.run('playSound("tap")');
   assert.equal(s.instances.length,2);assert.deepEqual(s.played,['running','running']);
 });
-test('gesture and app return unlock audio without playing a sound',async()=>{
-  const s=audioSetup();const first=s.listeners.pointerdown();s.instances[0].finish();await first;
-  s.instances[0].state='interrupted';s.listeners.visibilitychange();assert.equal(s.instances[0].resumes,2);
-  const pending=s.run('resumeAudio(audioCtx)');s.instances[0].finish();await pending;assert.equal(s.played.length,0);
-  s.run('soundOn=false');s.instances[0].state='suspended';s.listeners.touchend();assert.equal(s.instances[0].resumes,2);
+test('only a foreground gesture unlocks audio; returning to the app stays silent',async()=>{
+  const s=audioSetup();const first=s.listeners.pointerdown({type:'pointerdown'});s.instances[0].finish();await first;
+  s.instances[0].state='interrupted';s.listeners.visibilitychange();assert.equal(s.instances[0].resumes,1);
+  const second=s.listeners.touchend({type:'touchend'});assert.equal(s.instances[0].resumes,2);
+  s.instances[0].finish();await second;assert.equal(s.played.length,0);
+  s.run('soundOn=false');s.instances[0].state='suspended';s.listeners.touchend({type:'touchend'});assert.equal(s.instances[0].resumes,2);
+});
+test('an iOS release gesture retries a blocked resume on the same context',async()=>{
+  const s=audioSetup();const blocked=s.run('resumeAudio(getCtx())');
+  assert.equal(s.instances[0].resumes,1);
+  const released=s.listeners.pointerup({type:'pointerup'});
+  assert.equal(s.instances.length,1);assert.equal(s.instances[0].resumes,2);
+  s.instances[0].requests[1].finish();await released;
+  await s.run('playSound("tap")');assert.deepEqual(s.played,['running']);
+  s.instances[0].requests[0].finish();await blocked;
+});
+test('hidden apps neither request audio resume nor schedule effects',async()=>{
+  const s=audioSetup('suspended',{hidden:true});
+  await s.run('playSound("tap")');s.listeners.pointerup({type:'pointerup'});
+  assert.equal(s.instances.length,0);assert.equal(s.played.length,0);
+  s.document.hidden=false;s.listeners.visibilitychange();assert.equal(s.instances.length,0);
+});
+test('effects awaiting resume are discarded after the app goes into the background',async()=>{
+  const s=audioSetup();const pending=s.run('playSound("tap")');
+  s.document.hidden=true;s.listeners.visibilitychange();
+  s.document.hidden=false;s.listeners.visibilitychange();
+  assert.equal(s.instances[0].resumes,1);
+  const released=s.listeners.pointerup({type:'pointerup'});assert.equal(s.instances[0].resumes,2);
+  s.instances[0].requests[1].finish();await released;
+  s.instances[0].requests[0].finish();await pending;
+  assert.equal(s.played.length,0);
+  await s.run('playSound("tap")');assert.deepEqual(s.played,['running']);
+});
+test('effects awaiting resume stay silent while the document is hidden',async()=>{
+  const s=audioSetup();const pending=s.run('playSound("tap")');
+  s.document.hidden=true;s.instances[0].finish();await pending;
+  assert.equal(s.played.length,0);
+});
+test('initial pageshow preserves a user sound but history restoration drops stale effects',async()=>{
+  const s=audioSetup();const initial=s.run('playSound("tap")');
+  s.listeners.pageshow({persisted:false});s.instances[0].finish();await initial;
+  assert.deepEqual(s.played,['running']);
+  s.instances[0].state='suspended';const restored=s.run('playSound("tap")');
+  s.listeners.pageshow({persisted:true});s.instances[0].finish();await restored;
+  assert.deepEqual(s.played,['running']);
+});
+test('audio recovery preserves the browser audio category and other media',async()=>{
+  const categories=[];const audioSession={set type(value){categories.push(value);}};
+  const s=audioSetup('suspended',{navigator:{audioSession}});
+  const pending=s.listeners.click({type:'click'});s.instances[0].finish();await pending;
+  await s.run('playSound("tap")');assert.deepEqual(s.played,['running']);assert.deepEqual(categories,[]);
+});
+
+function speechSetup({supported=true,paused=false}={}){
+  const utterances=[],calls=[],timers=[];let inGesture=false;
+  class SpeechSynthesisUtterance{
+    constructor(text){this.text=text;utterances.push(this);}
+  }
+  const speechSynthesis={paused,cancel(){calls.push('cancel');},resume(){calls.push('resume');this.paused=false;},speak(utterance){
+    assert.equal(inGesture,true,'speech must be queued before the user gesture ends');calls.push(utterance);
+  }};
+  const window=supported?{speechSynthesis}:{};
+  const context=vm.createContext({window,speechSynthesis,SpeechSynthesisUtterance,console,
+    setTimeout:fn=>{timers.push(fn);return timers.length;},clearTimeout(){},
+    currentIndex:0,words:[{eng:'cat',kor:'고양이'}],cardDir:'e2k',speakMode:'eng',
+    safeStorage:{setItem(){}},updateSpeakBtns(){},alert(){}});
+  vm.runInContext(app.slice(app.indexOf('// ===== 음성 읽기'),app.indexOf('function updateSpeakBtns(')),context);
+  const run=s=>vm.runInContext(s,context);
+  return {utterances,calls,timers,speechSynthesis,run,gesture(s){
+    inGesture=true;try{return run(s);}finally{inGesture=false;}
+  }};
+}
+test('word and text speech are queued while the initiating gesture is active',()=>{
+  const s=speechSetup();s.gesture('speakWord()');
+  assert.equal(s.calls[0],'cancel');assert.equal(s.calls[1].text,'cat');assert.equal(s.calls[1].lang,'en-US');
+  s.gesture('speakText("hello")');
+  assert.equal(s.calls[2],'cancel');assert.equal(s.calls[3].text,'hello');assert.equal(s.calls[3].lang,'en-US');
+  assert.equal(s.timers.length,0);
+});
+test('paused speech resumes and both languages are queued in card order',()=>{
+  const s=speechSetup({paused:true});s.gesture('speakWord("both")');
+  assert.equal(s.calls[0],'cancel');assert.equal(s.calls[1],'resume');
+  assert.deepEqual(s.calls.slice(2).map(u=>[u.text,u.lang]),[['cat','en-US'],['고양이','ko-KR']]);
+  s.run('cardDir="k2e"');s.gesture('speakWord("both")');
+  assert.deepEqual(s.calls.slice(5).map(u=>[u.text,u.lang]),[['고양이','ko-KR'],['cat','en-US']]);
+});
+test('queued speech remains retained until end or error and canceled speech is released',()=>{
+  const s=speechSetup();assert.equal(s.gesture('speakUtterances([{text:"cat",lang:"en-US"},{text:"고양이",lang:"ko-KR"}])'),true);
+  assert.equal(s.run('activeUtterances.length'),2);
+  s.utterances[0].onend();assert.equal(s.run('activeUtterances.length'),1);
+  s.utterances[1].onerror();assert.equal(s.run('activeUtterances.length'),0);
+  s.gesture('speakText("old")');const canceled=s.utterances.at(-1);
+  s.gesture('speakText("new")');assert.equal(s.run('activeUtterances.length'),1);
+  canceled.onend();assert.equal(s.run('activeUtterances.length'),1);
+  s.utterances.at(-1).onend();assert.equal(s.run('activeUtterances.length'),0);
+});
+test('unsupported speech fails quietly without queuing delayed work',()=>{
+  const s=speechSetup({supported:false});
+  assert.equal(s.gesture('speakUtterances([{text:"cat",lang:"en-US"}])'),false);
+  s.gesture('speakText("cat")');assert.equal(s.calls.length,0);assert.equal(s.timers.length,0);
 });
 
 function themeDocument(){
