@@ -1,5 +1,5 @@
 // 단어 연습장 서비스워커
-const CACHE='wordbook-v23';
+const CACHE='wordbook-v24';
 const SHELL=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',e=>{
