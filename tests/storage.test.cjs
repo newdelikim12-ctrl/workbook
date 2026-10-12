@@ -387,3 +387,337 @@ test('changing app theme keeps document background and system UI metadata in syn
   vm.runInContext('applyTheme(true)',context);assertTheme(s,true);
   vm.runInContext('applyTheme(false)',context);assertTheme(s,false);
 });
+
+test('switching decks keeps restored study ranges visible and filters the same numbers',()=>{
+  const deckWords=Array.from({length:30},(_,i)=>({eng:'word'+i,kor:'뜻'+i}));
+  const s=setup({decks:JSON.stringify([{id:'a',name:'A',words:[]},{id:'b',name:'B',words:deckWords}]),activeDeckId:'a'});
+  const elements=new Map();
+  const element=id=>{
+    if(!elements.has(id))elements.set(id,{value:'',style:{},classList:{remove(){}}});
+    return elements.get(id);
+  };
+  Object.assign(s.context,{rangeMemo:{b:[11,20]},rangeFrom:null,rangeTo:null,RANGE_STEPS:[10],rangeStepIdx:0,
+    lsPeeked:new Set(),lsSelected:new Set(),wlSelected:new Set(),
+    render(){},renderDeckPanel(){},renderRecentDecks(){},showCardActions(){},showTab(){}});
+  s.context.document.getElementById=element;
+  for(const [start,end] of [
+    ['function clampRange(','function bulkDelete('],
+    ['function restoreRangeMemo(','// ===== 음성 읽기'],
+    ['function updateRangeCnt(','// ===== 학습취소'],
+    ['function getDeck(','function randomMode('],
+    ['function switchDeck(','function createDeck(']
+  ])vm.runInContext(app.slice(app.indexOf(start),app.indexOf(end)),s.context);
+  s.run('switchDeck("b")');
+  assert.equal(element('rangeFrom').value,11);assert.equal(element('rangeTo').value,20);
+  assert.equal(s.run('getDeck("all").map(x=>x.num).join(",")'),'11,12,13,14,15,16,17,18,19,20');
+  s.run('switchDeck("a")');
+  assert.equal(element('rangeFrom').value,'');assert.equal(element('rangeTo').value,'');
+});
+
+test('opening an editor during an autoplay countdown pauses completion until the dialog closes',()=>{
+  const timers=new Map();let nextTimer=0,open=false,advances=0;
+  const word={mastered:false};
+  const context=vm.createContext({autoPlay:true,currentIndex:0,autoPlaySpeed:3,autoPlayTimer:null,
+    clearTimeout:id=>timers.delete(id),setTimeout:(fn,ms)=>{const id=++nextTimer;timers.set(id,{fn,ms});return id;},
+    anyDialogOpen:()=>open,nextCard:()=>{word.mastered=true;advances++;}});
+  vm.runInContext(app.slice(app.indexOf('function scheduleAutoPlay('),app.indexOf('function toggleAutoPlay(')),context);
+  const fireNext=()=>{const [id,timer]=timers.entries().next().value;timers.delete(id);timer.fn();};
+  vm.runInContext('scheduleAutoPlay()',context);
+  open=true;fireNext();
+  assert.equal(word.mastered,false);assert.equal(advances,0);
+  fireNext();assert.equal(advances,0);
+  open=false;fireNext();assert.equal(advances,0);
+  fireNext();assert.equal(word.mastered,true);assert.equal(advances,1);
+});
+
+function exampleFillSetup(){
+  let input={value:''},complete;
+  const toasts=[];
+  const context=vm.createContext({_editTarget:null,
+    document:{getElementById:()=>input},showToast:message=>toasts.push(message),
+    getExamples:()=>new Promise(resolve=>{complete=resolve;})});
+  vm.runInContext(app.slice(app.indexOf('let _exFillIdx='),app.indexOf('function cardClick(')),context);
+  return {context,toasts,get input(){return input;},replace(next){input=next;},
+    request:()=>vm.runInContext('exampleFill("lsEditEx","cat")',context),
+    finish:()=>complete([{en:'A cat example.'}])};
+}
+test('pending examples do not fill another word after a list editor is reopened',async()=>{
+  const s=exampleFillSetup(),old=s.input,pending=s.request();
+  s.replace({value:'Dog draft.'});s.finish();await pending;
+  assert.equal(old.value,'');assert.equal(s.input.value,'Dog draft.');
+  assert.equal(s.toasts.some(message=>message.includes('예문을 채웠어요')),false);
+});
+test('pending examples preserve text entered by the user while lookup runs',async()=>{
+  const s=exampleFillSetup(),pending=s.request();
+  s.input.value='My own example.';s.finish();await pending;
+  assert.equal(s.input.value,'My own example.');
+});
+test('successful examples still fill the original untouched editor',async()=>{
+  const s=exampleFillSetup(),pending=s.request();s.finish();await pending;
+  assert.equal(s.input.value,'A cat example.');
+  assert.equal(s.toasts.some(message=>message.includes('예문을 채웠어요')),true);
+});
+
+function rootAnalysisSetup(){
+  const context=vm.createContext({});
+  vm.runInContext(app.slice(app.indexOf('const _PRE='),app.indexOf('// ===== 합성어 분해')),context);
+  return word=>JSON.parse(vm.runInContext('JSON.stringify(analyzeRoots('+JSON.stringify(word)+'))',context));
+}
+test('root hints retain a whole root when a longer suffix would hide it',()=>{
+  const analyze=rootAnalysisSetup();
+  for(const [word,root] of [['tension','tens'],['extension','tens'],['prediction','dict'],['diction','dict'],['question','quest']]){
+    const parts=analyze(word);
+    assert.equal(parts.find(part=>part.t==='root').p,root,word);
+    assert.equal(parts.map(part=>part.p).join(''),word,word);
+  }
+});
+test('layered roots remain available for common prefixes and inflected derivatives',()=>{
+  const analyze=rootAnalysisSetup();
+  for(const [word,root] of [['unpredictable','dict'],['reconstruction','struct'],['aggregates','greg'],['congregations','greg'],['attractively','tract'],['artists','art']]){
+    const parts=analyze(word);
+    assert.equal(parts.find(part=>part.t==='root').p,root,word);
+    assert.equal(parts.map(part=>part.p).join(''),word,word);
+  }
+  assert.equal(analyze('aggregates').at(-1).g,'~들(복수·3인칭)');
+});
+test('layered matching still rejects unknown tails, unrelated words and standalone roots',()=>{
+  const analyze=rootAnalysisSetup();
+  for(const word of ['portfolio','portablex','unpredictablexyz','mother','summer','person','personally','personalize','reason','reasonable','season','seasonally','general','generous','generation','greg','port'])
+    assert.deepEqual(analyze(word),[],word);
+  assert.equal(analyze('portable').find(part=>part.t==='root').p,'port');
+});
+
+function backupRestoreSetup(backup){
+  const initialDecks=[{id:'a',name:'A',words:[{eng:'original',kor:'기존 단어',example:['Old.']}],stats:{old:1},dupes:[]},
+    {id:'b',name:'B',words:[{eng:'other',kor:'다른 단어'}],stats:{},dupes:[]}];
+  const s=setup({decks:JSON.stringify(initialDecks),activeDeckId:'a',recentDeckIds:'["a","b"]'});
+  const toasts=[],calls={confirm:0,reset:0,render:0};
+  s.context.document.getElementById=()=>({value:JSON.stringify(backup)});
+  Object.assign(s.context,{currentIndex:0,showToast:message=>toasts.push(message),
+    needConfirm2(){calls.confirm++;return true;},afterWordsRemoved(){calls.reset++;},resetCardView(){calls.reset++;},
+    render(){calls.render++;},renderDeckPanel(){calls.render++;},renderRecentDecks(){calls.render++;}});
+  s.run('editIndex=0;const beforeRestore={decks,words,stats,dupes,activeDeckId,recentDeckIds};');
+  vm.runInContext(app.slice(app.indexOf('function prepareBackupRestore('),app.indexOf('function matchQ(')),s.context);
+  return {...s,toasts,calls,originalDisk:s.data.get('decks'),
+    assertOriginal(){
+      assert.equal(s.run('decks===beforeRestore.decks&&words===beforeRestore.words&&stats===beforeRestore.stats&&dupes===beforeRestore.dupes&&activeDeckId===beforeRestore.activeDeckId&&recentDeckIds===beforeRestore.recentDeckIds'),true);
+      assert.equal(s.run('currentIndex'),0);assert.equal(s.run('editIndex'),0);
+      assert.equal(calls.reset,0);assert.equal(calls.render,0);
+    }};
+}
+test('malformed full backups are rejected before confirmation or changes to memory and disk',()=>{
+  const validDeck={id:'restore',name:'Restore',words:[{eng:'cat',kor:'고양이'}]};
+  for(const badDeck of [null,{...validDeck,words:null},{...validDeck,words:[null]},
+    {...validDeck,words:[{eng:7,kor:'고양이'}]},{...validDeck,words:[{eng:'cat',kor:42}]},
+    {...validDeck,name:7},{...validDeck,stats:[]},{...validDeck,dupes:[null]}]){
+    const s=backupRestoreSetup({version:2,decks:[validDeck,badDeck]});
+    s.run('restoreBackup()');s.assertOriginal();
+    assert.equal(s.data.get('decks'),s.originalDisk);assert.equal(s.calls.confirm,0);assert.equal(s.alerts.length,1);
+  }
+  const s=backupRestoreSetup({version:2,decks:[],words:[{eng:'cat',kor:'고양이'}]});
+  s.run('restoreBackup()');s.assertOriginal();assert.equal(s.calls.confirm,0);
+});
+test('malformed legacy backups preserve all current data instead of partially restoring words',()=>{
+  for(const words of [null,[null],[{eng:'cat',kor:42}],[{eng:7,kor:'고양이'}],[{eng:'cat',kor:'고양이'},null]]){
+    const s=backupRestoreSetup({words});s.run('restoreBackup()');s.assertOriginal();
+    assert.equal(s.data.get('decks'),s.originalDisk);assert.equal(s.calls.confirm,0);assert.equal(s.alerts.length,1);
+  }
+});
+test('quota failures roll back both full and legacy restores without resetting the current study',()=>{
+  for(const backup of [
+    {version:2,decks:[{id:'restore',name:'Restore',words:[{eng:'new',kor:'새 단어'}]}]},
+    {words:[{eng:'new',kor:'새 단어'}],stats:{new:1}}
+  ]){
+    const s=backupRestoreSetup(backup);s.context.localStorage.setItem=()=>{throw Error('quota');};
+    assert.equal(s.run('restoreBackup()'),false);s.assertOriginal();
+    assert.equal(s.data.get('decks'),s.originalDisk);
+    assert.equal(s.toasts.some(message=>message.includes('복원했어요')),false);
+  }
+});
+test('conflicting restores preserve newer disk data and roll back memory',()=>{
+  const s=backupRestoreSetup({decks:[{id:'restore',words:[{eng:'new',kor:'새 단어'}]}]});
+  const newer=JSON.parse(s.originalDisk);newer[0].words.push({eng:'other tab',kor:'다른 창'});
+  const raw=JSON.stringify(newer);s.data.set('decks',raw);
+  assert.equal(s.run('restoreBackup()'),false);s.assertOriginal();
+  assert.equal(s.data.get('decks'),raw);assert.equal(s.toasts.some(message=>message.includes('복원했어요')),false);
+});
+test('valid backups retain multiple examples, structured notes and custom fields after reopening',()=>{
+  const word={eng:'cat',kor:'고양이',example:['First.','Second.'],note:[{eng:'kitten',kor:'새끼 고양이'}],custom:{tag:'keep'}};
+  for(const allDecks of [true,false]){
+    const backup=allDecks?{decks:[{id:'restore',name:'Restore',words:[word],customDeck:{color:'blue'}}],activeDeckId:'restore'}:{words:[word],stats:{restored:2}};
+    const s=backupRestoreSetup(backup);assert.equal(s.run('restoreBackup()'),true);
+    const again=setup(Object.fromEntries(s.data));
+    assert.deepEqual(JSON.parse(again.run('JSON.stringify(words[0].example)')),word.example);
+    assert.deepEqual(JSON.parse(again.run('JSON.stringify(words[0].note)')),word.note);
+    assert.deepEqual(JSON.parse(again.run('JSON.stringify(words[0].custom)')),word.custom);
+    if(allDecks)assert.equal(again.run('decks[0].customDeck.color'),'blue');
+    else{assert.equal(again.run('decks[1].words[0].eng'),'other');assert.equal(again.run('stats.restored'),2);}
+    assert.equal(s.calls.reset,2);assert.equal(s.calls.render,3);
+  }
+});
+test('restored deck IDs are safe and distinct and the selected deck follows its original ID',()=>{
+  const s=backupRestoreSetup({decks:[
+    {id:'a!',name:'First',words:[{eng:'first',kor:'첫째'}]},
+    {id:'a?',name:'Second',words:[{eng:'second',kor:'둘째'}]},
+    {id:'"',name:'Third',words:[]},{id:'"',name:'Fourth',words:[]}
+  ],activeDeckId:'a?'});
+  assert.equal(s.run('restoreBackup()'),true);
+  const ids=JSON.parse(s.run('JSON.stringify(decks.map(d=>d.id))'));
+  assert.equal(new Set(ids).size,4);assert.ok(ids.every(id=>/^[a-zA-Z0-9_-]+$/.test(id)));
+  assert.equal(s.run('activeDeckId'),ids[1]);assert.equal(s.run('words[0].eng'),'second');
+  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words[0].eng'),'second');
+});
+
+function morphologySetup(decks=[],fetcher=async()=>{throw Error('offline');},options={}){
+  const toasts=[],dialog={open:false,shows:0,showModal(){this.open=true;this.shows++;}},title={textContent:''},body={innerHTML:''};
+  if(options.unsupportedDialog)delete dialog.showModal;
+  const elements={etymologyDialog:options.missingDialog?null:dialog,etymologyTitle:title,etymologyBody:body};
+  const context=vm.createContext({decks,activeDeckId:decks[0]?.id||'a',words:decks[0]?.words||[],fetchT:fetcher,
+    document:{getElementById:id=>elements[id]||null},showToast:message=>toasts.push(message)});
+  vm.runInContext(app.slice(app.indexOf('function escapeHtml('),app.indexOf('// 캐시 무효화 파라미터 추가')),context);
+  vm.runInContext(app.slice(app.indexOf('const _PRE='),app.indexOf('// 카드 안 남은 공간')),context);
+  return {run:source=>vm.runInContext(source,context),toasts,
+    html:word=>vm.runInContext('rootsHtml('+JSON.stringify(word)+')',context),
+    open(word){
+      vm.runInContext('openEtymology('+JSON.stringify(word)+')',context);
+      return {title:title.textContent,body:body.innerHTML,open:dialog.open,shows:dialog.shows};
+    },
+    hint:word=>JSON.parse(vm.runInContext('JSON.stringify(etymologyHint('+JSON.stringify(word)+'))',context))};
+}
+test('greg family memory hints work offline even when the card already exists in a deck',()=>{
+  let calls=0;
+  const s=morphologySetup([{id:'a',words:[{eng:'gregarious',kor:'사교적인'},{eng:'egregious',kor:'터무니없는'}]}],async()=>{calls++;throw Error('offline');});
+  assert.match(s.html('gregarious'),/어원·암기/);
+  assert.match(s.html('gregarious'),/greg<\/b>\(무리·모이다\)/);
+  assert.match(s.html('gregarious'),/무리에 어울리는 → 사교적인/);
+  assert.match(s.html('egregious'),/무리 밖으로 두드러진다는 뜻에서 → 지독한·터무니없는/);
+  const modal=s.open('egregious');
+  assert.equal(modal.open,true);assert.equal(modal.title,'egregious · 어원·암기');
+  assert.match(modal.body,/>gregarious<\/button>/);
+  assert.match(modal.body,/>aggregate<\/button>/);assert.match(modal.body,/>segregate<\/button>/);
+  assert.match(modal.body,/한데 모으다/);assert.match(modal.body,/무리에서 떼어 놓다/);
+  assert.match(modal.body,/라틴어 grex, gregis/);
+  assert.equal(calls,0);
+});
+test('common missing word families now show useful memory hints instead of unrelated splits',()=>{
+  const s=morphologySetup();
+  for(const [word,meaning] of [['biology','생물학'],['photography','사진 촬영'],['unpredictable','예측 불가능한'],['valuable','가치가 있는'],['reduce','되돌려 줄이다'],['benefit','혜택']]){
+    const html=s.html(word);
+    assert.match(html,/어원·암기/,word);assert.ok(html.includes(meaning),word);
+    assert.ok(html.includes('관련 단어'),word);assert.ok(html.includes('어원 출처'),word);
+    assert.ok(html.includes('https://en.wiktionary.org/wiki/'+word+'#Etymology'),word);
+    const modal=s.open(word);
+    assert.equal(modal.open,true,word);assert.match(modal.body,/같은 어근[\s\S]*<button/,word);
+    assert.ok(modal.body.includes(meaning),word);
+  }
+  assert.match(s.html('display'),/접힌 것을 펼쳐 보이다/);
+  assert.doesNotMatch(s.html('display'),/play<\/b>|놀다/);
+  assert.match(s.html('salty'),/salt\(소금\) \+ y\(~한\) → 짠/);
+  assert.doesNotMatch(s.html('salty'),/뛰다|~성질\(명사\)/);
+});
+test('common inflections retain the correct curated lemma and its source',()=>{
+  const s=morphologySetup();
+  for(const [word,lemma] of [['aggregates','aggregate'],['aggregated','aggregate'],['aggregating','aggregate'],['congregations','congregation'],['incredibly','incredible'],['predictably','predictable'],['gregariously','gregarious'],['gregariousness','gregarious'],['unpredictability','unpredictable'],['flexibility','flexible'],['portability','portable']]){
+    assert.equal(s.hint(word).word,lemma,word);
+    const html=s.html(word);
+    assert.match(html,/어원·암기/,word);
+    assert.ok(html.includes(lemma+'의 어형'),word);
+    assert.ok(html.includes('/wiki/'+lemma+'#Etymology'),word);
+  }
+});
+test('ordinary phrase explanations remain available without inventing historical hints for unknown words',()=>{
+  const s=morphologySetup();
+  const phrase=s.html('go over');
+  assert.match(phrase,/구성 추정/);assert.match(phrase,/go<\/b>/);assert.match(phrase,/over<\/b>/);
+  assert.doesNotMatch(phrase,/어원·암기/);
+  for(const word of ['grag','portfolio']){
+    assert.equal(s.hint(word),null,word);assert.equal(s.html(word),'',word);
+  }
+});
+test('every curated memory note has a defined family, useful explanation and valid related entries',()=>{
+  const s=morphologySetup();
+  const {families,hints}=JSON.parse(s.run('JSON.stringify({families:_ETYMOLOGY_FAMILIES,hints:_ETYMOLOGY_HINTS})'));
+  for(const [word,[family,memory]] of Object.entries(hints)){
+    assert.ok(families[family],word);
+    assert.equal(typeof memory,'string',word);assert.ok(memory.trim().length>4,word);
+    assert.ok(memory.includes('→'),word);
+  }
+  for(const [key,family] of Object.entries(families)){
+    for(const field of ['root','meaning','origin'])assert.ok(typeof family[field]==='string'&&family[field].trim(),key+' '+field);
+    assert.ok(family.words.length>=2,key);
+    assert.equal(new Set(family.words).size,family.words.length,key);
+    for(const related of family.words)assert.ok(hints[related],key+' '+related);
+  }
+});
+test('ordinary dictionary keys are not mistaken for inherited JavaScript properties',()=>{
+  const s=morphologySetup();
+  assert.equal(s.hint('constructor'),null);assert.equal(s.hint('constructors'),null);
+  assert.match(s.html('constructor'),/struct/);
+  assert.equal(s.open('constructor').open,false);
+});
+test('known false base-word matches cannot trigger dictionary requests or reuse unrelated deck words',async()=>{
+  let calls=0;
+  const s=morphologySetup([{id:'a',words:[{eng:'flow',kor:'흐르다'},{eng:'sum',kor:'합'},{eng:'corn',kor:'옥수수'}]}],async()=>{calls++;return {ok:true,status:200};});
+  for(const word of ['flower','summer','corner','seven','seventy'])
+    assert.equal(await s.run('findBaseWord('+JSON.stringify(word)+')'),null,word);
+  assert.equal(calls,0);
+});
+test('unknown words cannot open or populate the related-word dialog',()=>{
+  const s=morphologySetup();
+  for(const word of ['grag','portfolio','go over']){
+    const modal=s.open(word);
+    assert.equal(modal.open,false,word);assert.equal(modal.shows,0,word);
+    assert.equal(modal.title,'',word);assert.equal(modal.body,'',word);
+  }
+  assert.deepEqual(s.toasts,[]);
+});
+test('related-word details fall back to the useful memory note when native dialogs are unavailable',()=>{
+  for(const options of [{missingDialog:true},{unsupportedDialog:true}]){
+    const s=morphologySetup([],undefined,options),modal=s.open('gregarious');
+    assert.equal(modal.open,false);assert.equal(modal.shows,0);
+    assert.equal(modal.title,'');assert.equal(modal.body,'');
+    assert.deepEqual(s.toasts,['무리에 어울리는 → 사교적인']);
+  }
+});
+
+function backupExportSetup(failure=''){
+  const s=setup(),box={value:''},toasts=[],timers=[],revoked=[];
+  let blob,anchor,attached=false,clickedWhileAttached=false;
+  s.run('words.push({eng:"cat",kor:"고양이",example:["First.","Second."]})');
+  Object.assign(s.context,{Blob,showToast:message=>toasts.push(message),
+    setTimeout:(fn,ms)=>{timers.push({fn,ms});return timers.length;},
+    URL:{createObjectURL(value){if(failure==='create')throw Error('unsupported');blob=value;return 'blob:backup';},
+      revokeObjectURL:url=>revoked.push(url)}});
+  s.context.document.getElementById=()=>box;
+  s.context.document.body={appendChild(value){assert.equal(value,anchor);attached=true;}};
+  s.context.document.createElement=()=>{
+    anchor={style:{},click(){clickedWhileAttached=attached;if(failure==='click')throw Error('blocked');},remove(){attached=false;}};
+    return anchor;
+  };
+  vm.runInContext(app.slice(app.indexOf('function exportBackup('),app.indexOf('function prepareBackupRestore(')),s.context);
+  return {...s,box,toasts,timers,revoked,get blob(){return blob;},get anchor(){return anchor;},
+    get attached(){return attached;},get clickedWhileAttached(){return clickedWhileAttached;}};
+}
+test('backup export requests a download with an attached anchor and releases its URL afterward',async()=>{
+  const s=backupExportSetup();s.run('exportBackup()');
+  assert.equal(s.clickedWhileAttached,true);assert.equal(s.attached,false);
+  assert.equal(s.anchor.href,'blob:backup');assert.equal(s.anchor.download,'wordbook-backup.json');
+  const data=JSON.parse(s.box.value);assert.equal(data.version,2);assert.equal(data.decks[0].words[0].eng,'cat');
+  assert.deepEqual(data.decks[0].words[0].example,['First.','Second.']);
+  assert.equal(await s.blob.text(),s.box.value);
+  assert.equal(s.toasts.length,1);assert.match(s.toasts[0],/다운로드를 요청/);assert.match(s.toasts[0],/확인/);
+  assert.deepEqual(s.revoked,[]);assert.equal(s.timers.length,1);assert.equal(s.timers[0].ms,60000);
+  s.timers[0].fn();assert.deepEqual(s.revoked,['blob:backup']);
+});
+test('backup export failures preserve copyable JSON and explain the fallback instead of claiming success',()=>{
+  for(const failure of ['create','click']){
+    const s=backupExportSetup(failure);s.run('exportBackup()');
+    assert.equal(JSON.parse(s.box.value).decks[0].words[0].eng,'cat');
+    assert.equal(s.toasts.length,1);assert.match(s.toasts[0],/실패/);assert.match(s.toasts[0],/복사/);
+    assert.equal(s.attached,false);assert.deepEqual(s.revoked,[]);
+    if(failure==='click'){
+      assert.equal(s.clickedWhileAttached,true);assert.equal(s.timers.length,1);
+      s.timers[0].fn();assert.deepEqual(s.revoked,['blob:backup']);
+    }else assert.equal(s.timers.length,0);
+  }
+});

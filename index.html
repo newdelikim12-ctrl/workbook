@@ -588,6 +588,18 @@ textarea.note-in{height:auto;min-height:56px;line-height:1.45;resize:none}
   background:var(--h3-bg);color:var(--text-main);cursor:pointer;font-family:inherit}
 .card-ex{font-style:italic}
 .card-ex+.card-ex{margin-top:4px}
+.etym-hint{color:rgba(255,255,255,.85);font-style:normal}
+.etym-more{margin-top:4px;font-size:12px;line-height:1.45}
+.etym-more a{color:var(--gold)}
+.etym-word{display:inline;padding:0;border:0;border-radius:0;background:none;box-shadow:none;color:var(--gold);font:inherit;line-height:inherit;min-height:0;text-decoration:underline}
+.etym-word:hover{background:none;transform:none;filter:none}
+.etym-dialog{width:calc(100% - 32px);max-width:420px;max-height:calc(100dvh - 32px);padding:20px;border:1px solid var(--input-border);border-radius:18px;background:var(--container-bg);color:var(--text-main);font-size:16px;line-height:1.7;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.etym-dialog::backdrop{background:rgba(0,0,0,.55)}
+.etym-dialog h4{margin:0 0 12px;font-size:18px}
+.etym-dialog p{margin:10px 0}
+.etym-dialog a{color:var(--link)}
+.etym-dialog .etym-word{display:inline-block;min-height:44px;padding:6px;color:var(--link)}
+.etym-related{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px}
 .rs-menu{display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);z-index:70;
   background:var(--li-bg);border:1.5px solid var(--input-border);border-radius:14px;padding:6px;
   box-shadow:0 10px 26px rgba(0,0,0,.22);width:max-content;max-width:96%}
@@ -1004,6 +1016,11 @@ body.hide-mean .wl-kor.peek,#lsList.ls-hideMean .kor-mean.peek{white-space:pre-w
     <button id="noteDelBtn" onclick="clearCardNote()" style="width:100%;margin-top:8px;background:none;border:none;box-shadow:none;color:rgba(255,255,255,.5);font-size:var(--fs-sm);padding:6px;cursor:pointer">메모 삭제</button>
   </div>
 </div>
+<dialog id="etymologyDialog" class="etym-dialog" aria-labelledby="etymologyTitle" onkeydown="event.stopPropagation()" onclick="if(event.target===this)this.close()">
+  <h4 id="etymologyTitle"></h4>
+  <div id="etymologyBody"></div>
+  <button type="button" style="width:100%;margin-top:16px" onclick="document.getElementById('etymologyDialog').close()">닫기</button>
+</dialog>
 <div id="confirmBack" class="cf-back" onclick="if(event.target===this)closeConfirm(false)">
   <div class="cf-box" role="dialog" aria-modal="true">
     <div class="cf-msg" id="confirmMsg"></div>
@@ -1016,7 +1033,7 @@ body.hide-mean .wl-kor.peek,#lsList.ls-hideMean .kor-mean.peek{white-space:pre-w
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-10-09.81'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-10-09.82'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 // Storage access can throw even on reads (private mode / browser policy).
@@ -1948,6 +1965,8 @@ function scheduleAutoPlay(){
   if(!autoPlay||currentIndex<0) return;
   if(anyDialogOpen()){ autoPlayTimer=setTimeout(scheduleAutoPlay,400); return; } // 수정·메모 창이 닫힐 때까지 대기
   autoPlayTimer=setTimeout(()=>{
+    if(!autoPlay||currentIndex<0) return;
+    if(anyDialogOpen()){ scheduleAutoPlay(); return; }
     nextCard();
   },autoPlaySpeed*1000);
 }
@@ -2498,7 +2517,7 @@ function addExRow(text){
 }
 function wordEditorOpen(){ let b=document.getElementById('wordEditBack'); return !!b&&b.classList.contains('show'); }
 let _editTarget=null, _noteTarget=null;
-function anyDialogOpen(){ return confirmOpen()||noteEditorOpen()||wordEditorOpen(); }
+function anyDialogOpen(){ return confirmOpen()||noteEditorOpen()||wordEditorOpen()||!!document.getElementById('etymologyDialog')?.open; }
 // N 키: 수정창을 열되 바로 새 예문 칸에 커서를 둔다
 function openExampleEditor(){ openWordEditor(true); }
 function openWordEditor(focusNewEx){
@@ -2695,42 +2714,230 @@ showWord(pick.w,pick.i);
 const _PRE={ab:'떨어져',ad:'향하여',ante:'앞',anti:'반대',auto:'스스로',bene:'좋은',bi:'둘',circum:'둘레',com:'함께',con:'함께',col:'함께',cor:'함께',ac:'~쪽으로',af:'~쪽으로',ag:'~쪽으로',al:'~쪽으로',ar:'~쪽으로',as:'~쪽으로',oc:'맞서·향하여',of:'맞서·향하여',op:'맞서·향하여',ef:'밖으로',sup:'아래',suf:'아래',sug:'아래',sus:'아래',di:'분리·떨어져',dif:'분리·떨어져',contra:'반대',counter:'반대',de:'아래로·반대',dia:'가로질러',dis:'반대·떨어져',en:'안에·되게 함',epi:'위에',ex:'밖으로',extra:'밖의',fore:'앞',hyper:'과도한',hypo:'아래',il:'아닌',im:'아닌·안에',inter:'사이',intro:'안으로',intra:'안의',ir:'아닌',macro:'큰',micro:'작은',mis:'잘못',mono:'하나',multi:'많은',non:'아닌',ob:'맞서',omni:'모두',out:'밖·능가',over:'지나치게',per:'완전히',peri:'둘레',post:'후에',pre:'전에',pro:'앞으로',re:'다시·뒤로',retro:'뒤로',semi:'절반',sub:'아래',super:'위에·넘어',sur:'위에',sym:'함께',syn:'함께',tele:'멀리',trans:'가로질러',tri:'셋',ultra:'극단의',un:'아닌',under:'아래·부족',uni:'하나',in:'아닌·안에',a:'아닌·없는',an:'아닌·없는',ana:'위로·다시',apo:'떨어져',cata:'아래로',meta:'변화·넘어',para:'옆·반대',amphi:'양쪽',ambi:'양쪽',endo:'안의',exo:'밖의',ecto:'밖의',homo:'같은',hetero:'다른',iso:'같은',ortho:'바른',eu:'좋은',dys:'나쁜',mal:'나쁜',pan:'모든',poly:'많은',neo:'새로운',proto:'최초의',pseudo:'거짓의',mega:'큰',mini:'작은',be:'되게 하다',with:'반대·뒤로',for:'금지·완전히',off:'떨어져',demi:'반',vice:'대리·부',se:'분리하여',dec:'열',cent:'백',kilo:'천',quadr:'넷',penta:'다섯',hexa:'여섯',oct:'여덟',mid:'중간',by:'옆의·부수적',e:'밖으로',co:'함께',em:'~하게 만들다',at:'~쪽으로·접근',ap:'~쪽으로·접근'};
 const _ROOT={spect:'보다',spec:'보다',spic:'보다',dict:'말하다',duct:'이끌다',duc:'이끌다',port:'나르다',scrib:'쓰다',script:'쓰다',struct:'세우다',tract:'끌다',fract:'부수다',frag:'부수다',rupt:'깨다',ject:'던지다',junct:'연결하다',flect:'구부리다',flex:'구부리다',press:'누르다',puls:'밀다',pel:'밀다',pend:'매달다',pens:'매달다·무게 달다',tend:'뻗다',tens:'뻗다',strict:'묶다',string:'묶다',tact:'만지다',tang:'만지다',cept:'잡다·받다',capt:'잡다',ceive:'받다',cap:'잡다',ced:'가다·양보하다',cess:'가다',grad:'걸어가다',gress:'걸어가다',curs:'달리다',cours:'달리다',cur:'달리다·돌보다',ven:'오다',vent:'오다',mot:'움직이다',mov:'움직이다',mob:'움직이다',migr:'이동하다',mit:'보내다',miss:'보내다',pos:'놓다',pon:'놓다',sta:'서다',stat:'서다',sist:'서다',sid:'앉다',sess:'앉다',ten:'잡다·유지하다',tain:'잡다·유지하다',tent:'유지하다',hab:'가지다',hib:'가지다',fer:'나르다',lat:'나르다',aud:'듣다',phon:'소리',son:'소리',vis:'보다',vid:'보다',luc:'빛',lum:'빛',photo:'빛',graph:'쓰다·그리다',gram:'쓰다',log:'말·학문',loqu:'말하다',ora:'말하다',claim:'외치다',clam:'외치다',voc:'부르다',vok:'부르다',nom:'이름',nym:'이름',cred:'믿다',fid:'믿다',ver:'진실',sci:'알다',cogn:'알다',gno:'알다',memor:'기억',mem:'기억',ment:'마음',path:'느낌·고통',pass:'느끼다·고통',sent:'느끼다',sens:'느끼다',cord:'마음·심장',anim:'마음·생명',vit:'살다',viv:'살다',bio:'생명',nat:'태어나다',gen:'낳다·종족',mort:'죽음',cid:'죽이다·자르다',cis:'자르다',sect:'자르다',fin:'끝',term:'끝·경계',prim:'첫째',nov:'새로운',ann:'해(년)',chron:'시간',temp:'시간',geo:'땅',terr:'땅',mar:'바다',nav:'배',hydr:'물',aqua:'물',astr:'별',stell:'별',sol:'홀로·태양',lun:'달',ped:'발',pod:'발',man:'손',manu:'손',corp:'몸',cardi:'심장',dent:'이빨',oper:'일하다',labor:'일하다',fac:'만들다',fact:'만들다',fect:'만들다',fic:'만들다',form:'형태',fort:'강한',val:'가치·힘',pot:'힘',dyn:'힘',reg:'다스리다',rect:'곧은·바른',jud:'판단하다',jur:'법',leg:'법·읽다',lect:'모으다·읽다',liber:'자유',serv:'지키다·섬기다',sequ:'따르다',secu:'따르다',solv:'풀다',solut:'풀다',clud:'닫다',clus:'닫다',vac:'비어있는',plen:'가득한',equ:'같은',med:'중간',magn:'큰',min:'작은',micr:'작은',numer:'수',loc:'장소',dom:'집·지배',urb:'도시',popul:'사람들',dem:'민중',phil:'사랑',vers:'돌리다',vert:'돌리다',rot:'돌다',vol:'의지·구르다',spir:'숨쉬다',spond:'약속하다',spons:'약속하다',grat:'기쁜·감사',mand:'명령하다',ordin:'순서',sign:'표시',trud:'밀다',trus:'밀다',via:'길',quir:'구하다·묻다',quest:'구하다·묻다',don:'주다',trib:'주다·할당하다',agr:'밭·농사',alt:'높은',arm:'무기',art:'기술',bell:'전쟁',brev:'짧은',calc:'돌·계산',cand:'빛나는·희다',carn:'살·고기',cav:'비어있는',celer:'빠른',centr:'중심',circ:'원·둘레',civ:'시민',clin:'기울다',cosm:'우주·질서',crat:'지배하다',cracy:'지배',crea:'만들다',cresc:'자라다',cret:'자라다',crit:'판단하다',cris:'판단·위기',cruc:'십자가',crypt:'숨은',cult:'경작·기르다',dei:'신',div:'신·나누다',doc:'가르치다',doct:'가르치다',dol:'슬픔·고통',domin:'지배하다',dorm:'자다',dur:'단단한·지속',ego:'나·자아',err:'헤매다·잘못',fab:'말하다',phan:'나타나다',fant:'환상',fend:'치다·막다',fens:'막다',fig:'모양',fict:'꾸미다',fil:'실·아들',flor:'꽃',flu:'흐르다',flux:'흐르다',foli:'잎',frater:'형제',fratr:'형제',fug:'도망치다',fund:'기초·바닥',found:'세우다',fus:'붓다·녹이다',germ:'싹·씨',gest:'나르다·행하다',glob:'공·둥근',grav:'무거운',greg:'무리·떼',herb:'풀·약초',her:'붙다·상속',hes:'붙다',hered:'상속',homin:'사람',hospit:'손님·접대',host:'손님·적',hum:'땅·습기',integr:'완전한',later:'옆·측면',laps:'미끄러지다',lev:'가벼운·올리다',lig:'묶다',limin:'문턱·경계',lingu:'혀·언어',liter:'글자·문학',lud:'놀다',lus:'놀다',matr:'어머니',mater:'어머니',mens:'재다',merg:'담그다',mers:'담그다',milit:'군인·싸우다',mim:'흉내내다',mir:'놀라다·바라보다',miser:'불쌍한',mod:'방식·척도',mon:'경고하다',monit:'경고하다',mut:'바꾸다',narr:'이야기하다',naut:'선원·배',noc:'해치다',nox:'해로운',noct:'밤',norm:'규범·표준',not:'표시·알다',null:'없는·무효',nunci:'알리다',ocul:'눈',ori:'생기다',orig:'기원·시작',pac:'평화',pand:'펼치다',pans:'펼치다',par:'준비·동등',part:'부분·나누다',pater:'아버지',patr:'아버지·조국',phag:'먹다',phob:'두려움',phor:'나르다',phys:'자연·몸',plac:'달래다',plaud:'박수치다',plaus:'그럴듯한',plic:'접다·엮다',ple:'채우다',plor:'울부짖다·탐구',plur:'더 많은',pol:'도시',poss:'힘·가능',prehend:'붙잡다',prehens:'붙잡다',prise:'붙잡다',priv:'개인·빼앗다',prob:'증명·시험',prov:'증명하다',propr:'고유한',proxim:'가장 가까운',pug:'싸우다',punct:'찌르다·점',pung:'찌르다',purg:'깨끗이 하다',put:'생각하다·자르다',radi:'광선·뿌리',rap:'낚아채다',rapt:'낚아채다·황홀',ras:'긁다',rad:'긁다',rid:'웃다',ris:'웃다',rog:'묻다·요구',sacr:'신성한',sanct:'신성한',sal:'뛰다·소금',sil:'뛰다',sat:'충분한',satis:'충분한',scend:'오르다',scens:'오르다',scop:'보다·관찰',seg:'자르다',semin:'씨·뿌리다',sen:'늙은',sever:'엄격한',simil:'비슷한',simul:'흉내·함께',sit:'놓다·위치',soci:'동료·사회',somn:'잠',soph:'지혜',sper:'희망',spers:'흩뿌리다',sult:'뛰다·오르다',sum:'취하다',sumpt:'소비하다',techn:'기술',tect:'덮다',teg:'덮다',test:'증언·증거',text:'짜다·엮다',theo:'신',therm:'열·온도',thes:'놓다·주장',thet:'놓다',tim:'두려워하다',tom:'자르다',ton:'소리·긴장',tort:'비틀다',tox:'독',turb:'혼란·휘젓다',tut:'지키다·가르치다',tuit:'가르치다',umbr:'그림자',und:'물결·넘치다',vad:'가다·나아가다',vas:'가다',vag:'헤매다',van:'헛된·빈',vari:'다양한',vend:'팔다',verb:'말·단어',verg:'기울다',vest:'옷·입히다',vict:'이기다·정복',vinc:'이기다',vig:'활기·깨어있다',vir:'남자·힘',volv:'구르다·말다',volut:'구르다',vor:'먹다·삼키다',vot:'맹세',vulg:'대중·흔한',journ:'하루·날',camp:'들판·싸움',dot:'주다',join:'연결하다',pli:'채우다',publ:'사람들',prin:'첫째의',quis:'구하다·묻다',secut:'따르다',tribut:'주다·할당하다',void:'비어 있는',vail:'가치·힘',vic:'정복하다',aster:'별',astro:'별',psych:'마음·정신',enn:'해(년)',course:'달리다',dow:'주다',medi:'중간',ord:'순서',phas:'보이다·나타나다',sembl:'비슷한',sphere:'구(球)',termin:'경계·끝',tempor:'시간',iter:'다시·반복',itiner:'길·여행',dic:'말하다·가리키다',cycl:'원·바퀴',nect:'묶다·연결',nex:'묶다·연결',sert:'끼우다·넣다',tach:'붙이다',pear:'보이다·나타나다',ceal:'숨기다',clar:'명확한',onym:'이름',pati:'고통·견디다',strain:'묶다·당기다',tempt:'시도하다',minist:'섬기다·관리',surg:'솟다·일어나다',surrec:'일어나다',uni:'하나'};
 const _SUF={tion:'~하는 것(명사)',sion:'~하는 것(명사)',ation:'~하는 것(명사)',ment:'~하는 것(명사)',ness:'성질(명사)',ity:'성질(명사)',ship:'상태·자격(명사)',hood:'상태(명사)',ism:'~주의(명사)',ist:'~하는 사람(명사)',er:'~하는 사람·것(명사)',or:'~하는 사람·것(명사)',ee:'~받는 사람(명사)',able:'~할 수 있는(형용사)',ible:'~할 수 있는(형용사)',ful:'~가득한(형용사)',less:'~없는(형용사)',ous:'~가득한(형용사)',ive:'~성질의(형용사)',al:'~의(형용사)',ic:'~의(형용사)',ical:'~의(형용사)',ish:'~비슷한(형용사)',ary:'~의·장소(형·명)',ory:'~의·장소(형·명)',ize:'~화하다(동사)',ify:'~하게 하다(동사)',ate:'~하다·시키다(동사)',en:'~하게 만들다(동사)',ly:'~하게(부사)',ward:'~방향으로(부사)',ology:'~학문(명사)',ance:'~함·상태(명사)',ence:'~함·상태(명사)',ancy:'~성질(명사)',ency:'~성질(명사)',age:'~행위·상태(명사)',dom:'~영역·상태(명사)',ery:'~장소·집합(명사)',cy:'~상태·직위(명사)',ty:'~성질(명사)',th:'~함·상태(명사)',let:'작은 것(명사)',ling:'작은·~하는 이(명사)',eer:'~하는 사람(명사)',ician:'~전문가(명사)',ette:'작은·여성(명사)',ine:'~의·화학(형·명)',esque:'~풍의(형용사)',wise:'~방식으로(부사)',ways:'~방향으로(부사)',ent:'~하는(형·명)',ant:'~하는(형·명)',ile:'~하기 쉬운(형용사)',escent:'~하기 시작하는(형용사)',fy:'~하게 하다(동사)',some:'~한 경향의(형용사)',fold:'~배의(형·부)',proof:'~을 막는(형용사)',ise:'~화하다(동사)',ion:'~하는 것(명사)',ure:'~하는 것·상태(명사)'};
+// 어형만으로 놓치기 쉬운 대표 단어는 뜻의 연결까지 설명한다.
+// 역사적 어근과 암기용 연상은 분해 추정과 구별하고, 확인할 사전 링크를 제공한다.
+const _ETYMOLOGY_FAMILIES={
+  greg:{root:'greg',meaning:'무리·모이다',origin:'라틴어 grex, gregis(무리)',words:['gregarious','aggregate','segregate']},
+  bio:{root:'bio',meaning:'생명·삶',origin:'그리스어 bios(삶)',words:['biology','biography','biodegradable']},
+  graph:{root:'graph / gram',meaning:'쓰다·기록하다',origin:'그리스어 graphein(쓰다), gramma(쓴 것)',words:['photograph','autograph','biography']},
+  cred:{root:'cred',meaning:'믿다',origin:'라틴어 credere(믿다)',words:['credible','incredible','credit']},
+  dict:{root:'dic / dict',meaning:'말하다',origin:'라틴어 dicere(말하다)',words:['predict','dictate','contradict']},
+  port:{root:'port',meaning:'나르다',origin:'라틴어 portare(나르다)',words:['transport','import','export']},
+  struct:{root:'struct',meaning:'쌓다·세우다',origin:'라틴어 struere(쌓다)',words:['construct','reconstruction','infrastructure']},
+  tract:{root:'tract',meaning:'끌다',origin:'라틴어 trahere, tractus(끌다)',words:['attract','extract','distract']},
+  spect:{root:'spec / spect',meaning:'보다',origin:'라틴어 specere, spectare(보다)',words:['inspect','respect','prospect']},
+  rupt:{root:'rupt',meaning:'깨다·끊다',origin:'라틴어 rumpere, ruptus(깨다)',words:['interrupt','erupt','disrupt']},
+  duct:{root:'duc / duct',meaning:'이끌다',origin:'라틴어 ducere(이끌다)',words:['reduce','introduce','conduct']},
+  fac:{root:'fac / fact / fect / fic',meaning:'만들다·하다',origin:'라틴어 facere(만들다·하다)',words:['benefit','beneficial','efficient']},
+  flex:{root:'flect / flex',meaning:'굽히다',origin:'라틴어 flectere(굽히다)',words:['flexible','reflect','deflect']},
+  ject:{root:'ject',meaning:'던지다',origin:'라틴어 iacere, iactus(던지다)',words:['inject','reject','project']},
+  scrib:{root:'scrib / script',meaning:'쓰다',origin:'라틴어 scribere(쓰다)',words:['describe','prescribe','manuscript']},
+  val:{root:'val',meaning:'힘·가치',origin:'라틴어 valere(강하다·가치가 있다)',words:['valuable','valid','validate']},
+  tend:{root:'tend / tens',meaning:'뻗다·팽팽하게 하다',origin:'라틴어 tendere(뻗다)',words:['attention','intention','tension']},
+  plic:{root:'plic / ply',meaning:'접다·겹치다',origin:'라틴어 plicare(접다)',words:['display','complicate','multiply']},
+  salt:{root:'salt',meaning:'소금',origin:'고대 영어 sealt(소금)',words:['salty','saltwater','salted']},
+  gener:{root:'gen / gener',meaning:'종류·태어나다',origin:'라틴어 genus, generis(종류·출신), generare(낳다)',words:['general','generous','generation']},
+  surg:{root:'surg / surrect',meaning:'일어나다·솟다',origin:'라틴어 surgere(일어나다)',words:['surge','resurrect','insurrection']}
+};
+const _ETYMOLOGY_HINTS={
+  gregarious:['greg','무리에 어울리는 → 사교적인'],
+  egregious:['greg','무리 밖으로 두드러진다는 뜻에서 → 지독한·터무니없는'],
+  aggregate:['greg','ag(쪽으로) + greg(무리) → 한데 모으다'],
+  aggregation:['greg','여럿을 한 무리로 모으는 것 → 집합·집계'],
+  congregate:['greg','con(함께) + greg(무리) → 모이다'],
+  congregation:['greg','함께 모인 무리 → 회중·집회'],
+  segregate:['greg','se(분리) + greg(무리) → 무리에서 떼어 놓다'],
+  segregation:['greg','무리를 서로 떼어 놓는 것 → 분리·차별'],
+  biology:['bio','bio(생명) + logy(학문) → 생물학'],
+  biological:['bio','생명·생물학에 관한 → 생물학적인'],
+  biography:['graph','bio(삶) + graph(쓰다) → 삶을 쓴 전기'],
+  autobiography:['graph','auto(자신) + bio(삶) + graph(쓰다) → 자서전'],
+  photograph:['graph','photo(빛) + graph(기록) → 빛으로 기록한 사진'],
+  photography:['graph','빛으로 기록하는 일 → 사진 촬영'],
+  photographer:['graph','빛으로 기록하는 사람 → 사진가'],
+  autograph:['graph','auto(자신) + graph(쓰다) → 직접 쓴 서명'],
+  geography:['graph','geo(땅) + graph(기록) → 땅을 설명하는 지리학'],
+  diagram:['graph','선을 그어 나타낸 기록 → 도표·그림'],
+  program:['graph','앞서 적어 둔 내용·계획 → 프로그램'],
+  biodegradable:['bio','생물의 작용으로 분해될 수 있는 → 생분해성의'],
+  credible:['cred','cred(믿다) + ible(가능한) → 믿을 수 있는'],
+  incredible:['cred','in(아닌) + cred(믿다) → 믿기 어려운·놀라운'],
+  credibility:['cred','믿을 수 있는 성질 → 신뢰성'],
+  credit:['cred','믿고 맡기는 것 → 신용'],
+  predict:['dict','pre(미리) + dict(말하다) → 예측하다'],
+  prediction:['dict','미리 말해 둔 것 → 예측'],
+  predictable:['dict','미리 말할 수 있는 → 예측 가능한'],
+  unpredictable:['dict','un(아닌) + predictable → 예측 불가능한'],
+  dictate:['dict','말로 지시하다 → 명령하다·받아쓰게 하다'],
+  contradict:['dict','contra(반대) + dict(말하다) → 반박하다'],
+  dictionary:['dict','말·단어를 모아 놓은 책 → 사전'],
+  transport:['port','trans(가로질러) + port(나르다) → 운송하다'],
+  transportation:['port','건너 나르는 일 → 운송·교통'],
+  import:['port','im(안으로) + port(나르다) → 수입하다'],
+  export:['port','ex(밖으로) + port(나르다) → 수출하다'],
+  portable:['port','나를 수 있는 → 휴대 가능한'],
+  construct:['struct','con(함께) + struct(쌓다) → 세워 만들다'],
+  construction:['struct','함께 쌓아 만드는 일 → 건설'],
+  reconstruction:['struct','re(다시) + construction → 재건'],
+  structure:['struct','쌓아 만든 형태 → 구조'],
+  infrastructure:['struct','infra(아래) + structure(구조) → 기반 시설'],
+  attract:['tract','at(쪽으로) + tract(끌다) → 끌어당기다'],
+  attraction:['tract','쪽으로 끌어당기는 힘 → 매력'],
+  attractive:['tract','마음을 끌어당기는 → 매력적인'],
+  unattractive:['tract','un(아닌) + attractive → 매력적이지 않은'],
+  extract:['tract','ex(밖으로) + tract(끌다) → 뽑아내다'],
+  distract:['tract','dis(떨어져) + tract(끌다) → 주의를 딴 데로 끌다'],
+  inspect:['spect','in(안으로) + spect(보다) → 들여다보고 점검하다'],
+  inspection:['spect','안까지 살펴보는 일 → 검사'],
+  respect:['spect','다시 바라보고 살피는 태도 → 존중'],
+  prospect:['spect','pro(앞으로) + spect(보다) → 앞으로의 전망'],
+  spectacle:['spect','눈으로 볼 만한 것 → 장관·구경거리'],
+  interrupt:['rupt','inter(사이) + rupt(끊다) → 중간에 끊다'],
+  interruption:['rupt','사이를 끊는 일 → 중단·방해'],
+  erupt:['rupt','e(밖으로) + rupt(깨다) → 터져 나오다'],
+  disrupt:['rupt','dis(떨어져) + rupt(깨다) → 흐름을 깨뜨리다'],
+  reduce:['duct','re(뒤로) + duc(이끌다) → 되돌려 줄이다'],
+  reduction:['duct','줄여 되돌리는 일 → 감소'],
+  introduce:['duct','intro(안으로) + duc(이끌다) → 소개·도입하다'],
+  introduction:['duct','안으로 이끌어 알리는 것 → 소개·도입'],
+  conduct:['duct','con(함께) + duct(이끌다) → 이끌어 수행하다'],
+  induce:['duct','in(안으로) + duc(이끌다) → 유도하다'],
+  deduce:['duct','de(떼어) + duc(이끌다) → 결론을 끌어내다'],
+  benefit:['fac','bene(좋게) + facere(하다) → 이롭게 하는 혜택'],
+  beneficial:['fac','좋은 결과를 만드는 → 유익한'],
+  factory:['fac','만드는 일이 이루어지는 곳 → 공장'],
+  effect:['fac','해내어 만들어진 결과 → 효과'],
+  efficient:['fac','일을 해내는 힘이 있는 → 효율적인'],
+  flexible:['flex','굽힐 수 있는 → 유연한'],
+  reflect:['flex','re(뒤로) + flect(굽히다) → 반사·되돌아보기'],
+  deflect:['flex','방향을 굽혀 돌리다 → 빗나가게 하다'],
+  inject:['ject','in(안으로) + ject(던지다) → 주입하다'],
+  reject:['ject','re(뒤로) + ject(던지다) → 돌려보내 거절하다'],
+  project:['ject','pro(앞으로) + ject(던지다) → 앞으로 내보내다·계획'],
+  describe:['scrib','말·글로 적어 풀어내다 → 묘사하다'],
+  prescribe:['scrib','pre(미리) + scrib(쓰다) → 처방·규정하다'],
+  manuscript:['scrib','manu(손) + script(쓰다) → 손으로 쓴 원고'],
+  valuable:['val','value(가치) + able → 가치가 있는'],
+  valid:['val','힘이 있어 효력이 있는 → 유효한'],
+  validate:['val','효력이 있음을 확인하다 → 검증하다'],
+  attention:['tend','at(쪽으로) + tend(뻗다) → 마음을 그쪽으로 뻗는 주의'],
+  intention:['tend','마음·생각을 향해 뻗는 것 → 의도'],
+  tension:['tend','팽팽하게 뻗어 있는 상태 → 긴장'],
+  display:['plic','접힌 것을 펼쳐 보이다 → 보여 주다'],
+  complicate:['plic','함께 여러 겹으로 접다 → 복잡하게 만들다'],
+  complicated:['plic','여러 겹으로 얽힌 → 복잡한'],
+  multiply:['plic','multi(여럿) + ply(겹치다) → 여러 배로 늘리다'],
+  salty:['salt','salt(소금) + y(~한) → 짠'],
+  salted:['salt','salt(소금) + ed → 소금을 친'],
+  saltwater:['salt','salt(소금) + water(물) → 바닷물·소금물'],
+  general:['gener','genus(종류·집단)에서 → 전체 집단에 관한·일반적인'],
+  generous:['gener','고귀한 출신이라는 뜻에서 → 마음이 넓은·후한'],
+  generation:['gener','낳고 태어나는 것에서 → 생성·같은 때 태어난 세대'],
+  surge:['surg','위로 솟아오르는 것 → 급증·밀려오다'],
+  resurrect:['surg','re(다시) + surgere(일어나다) → 되살리다'],
+  resurrection:['surg','다시 일어나는 것 → 부활'],
+  insurrection:['surg','맞서 일어나는 것 → 반란']
+};
+function etymologyHint(word){
+  let w=String(word||'').trim().toLowerCase();
+  if(!/^[a-z]+$/.test(w)) return null;
+  let entry=Object.prototype.hasOwnProperty.call(_ETYMOLOGY_HINTS,w)?_ETYMOLOGY_HINTS[w]:null;
+  if(entry) return {word:w,entry};
+  // 검토한 기본 단어의 규칙적인 어형에만 설명을 재사용한다.
+  for(let suffix of ['ness','ities','ity','ies','ing','ed','es','s','ly']){
+    if(!w.endsWith(suffix)) continue;
+    let stem=w.slice(0,-suffix.length),forms=[stem];
+    if(suffix==='ies') forms.push(stem+'y');
+    if((suffix==='ity'||suffix==='ities')&&/(abil|ibil)$/.test(stem)) forms.push(stem.slice(0,-2)+'le');
+    if(suffix==='ed'||suffix==='ing'){
+      forms.push(stem+'e');
+      if(/([a-z])\1$/.test(stem)) forms.push(stem.slice(0,-1));
+    }
+    if(suffix==='ly'){
+      forms.push(stem+'le'); // incredibly → incredible, predictably → predictable
+      if(stem.endsWith('i')) forms.push(stem.slice(0,-1)+'y');
+    }
+    for(let form of forms){ if(Object.prototype.hasOwnProperty.call(_ETYMOLOGY_HINTS,form)) return {word:form,entry:_ETYMOLOGY_HINTS[form],suffix}; }
+  }
+  return null;
+}
+function etymologyHtml(word){
+  let hint=etymologyHint(word); if(!hint) return '';
+  let family=_ETYMOLOGY_FAMILIES[hint.entry[0]];
+  let form=hint.suffix?' <span style="opacity:.7">('+escapeHtml(hint.word)+'의 어형)</span>':'';
+  return '<div class="roots-line etym-hint" style="margin-top:8px;font-size:13.5px;line-height:1.45">🌱 어원·암기 · <b style="color:var(--gold)">'+escapeHtml(family.root)+'</b>('+escapeHtml(family.meaning)+')'+form+
+    '<div>'+escapeHtml(hint.entry[1])+'</div><div class="etym-more" onclick="event.stopPropagation()"><button type="button" class="etym-word" onclick="openEtymology(\''+speakAttr(hint.word)+'\')">관련 단어</button>'+
+    ' · <a href="https://en.wiktionary.org/wiki/'+encodeURIComponent(hint.word)+'#Etymology" target="_blank" rel="noopener">어원 출처 ↗</a></div></div>';
+}
+function openEtymology(word){
+  let hint=etymologyHint(word); if(!hint) return;
+  let family=_ETYMOLOGY_FAMILIES[hint.entry[0]],dialog=document.getElementById('etymologyDialog');
+  if(!dialog||typeof dialog.showModal!=='function'){ showToast(hint.entry[1]); return; }
+  document.getElementById('etymologyTitle').textContent=hint.word+' · 어원·암기';
+  let related=family.words.filter(w=>w!==hint.word).map(w=>{
+    let meaning=_ETYMOLOGY_HINTS[w][1].split('→').pop().trim();
+    return '<div class="etym-related"><button type="button" class="etym-word" onclick="speakText(\''+speakAttr(w)+'\')">'+escapeHtml(w)+'</button><span>'+escapeHtml(meaning)+'</span></div>';
+  }).join('');
+  document.getElementById('etymologyBody').innerHTML='<p><b>'+escapeHtml(family.root)+'</b> · '+escapeHtml(family.meaning)+'</p><p>'+escapeHtml(hint.entry[1])+'</p><p>'+escapeHtml(family.origin)+'</p><p>같은 어근</p>'+related+'<a href="https://en.wiktionary.org/wiki/'+encodeURIComponent(hint.word)+'#Etymology" target="_blank" rel="noopener">사전에서 어원 확인 ↗</a>';
+  if(!dialog.open) dialog.showModal();
+}
 const _ROOTKEYS=Object.keys(_ROOT).sort((a,b)=>b.length-a.length);
 const _PREKEYS=Object.keys(_PRE).sort((a,b)=>b.length-a.length);
 const _SUFKEYS=Object.keys(_SUF).sort((a,b)=>b.length-a.length);
 // 우연히 어근과 겹치지만 실제 어원과 무관한 흔한 단어들 — 분석 표시 안 함
 const _ROOTSKIP=new Set(['mother','sister','summer','summit','person','here','hero','herd','orange','nothing','tennis','send','sent','market','march','marry','regret','curtain','mind','mine','miner','candy','announce','announcement','potato','passport','evening','apple','terror','dollar','finger','member','color','collar','corner','under','often','forever','office','always','island','interesting','problem','pear','surgery','pleasure','forward','another','theory','although','among','common','cover','earth','every','fortune','later','level','money','narrow','inside','outside','passage','polite','present','secret','several','silent','soldier','solid','terrible','tomorrow','tonight','trust','valley','capital','especially','improve','sentence','statue','volume','service','spirit','notebook','earthquake','captain','down']);
+['seven','seventy','flower'].forEach(word=>_ROOTSKIP.add(word));
 function analyzeRoots(word){
   let w=String(word||'').toLowerCase().replace(/[^a-z]/g,'');
   if(w.length<4) return [];
   if(_ROOTSKIP.has(w)) return [];
-  // core에서 접미어를 떼고, 남은 core의 '앞부분'에서만 어근을 찾는다(indexOf 노이즈 방지)
-  function build(core, pre){
-    // 접미사 후보도 긴 것부터 전부 시도 (question: tion 실패 → ion+quest 성공), 마지막엔 접미사 없이
-    let sufCands=[];
-    for(let k of _SUFKEYS){ if(core.endsWith(k)&&core.length-k.length>=3) sufCands.push(k); }
-    sufCands.push(null);
-    for(let sk of sufCands){
-      let c2=sk?core.slice(0,core.length-sk.length):core;
-      let root=null;
-      for(let k of _ROOTKEYS){ if(k.length>=3&&c2===k){ root={t:'root',p:k,g:_ROOT[k]}; break; } }
-      if(root){
-        let parts=[]; if(pre) parts.push(pre);
-        parts.push(root); if(sk) parts.push({t:'suf',p:sk,g:_SUF[sk]});
-        if(parts.length===1&&parts[0].p===w) return null; // 어근=단어 전체면 알려주는 게 없음
-        return parts;
-      }
+  // 철자를 빠짐없이 소비하는 후보만 허용: 접두사·접미사는 각각 두 겹까지만.
+  // 임의의 연결 글자를 버리지 않으므로 portfolio 같은 부분 일치는 계속 거절한다.
+  const infl={s:'~들(복수·3인칭)',es:'~들(복수·3인칭)',ed:'~한(과거·과거분사)',ing:'~하는(진행·동명사)'};
+  const suffixKeys=[...new Set(_SUFKEYS.concat(Object.keys(infl)))];
+  let best=null;
+  function suffixParts(tail,depth){
+    if(!tail) return [];
+    if(depth>=2) return null;
+    let chosen=null;
+    for(let k of suffixKeys){
+      if(!tail.startsWith(k)) continue;
+      const rest=tail.slice(k.length);
+      // 어형 변화는 맨 끝에서만 허용한다(예: greg + ate + s).
+      if(infl[k]&&rest) continue;
+      const next=suffixParts(rest,depth+1);
+      if(next===null) continue;
+      // gen + er + al 같은 우연한 철자를 '-er(사람)'로 설명하지 않는다.
+      if((k==='er'||k==='or')&&next.length&&!infl[next[next.length-1].p]) continue;
+      const parts=[{t:'suf',p:k,g:_SUF[k]||infl[k]}].concat(next);
+      if(!chosen||parts.length<chosen.length) chosen=parts;
     }
-    return null;
+    return chosen;
   }
-  // 매칭되는 접두사 후보를 긴 것부터 전부 시도 (declare: dec 실패 → de+clar 성공)
-  let pres=[];
-  for(let k of _PREKEYS){ if(w.startsWith(k)&&w.length-k.length>=3) pres.push({t:'pre',p:k,g:_PRE[k]}); }
-  for(let pre of pres){ let r=build(w.slice(pre.p.length),pre); if(r) return r; }
-  // 접두어를 잘못 뗀 경우(예: biography의 'bi' vs 'bio') 접두어 없이 재시도
-  let r2=build(w,null); if(r2) return r2;
-  // 어근을 못 찾으면 표시하지 않음(접두사만 보여주면 헷갈리므로)
-  return [];
+  function match(core,prefixes){
+    for(let k of _ROOTKEYS){
+      if(k.length<3||!core.startsWith(k)) continue;
+      const suffixes=suffixParts(core.slice(k.length),0);
+      if(suffixes===null) continue;
+      const parts=prefixes.concat({t:'root',p:k,g:_ROOT[k]},suffixes);
+      if(parts.length===1) continue; // 어근=단어 전체면 이미 보이는 뜻을 반복하지 않음
+      // 제외한 단어의 파생형도 같은 오분석을 물려받지 않게 한다(person→personally).
+      let stem=prefixes.map(part=>part.p).join('')+k,excluded=_ROOTSKIP.has(stem);
+      for(let suffix of suffixes){ stem+=suffix.p; excluded=excluded||_ROOTSKIP.has(stem); }
+      if(excluded) continue;
+      // 긴 접미사를 먼저 떼면 tension→ten+sion이 된다. 더 긴 어근 tens+ion을 우선한다.
+      if(!best||k.length>best.rootLength||(k.length===best.rootLength&&parts.length<best.parts.length))
+        best={rootLength:k.length,parts};
+    }
+    if(prefixes.length>=2) return;
+    for(let k of _PREKEYS){
+      if(prefixes.length&&k.length<2) continue; // reason→re+a+son 같은 한 글자 중첩 오탐 방지
+      if(core.startsWith(k)&&core.length-k.length>=3)
+        match(core.slice(k.length),prefixes.concat({t:'pre',p:k,g:_PRE[k]}));
+    }
+  }
+  match(w,[]);
+  return best?best.parts:[];
 }
 // ===== 합성어 분해 (양쪽 모두 아는 단어일 때만 → 오탐 최소화) =====
 const _COMP={care:'돌보다',give:'주다',take:'잡다·취하다',keep:'지키다',make:'만들다',work:'일',home:'집',house:'집',life:'삶',live:'살다',time:'시간',day:'날·낮',night:'밤',land:'땅',sea:'바다',air:'공기',fire:'불',water:'물',light:'빛·가벼운',hand:'손',head:'머리',heart:'심장·마음',foot:'발',eye:'눈',book:'책',word:'말·단어',news:'소식',paper:'종이',man:'사람·남자',woman:'여자',child:'아이',self:'자신',mate:'동료',friend:'친구',school:'학교',room:'방',door:'문',back:'뒤',side:'옆·측면',way:'길',road:'길',walk:'걷다',run:'달리다',break:'부수다',down:'아래로',out:'밖',over:'위·너머',under:'아래',well:'잘',free:'자유로운',full:'가득한',half:'절반',wide:'넓은',long:'긴',high:'높은',low:'낮은',new:'새로운',safe:'안전한',sick:'아픈',hold:'잡다',stand:'서다',sit:'앉다',look:'보다',watch:'지켜보다',guard:'지키다',wash:'씻다',cut:'자르다',drive:'운전하다',ride:'타다',play:'놀다·경기하다',ground:'땅',field:'들판',farm:'농장',star:'별',sun:'해',moon:'달',rain:'비',snow:'눈(雪)',wind:'바람',storm:'폭풍',earth:'지구·땅',world:'세계',town:'마을',city:'도시',grand:'큰·조부모의',mother:'어머니',father:'아버지',baby:'아기',ball:'공',game:'경기',food:'음식',bed:'침대',bath:'목욕',shop:'가게',store:'가게',place:'장소',point:'지점',line:'선',mark:'표시',print:'인쇄하다',write:'쓰다',read:'읽다',speak:'말하다',talk:'말하다',sleep:'자다',dream:'꿈',wake:'깨다',bird:'새',fish:'물고기',tree:'나무',wood:'나무·숲',stone:'돌',rock:'바위',gold:'금',silver:'은',iron:'철',glass:'유리',board:'판자',box:'상자',bag:'가방',coat:'외투',wear:'입다',rest:'쉬다',power:'힘',force:'힘',guide:'안내하다',guest:'손님',own:'소유하다',build:'짓다',teach:'가르치다',learn:'배우다',help:'돕다',love:'사랑',hate:'미워하다',hope:'희망',fear:'두려움',pain:'고통',note:'메모·기록',feed:'먹이다',quake:'흔들리다',through:'통과·꿰뚫어',come:'오다',thing:'것·물건',some:'어떤',any:'어느',every:'모든',week:'주(週)',end:'끝',year:'해(년)',turn:'돌다',fall:'떨어지다',rise:'오르다',set:'놓다·지다',step:'걸음',stop:'멈추다',check:'확인하다',test:'시험',proof:'증명·막는',screen:'화면·가리개',net:'그물·망',web:'거미줄·망',mail:'우편',phone:'전화',photo:'사진',film:'필름·영화',sound:'소리',voice:'목소리',music:'음악',dance:'춤',song:'노래',blood:'피',bone:'뼈',skin:'피부',hair:'머리카락',face:'얼굴',body:'몸',brain:'뇌',shot:'발사·촬영',pack:'꾸리다·묶음',load:'싣다·짐'};
@@ -2847,6 +3054,7 @@ function prefixKnownParts(w){
   return [];
 }
 function rootsHtml(word){
+  let etym=etymologyHtml(word); if(etym) return etym;
   // 숙어는 단어별로 쪼개 각각 분석 (make progress → progress, go over → go+over)
   let tokens=String(word||'').toLowerCase().split(/[^a-z]+/).filter(x=>x.length>=2);
   if(!tokens.length) return '';
@@ -2964,6 +3172,7 @@ async function findBaseWord(word){
   if(/[a-z][^a-z]+[a-z]/i.test(String(word||'').trim())) return null; // 숙어(여러 단어)는 기본형 탐색 안 함
   let w=String(word||'').toLowerCase().replace(/[^a-z]/g,'');
   if(w.length<5) return null;
+  if(_ROOTSKIP.has(w)) return null; // flower→flow, summer→sum 같은 사전 존재만으로 만든 오분석 방지
   if(_baseCache.has(w)) return _baseCache.get(w);
   if(_baseCache.size>500) _baseCache.clear(); // 메모리 상한
   let mine=_baseFromDecks(w);
@@ -3262,15 +3471,16 @@ let _exFillSeq=0;
 async function exampleFill(inputId,word){
   let inp=document.getElementById(inputId);
   if(!inp||!word) return;
+  let originalValue=inp.value;
   let seq=++_exFillSeq;
   let target=_editTarget;   // 카드 수정창에서 눌렀다면 그 단어에만 넣는다
   showToast('예문을 찾는 중... ⏳');
   let list=await getExamples(word.toLowerCase()).catch(()=>[]);
-  if(!list.length) return showToast('예문을 찾지 못했어요. 직접 입력하거나 네이버 사전을 참고해 주세요');
   if(seq!==_exFillSeq) return;            // 그 사이 다른 단어로 다시 눌렀음
   if(target&&_editTarget!==target) return; // 수정 대상이 바뀌었으면 넣지 않음
-  inp=document.getElementById(inputId);   // 기다리는 동안 목록이 다시 그려졌을 수 있음
-  if(!inp) return showToast('수정 화면이 닫혀 예문을 넣지 못했어요');
+  // 같은 id로 다른 단어의 수정칸이 다시 생기거나 사용자가 직접 쓴 내용은 덮어쓰지 않는다.
+  if(document.getElementById(inputId)!==inp||inp.value!==originalValue) return;
+  if(!list.length) return showToast('예문을 찾지 못했어요. 직접 입력하거나 네이버 사전을 참고해 주세요');
   let k=word.toLowerCase();
   _exFillIdx[k]=((_exFillIdx[k]??-1)+1)%list.length;
   inp.value=list[_exFillIdx[k]].en;
@@ -3669,50 +3879,67 @@ saveDeckData(); // 활성 단어장 최신 상태를 decks에 반영 후 전체 
 let data={version:2,decks:decks,activeDeckId:activeDeckId,words:words,stats:stats,exportedAt:new Date().toISOString()};
 let json=JSON.stringify(data);
 document.getElementById('backupBox').value=json;
+let downloadUrl=null,anchor=null;
 try{
-let a=document.createElement('a');
-a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
-a.download='wordbook-backup.json';
-a.click();
-}catch(e){}
-showToast('백업을 내보냈어요! 💾');
+downloadUrl=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+anchor=document.createElement('a');
+anchor.href=downloadUrl;anchor.download='wordbook-backup.json';anchor.style.display='none';
+document.body.appendChild(anchor);
+anchor.click();
+showToast('다운로드를 요청했어요. 저장된 백업 파일을 확인해 주세요.');
+}catch(e){
+showToast('파일 다운로드 실패: 아래 백업 데이터를 복사해 저장해 주세요.');
+}finally{
+if(anchor) anchor.remove();
+if(downloadUrl) setTimeout(()=>{try{URL.revokeObjectURL(downloadUrl);}catch(e){}},60000);
+}
+}
+function prepareBackupRestore(data){
+  if(!isRecord(data)) return null;
+  const validWords=list=>Array.isArray(list)&&list.every(w=>isRecord(w)&&typeof w.eng==='string'&&typeof w.kor==='string');
+  const validStats=value=>value===undefined||isRecord(value);
+  const validDupes=list=>list===undefined||(Array.isArray(list)&&list.every(d=>isRecord(d)&&typeof d.eng==='string'
+    &&(d.sheets===undefined||(Array.isArray(d.sheets)&&d.sheets.every(s=>typeof s==='string')))));
+  if(Object.prototype.hasOwnProperty.call(data,'decks')){
+    if(!Array.isArray(data.decks)||!data.decks.length||!data.decks.every(d=>isRecord(d)&&validWords(d.words)
+      &&(d.id===undefined||typeof d.id==='string')&&(d.name===undefined||typeof d.name==='string')
+      &&validStats(d.stats)&&validDupes(d.dupes))) return null;
+    // 유효한 추가 필드는 유지하고 외부 ID는 안전한 문자만 허용한다.
+    const restored=normalizeDecks(data.decks.map((d,i)=>({...d,
+      id:(d.id||'').replace(/[^a-zA-Z0-9_-]/g,'')||('restored_'+i),name:d.name||'단어장'})));
+    const activeIndex=typeof data.activeDeckId==='string'?data.decks.findIndex(d=>d.id===data.activeDeckId):-1;
+    return {allDecks:true,decks:restored,activeDeckId:restored[activeIndex>=0?activeIndex:0].id};
+  }
+  if(!validWords(data.words)||!validStats(data.stats)) return null;
+  const restored=decks.map(d=>d.id===activeDeckId?{...d,words:normalizeWords(data.words),
+    stats:data.stats===undefined?stats:normalizeStats(data.stats),dupes:[]}:d);
+  return {allDecks:false,decks:restored,activeDeckId};
 }
 function restoreBackup(){
 let raw=document.getElementById('backupBox').value.trim();
 if(!raw) return alert('복원할 백업 데이터를 붙여넣어 주세요');
 let data;
 try{data=JSON.parse(raw);}catch(e){return alert('백업 데이터 형식이 올바르지 않습니다');}
-let mapWord=w=>({eng:w.eng||'',kor:w.kor||'',example:normalizeExamples(w.example),note:normalizeNotes(w.note),wrong:!!w.wrong,mastered:!!w.mastered,lastResult:w.lastResult,wrongResult:w.wrongResult||null,src:w.src});
-// 신형(v2): 모든 단어장 복원
-if(data&&Array.isArray(data.decks)&&data.decks.length){
-  if(!needConfirm2(()=>restoreBackup(),'모든 단어장을 백업 데이터로 덮어쓸까요? (지금 단어장들은 사라집니다)')) return;
-  decks=data.decks.map(d=>({
-    // 외부 백업 id는 안전한 문자만 허용(따옴표/역슬래시 등 주입 차단)
-    id:(typeof d.id==='string'?d.id.replace(/[^a-zA-Z0-9_-]/g,''):'')||('deck_'+Math.random().toString(36).slice(2)),
-    name:d.name||'단어장',
-    words:Array.isArray(d.words)?d.words.map(mapWord):[],
-    stats:(d.stats&&typeof d.stats==='object')?d.stats:{},
-    dupes:Array.isArray(d.dupes)?d.dupes:[]
-  }));
-  activeDeckId=(data.activeDeckId&&decks.find(d=>d.id===data.activeDeckId))?data.activeDeckId:decks[0].id;
+const candidate=prepareBackupRestore(data);
+if(!candidate) return alert('백업 데이터에 잘못된 단어장 또는 단어가 있어 복원하지 않았습니다. 기존 데이터는 유지됩니다.');
+const message=candidate.allDecks?'모든 단어장을 백업 데이터로 덮어쓸까요? (지금 단어장들은 사라집니다)':'현재 단어를 백업 데이터로 덮어쓸까요? (지금 단어는 사라집니다)';
+if(!needConfirm2(()=>restoreBackup(),message)) return;
+const previous={decks,words,stats,dupes,activeDeckId,recentDeckIds};
+decks=candidate.decks;activeDeckId=candidate.activeDeckId;
+const active=decks.find(d=>d.id===activeDeckId);
+words=active.words;stats=active.stats;dupes=active.dupes;
+if(candidate.allDecks) recentDeckIds=[activeDeckId];
+if(!saveDecks()){
+  decks=previous.decks;words=previous.words;stats=previous.stats;dupes=previous.dupes;
+  activeDeckId=previous.activeDeckId;recentDeckIds=previous.recentDeckIds;
   invalidateWordIndex();
-  let d=decks.find(x=>x.id===activeDeckId);
-  words=d.words; stats=d.stats; dupes=d.dupes;
-  currentIndex=-1; afterWordsRemoved();
-  recentDeckIds=[]; pushRecentDeck(activeDeckId);
-  saveDecks(); render(); renderDeckPanel(); renderRecentDecks();
-  showToast(decks.length+'개 단어장을 복원했어요! ♻️');
-  return;
+  showToast('백업을 저장하지 못해 복원하지 않았습니다. 기존 단어장을 유지합니다.');
+  return false;
 }
-// 구형: 활성 단어장만 복원
-if(!data||!Array.isArray(data.words)) return alert('백업 데이터에 단어가 없습니다');
-if(!needConfirm2(()=>restoreBackup(),'현재 단어를 백업 데이터로 덮어쓸까요? (지금 단어는 사라집니다)')) return;
-words=data.words.map(mapWord);
-if(data.stats&&typeof data.stats==='object'){stats=data.stats;}
-dupes=[]; // 복원된 단어와 어긋난 옛 중복 기록 제거
-currentIndex=-1; afterWordsRemoved();
-save();
-showToast('백업을 복원했어요! ♻️');
+afterWordsRemoved();resetCardView();
+render();renderDeckPanel();renderRecentDecks();
+showToast(candidate.allDecks?decks.length+'개 단어장을 복원했어요! ♻️':'백업을 복원했어요! ♻️');
+return true;
 }
 
 function matchQ(w,q,i){return !q||w.eng.toLowerCase().includes(q)||w.kor.toLowerCase().includes(q)||(i!==undefined&&/^\d+$/.test(q)&&String(i+1)===q);}
@@ -4216,8 +4443,6 @@ function switchDeck(id,targetTab){
   restoreRangeMemo();   // 단어장별로 기억해둔 학습 범위 복원
   lsPeeked.clear(); lsEditIndex=-1; lsSelMode=false; lsSelected.clear(); wlSelMode=false; wlSelected.clear(); // 단어장이 바뀌면 펼쳐둔 뜻·수정·선택 상태 초기화(인덱스 무효화)
   document.getElementById('cardHint').style.display='';
-  document.getElementById('rangeFrom').value='';
-  document.getElementById('rangeTo').value='';
   pushRecentDeck(id);
   saveDecks();
   render();
