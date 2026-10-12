@@ -1033,28 +1033,34 @@ body.hide-mean .wl-kor.peek,#lsList.ls-hideMean .kor-mean.peek{white-space:pre-w
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-10-09.82'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-10-12.83'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 // Storage access can throw even on reads (private mode / browser policy).
 let storageWarningShown=false;
 const blockedStorageKeys=new Set();
+const storedJSONSnapshots=new Map();
 function warnStorage(){
   if(storageWarningShown) return;
   storageWarningShown=true;
-  setTimeout(()=>alert('데이터를 읽거나 저장하지 못했습니다. 변경 내용이 보존되지 않을 수 있으니 앱을 닫기 전에 백업을 내보내 주세요.'),0);
+  setTimeout(()=>alert('데이터를 읽거나 저장하지 못했습니다. 저장 실패한 입력은 창을 닫기 전에 복사해 두세요. 앱을 다시 열어 기존 데이터를 확인한 뒤 다시 저장해 주세요.'),0);
 }
 const safeStorage={
-  getItem(key){try{return localStorage.getItem(key);}catch(e){warnStorage();return null;}},
+  getItem(key){try{return localStorage.getItem(key);}catch(e){blockedStorageKeys.add(key);warnStorage();return null;}},
   setItem(key,value){
     try{
-      if(blockedStorageKeys.has(key)) throw new Error('Recovery backup required');
+      if(blockedStorageKeys.has(key)) throw new Error('Stored data must be read and preserved before writing');
       value=String(value);
       if(localStorage.getItem(key)!==value) localStorage.setItem(key,value);
       return true;
     }catch(e){warnStorage();return false;}
   },
-  removeItem(key){try{localStorage.removeItem(key);return true;}catch(e){warnStorage();return false;}}
+  removeItem(key){
+    try{
+      if(blockedStorageKeys.has(key)) throw new Error('Stored data must be read and preserved before removing');
+      localStorage.removeItem(key);return true;
+    }catch(e){warnStorage();return false;}
+  }
 };
 function preserveStorage(key,raw){
   if(raw===null) return;
@@ -1065,6 +1071,7 @@ function preserveStorage(key,raw){
 }
 function readStoredJSON(key,fallback,normalize){
   const raw=safeStorage.getItem(key);
+  if(!blockedStorageKeys.has(key)) storedJSONSnapshots.set(key,raw);
   if(raw===null) return fallback;
   try{
     const parsed=JSON.parse(raw), value=normalize(parsed);
@@ -1080,7 +1087,7 @@ function normalizeExamples(value){
 }
 function normalizeNotes(value){
   if(typeof value==='string') return value;
-  if(Array.isArray(value)) return value.filter(isRecord).map(n=>({eng:typeof n.eng==='string'?n.eng:'',kor:typeof n.kor==='string'?n.kor:''}));
+  if(Array.isArray(value)) return value.filter(n=>typeof n==='string'||isRecord(n)).map(n=>typeof n==='string'?{eng:'',kor:n}:{eng:typeof n.eng==='string'?n.eng:'',kor:typeof n.kor==='string'?n.kor:''});
   if(isRecord(value)) return {eng:typeof value.eng==='string'?value.eng:'',kor:typeof value.kor==='string'?value.kor:''};
   return undefined;
 }
@@ -1115,14 +1122,19 @@ let decks = readStoredJSON('decks',[],normalizeDecks);
 let activeDeckId = safeStorage.getItem('activeDeckId') || '';
 let recentDeckIds = readStoredJSON('recentDeckIds',[],v=>Array.isArray(v)?v.filter(id=>typeof id==='string'):[]);
 if (!decks.length) {
+  // A failed read is not an empty database. Do not migrate incomplete legacy data.
+  if(['words','stats','dupes'].some(key=>blockedStorageKeys.has(key))) blockedStorageKeys.add('decks');
   let d = {id: 'deck_'+Date.now(), name: '기본 단어장',
             words,stats,dupes};
   decks.push(d);
   activeDeckId = d.id;
-  const migrated=safeStorage.setItem('decks', JSON.stringify(decks));
-  safeStorage.setItem('activeDeckId', activeDeckId);
+  const migrationModel=JSON.stringify(decks);
+  const unchanged=!blockedStorageKeys.has('decks')&&safeStorage.getItem('decks')===storedJSONSnapshots.get('decks');
+  const migrated=unchanged&&safeStorage.setItem('decks',migrationModel);
   // 덱으로 옮겼으니 옛 최상위 키 제거 (이후 저장은 모두 decks로 일원화)
   if(migrated){
+    storedJSONSnapshots.set('decks',migrationModel);
+    safeStorage.setItem('activeDeckId',activeDeckId);
     safeStorage.removeItem('words');
     safeStorage.removeItem('stats');
     safeStorage.removeItem('dupes');
@@ -1140,20 +1152,23 @@ if (!decks.length) {
 })();
 
 // Compare against the last disk snapshot before every write. A stale window must not overwrite it.
-let _diskDecks=safeStorage.getItem('decks');
+let _diskDecks=storedJSONSnapshots.get('decks')??null;
 let _savedModel=_diskDecks;
 let _conflictWarned=false;
 const _conflictKey='workbook.unsaved.'+Date.now()+'.'+Math.random().toString(36).slice(2);
-function _writeDecks(){
+function _writeDecks(verifyUnchanged=false){
   invalidateWordIndex();
   try{
+    if(blockedStorageKeys.has('decks')){warnStorage();return false;}
     const model=JSON.stringify(decks);
-    if(model===_savedModel) return true;
-    if(safeStorage.getItem('decks')!==_diskDecks){
+    if(model===_savedModel&&!verifyUnchanged) return true;
+    const disk=safeStorage.getItem('decks');
+    if(blockedStorageKeys.has('decks')) return false;
+    if(disk!==_diskDecks){
       const backedUp=safeStorage.setItem(_conflictKey,model);
       if(!_conflictWarned){
         _conflictWarned=true;
-        setTimeout(()=>alert('다른 창에서 단어장이 변경되어 덮어쓰기를 중단했습니다. 이 창의 변경 내용은 '+(backedUp?'별도 보관했습니다.':'저장하지 못했습니다.')+' 이 창에서 백업 내보내기를 한 뒤 다른 창을 닫고 다시 열어 주세요.'),0);
+        setTimeout(()=>alert('다른 창에서 단어장이 변경되어 덮어쓰기를 중단했습니다. 이 창의 변경 내용은 '+(backedUp?'별도 보관했습니다.':'저장하지 못했습니다.')+' 저장 실패한 입력은 복사해 두고, 다른 창을 닫은 뒤 앱을 다시 열어 최신 내용을 확인해 주세요.'),0);
       }
       return false;
     }
@@ -1163,11 +1178,22 @@ function _writeDecks(){
   }catch(e){warnStorage();return false;}
 }
 let _saveTimer=null;
+let _durabilityRequested=false;
+function requestPersistentStorage(){
+  if(_durabilityRequested||typeof navigator==='undefined') return;
+  try{
+    const storage=navigator.storage;
+    if(!storage||typeof storage.persist!=='function') return;
+    _durabilityRequested=true;
+    Promise.resolve(typeof storage.persisted==='function'?storage.persisted():false)
+      .then(retained=>retained||storage.persist()).catch(()=>{});
+  }catch(e){} // 지원하지 않거나 거절되어도 이미 저장한 데이터는 그대로 유지한다.
+}
 // Persist user edits immediately; a process termination must not lose pending edits.
 function saveDecks(){
   invalidateWordIndex();
-  const saved=_writeDecks();
-  if(saved){safeStorage.setItem('activeDeckId',activeDeckId);safeStorage.setItem('recentDeckIds',JSON.stringify(recentDeckIds));}
+  const saved=_writeDecks(true);
+  if(saved){safeStorage.setItem('activeDeckId',activeDeckId);safeStorage.setItem('recentDeckIds',JSON.stringify(recentDeckIds));requestPersistentStorage();}
   return saved;
 }
 function flushDecks(){return _writeDecks();}
@@ -1459,7 +1485,10 @@ document.addEventListener('visibilitychange',()=>{ if(!document.hidden) applyThe
 function saveOnly(){ return saveDeckData(); }
 function save(){ const saved=saveOnly(); if(saved) render(); return saved; }
 function persistWordEdit(w,eng,kor,examples){
-  if(!w) return false;
+  if(!w||!words.includes(w)){
+    showToast('수정 대상이 바뀌어 저장하지 못했습니다. 입력 내용을 복사해 두세요.');
+    return false;
+  }
   const previous={eng:w.eng,kor:w.kor,example:w.example,hasExample:Object.prototype.hasOwnProperty.call(w,'example')};
   w.eng=eng;w.kor=kor;setExList(w,examples);
   if(saveOnly()) return true;
@@ -1467,6 +1496,19 @@ function persistWordEdit(w,eng,kor,examples){
   if(previous.hasExample) w.example=previous.example;else delete w.example;
   invalidateWordIndex();
   showToast('저장하지 못했습니다. 입력 내용은 남겨 두었으니 다시 시도해 주세요.');
+  return false;
+}
+function persistNoteEdit(w,notes){
+  if(!w||!words.includes(w)){
+    showToast('수정하던 단어가 변경되어 메모를 저장하지 못했습니다. 입력 내용을 복사한 뒤 단어를 다시 선택해 주세요.');
+    return false;
+  }
+  const hadNote=Object.prototype.hasOwnProperty.call(w,'note'),previous=w.note;
+  if(notes.length) w.note=notes;else delete w.note;
+  if(saveOnly()) return true;
+  if(hadNote) w.note=previous;else delete w.note;
+  invalidateWordIndex();
+  showToast('메모를 저장하지 못했습니다. 창을 닫기 전에 입력 내용을 복사해 두고 다시 시도해 주세요.');
   return false;
 }
 function duplicate(e){return words.some(w=>w.eng.toLowerCase()==e.toLowerCase())}
@@ -1508,6 +1550,7 @@ if(!box.children.length){for(let i=0;i<3;i++) addBulkRow();}
 function bulkAdd(){
 let rows=document.querySelectorAll('#bulkRows .row');
 let added=0;
+const previousLength=words.length;
 const existing=new Set(words.map(w=>w.eng.toLowerCase()));
 rows.forEach(r=>{
 let eng=r.querySelector('.bulkEng').value.trim();
@@ -1521,9 +1564,14 @@ added++;
 }
 });
 if(added){
+if(!saveOnly()){
+  words.length=previousLength;invalidateWordIndex();
+  showToast('저장하지 못했습니다. 입력한 단어와 예문은 그대로 있으니 다시 시도해 주세요.');
+  return false;
+}
 document.getElementById('bulkRows').innerHTML='';
 for(let i=0;i<3;i++) addBulkRow();
-save();
+render();
 playSound('add');
 showToast(added+'개 단어를 추가했어요! 📋');
 }else{
@@ -1554,6 +1602,7 @@ return rows;
 }
 function addFromCsvText(text, srcLabel){
 let added=0, updated=0;
+const previousLength=words.length,snapshots=words.map(w=>({word:w,values:{...w}}));
 let label=srcLabel||'시트';
 let seen=new Map();      // 이번 시트에서 본 영단어(소문자) -> 행 번호
 let dupMap=new Map();    // 소문자영단어 -> {eng, sheets:Set, rows:Set}
@@ -1608,9 +1657,21 @@ words.push(nw); wordMap.set(engL,nw);
 added++;
 seen.set(engL,idx+1);
 });
-save();
 let dups=[...dupMap.values()].map(e=>({eng:e.eng,sheets:[...e.sheets],rows:[...e.rows].sort((a,b)=>a-b)}));
-return {added,updated,dups};
+if(!saveOnly()){
+  words.length=previousLength;
+  for(let snapshot of snapshots){
+    for(let key of Object.keys(snapshot.word)){
+      if(!Object.prototype.hasOwnProperty.call(snapshot.values,key)) delete snapshot.word[key];
+    }
+    Object.assign(snapshot.word,snapshot.values);
+  }
+  invalidateWordIndex();
+  showToast('시트 내용을 저장하지 못해 반영하지 않았습니다. 기존 단어·예문·메모는 유지됩니다.');
+  return {added:0,updated:0,dups:[],saved:false};
+}
+render();
+return {added,updated,dups,saved:true};
 }
 
 // ===== 중복 단어 기록 (여러 시트에 겹쳐 들어온 영단어) =====
@@ -1784,6 +1845,7 @@ box.innerHTML=html;
 function importSheetTab(i){let t=detectedTabs[i];if(!t) return;importGoogleSheet({gid:t.gid,sheet:t.name});}
 function importManualSheet(){let name=(document.getElementById('manualSheetName')?.value||'').trim();if(!name) return alert('시트 탭 이름을 입력해 주세요');importGoogleSheet({sheet:name});}
 
+let _sheetImportSeq=0;
 function importGoogleSheet(opts){
 opts=opts||{};
 let url=document.getElementById('sheetUrl').value.trim();
@@ -1795,6 +1857,7 @@ let gm=url.match(/[#&?]gid=([0-9]+)/);
 // gid 우선순위: 선택한 탭 > URL의 gid > 0(첫 시트)
 let gid=opts.gid||(gm?gm[1]:null)||'0';
 let sheetName=opts.sheet||null;
+const targetDeckId=activeDeckId,targetWords=words,seq=++_sheetImportSeq;
 // 구글 직접 엔드포인트들
 let directUrls=[];
 // 수동으로 시트 이름만 입력한 경우(gid 없음): 이름 기반 URL만 사용 → 틀린 이름이면 폴백으로 엉뚱한 시트를 불러오지 않도록
@@ -1810,7 +1873,7 @@ directUrls.push(`https://docs.google.com/spreadsheets/d/${id}/pub?gid=${gid}&sin
 let urls=withProxies(directUrls);
 let label=sheetName?('"'+sheetName+'" 시트를'):'구글 시트를';
 showToast(label+' 불러오는 중... ⏳');
-(async()=>{
+return (async()=>{
 try{
 let text=await fetchFirstOk(urls,function(t){
 if(/^\s*</.test(t)||/<!DOCTYPE|<html/i.test(t.slice(0,200))) throw new Error('html returned');
@@ -1819,7 +1882,12 @@ if(/google\.visualization\.Query|\/\*O_o\*\/|"status"\s*:\s*"error"/.test(t.slic
 if(!t.trim()) throw new Error('empty');
 });
 let srcLabel=sheetName||('시트(gid '+gid+')');
+if(seq!==_sheetImportSeq||activeDeckId!==targetDeckId||words!==targetWords||wordEditorOpen()||noteEditorOpen()||confirmOpen()||editIndex>=0||lsEditIndex>=0){
+  showToast('단어장이나 수정 화면이 바뀌어 시트 불러오기를 취소했습니다. 원하는 단어장에서 다시 불러와 주세요.');
+  return {saved:false,cancelled:true};
+}
 let res=addFromCsvText(text,srcLabel);
+if(!res.saved) return res;
 let added=res.added,updated=res.updated,dups=res.dups||[];
 if(dups.length) recordDupes(dups);
 if(added>0||updated>0||dups.length>0){
@@ -1837,6 +1905,7 @@ alert((sheetName?('"'+sheetName+'" 시트에서 '):'')+(msg||'변경 없음')+'�
 }else{
 alert('변경된 내용이 없습니다. (시트가 이미 반영돼 있거나, 형식이 "영어, 뜻" 두 열인지 확인해 주세요)');
 }
+return res;
 }catch(e){
 alert('불러오기 실패! 다음을 확인해 주세요.\n\n① 시트 공유 설정이 "링크가 있는 모든 사용자(뷰어)"인지\n② 첫 번째 열은 영어, 두 번째 열은 뜻인지\n\n그래도 안 되면 [파일 → 공유 → 웹에 게시]로 게시한 링크를 사용해 보세요.');
 }
@@ -2476,8 +2545,10 @@ function noteList(w){
   let n=w&&w.note;
   if(!n) return [];
   let arr=Array.isArray(n)?n:[n];
-  return arr.filter(function(x){ return x&&((x.eng||'').trim()||(x.kor||'').trim()); })
-            .map(function(x){ return {eng:(x.eng||'').trim(),kor:(x.kor||'').trim()}; });
+  return arr.map(function(x){
+    if(typeof x==='string') return {eng:'',kor:x.trim()};
+    return {eng:x&&typeof x.eng==='string'?x.eng.trim():'',kor:x&&typeof x.kor==='string'?x.kor.trim():''};
+  }).filter(function(x){ return x.eng||x.kor; });
 }
 function addNoteRow(eng,kor){
   let box=document.getElementById('noteRows');
@@ -2603,30 +2674,34 @@ function openNoteEditor(){
 function closeNoteEditor(save_){
   let b=document.getElementById('noteBack');
   if(!b||!b.classList.contains('show')) return;
-  if(save_&&_noteTarget){
+  if(save_){
     let rows=[].slice.call(document.querySelectorAll('#noteRows .note-row')).map(function(r){
       let i=r.querySelectorAll('input');
       return {eng:i[0].value.trim(),kor:i[1].value.trim()};
     }).filter(function(n){ return n.eng||n.kor; });
     let w=_noteTarget;
-    if(rows.length){ w.note=rows; if(words[currentIndex]===w) cardReveal(true); playSound('memoSave'); showToast(rows.length>1?('메모 '+rows.length+'줄을 저장했어요 📝'):'메모를 저장했어요 📝'); }
-    else if(w.note){ delete w.note; showToast('메모를 지웠어요'); }
-    save(); renderCardNote(); fitCardExample();
+    if(!persistNoteEdit(w,rows)) return false;
+    render();
+    if(rows.length){ if(words[currentIndex]===w) cardReveal(true); playSound('memoSave'); showToast(rows.length>1?('메모 '+rows.length+'줄을 저장했어요 📝'):'메모를 저장했어요 📝'); }
+    else showToast('메모를 지웠어요');
+    renderCardNote(); fitCardExample();
   }
   _noteTarget=null;
   b.classList.remove('show');
 }
 function clearCardNote(){
-  if(_noteTarget) delete _noteTarget.note;
+  if(!noteEditorOpen()) return false;
+  if(!persistNoteEdit(_noteTarget,[])) return false;
+  render();
   playSound('delete');
   _noteTarget=null;
-  save(); renderCardNote();
+  renderCardNote(); fitCardExample();
   let b=document.getElementById('noteBack'); if(b) b.classList.remove('show');
   showToast('메모를 지웠어요');
 }
 document.addEventListener('keydown',function(e){
   if(!noteEditorOpen()) return;
-  if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); closeNoteEditor(true); }
+  if(e.key==='Enter'&&!e.isComposing&&e.keyCode!==229){ e.preventDefault(); e.stopPropagation(); closeNoteEditor(true); }
   else if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); closeNoteEditor(false); }
 },true);
 
@@ -4062,7 +4137,12 @@ if(!_dictLast) return;
 let {eng,kor}=_dictLast;
 if(duplicate(eng)) return showToast('이미 단어장에 있는 단어예요');
 words.push({eng:eng,kor:kor,example:'',wrong:false,mastered:false,wrongResult:null});
-save();
+if(!saveOnly()){
+  words.pop();invalidateWordIndex();
+  showToast('저장하지 못했습니다. 사전 검색 결과는 유지되니 다시 시도해 주세요.');
+  return false;
+}
+render();
 playSound('add');
 showToast('"'+eng+'" 단어를 추가했어요! ➕');
 renderGlobalSearch();

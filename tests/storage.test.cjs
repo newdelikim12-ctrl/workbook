@@ -67,7 +67,7 @@ test('invalid deck switch leaves state untouched',()=>{
 test('bulk add rejects existing and same-batch case-insensitive duplicates',()=>{
   const s=setup();s.run('words.push({eng:"cat",kor:"고양이"})');
   const rows=[['CAT','고양이'],['dog','개'],['Dog','강아지'],['bird','새'],['','빈칸']].map(([eng,kor])=>({querySelector:q=>({value:q==='.bulkEng'?eng:q==='.bulkKor'?kor:''})}));
-  Object.assign(s.context,{save(){},playSound(){},addBulkRow(){}});
+  Object.assign(s.context,{saveOnly(){return true;},render(){},playSound(){},addBulkRow(){}});
   s.context.document.querySelectorAll=()=>rows;s.context.document.getElementById=()=>({innerHTML:''});
   vm.runInContext(app.slice(app.indexOf('function bulkAdd('),app.indexOf('function parseCsv(')),s.context);
   s.run('bulkAdd()');assert.equal(s.run('words.map(w=>w.eng).join(",")'),'cat,dog,bird');
@@ -120,7 +120,7 @@ test('user edits persist immediately without running timers',()=>{
   assert.equal(JSON.parse(s.data.get('decks'))[0].words[0].eng,'now');
 });
 test('sheet reload retains all saved examples and does not remove manually added words',()=>{
-  const s=setup();Object.assign(s.context,{save(){}});
+  const s=setup();Object.assign(s.context,{saveOnly(){return true;},render(){}});
   vm.runInContext(app.slice(app.indexOf('function parseCsv('),app.indexOf('// ===== 중복 단어 기록')),s.context);
   vm.runInContext(app.slice(app.indexOf('function exList('),app.indexOf('function showExample(')),s.context);
   s.run('words.push({eng:"cat",kor:"고양이",example:["local one","local two"]},{eng:"manual",kor:"직접 추가"});addFromCsvText("cat,고양이,sheet example","Sheet")');
@@ -719,5 +719,502 @@ test('backup export failures preserve copyable JSON and explain the fallback ins
       assert.equal(s.clickedWhileAttached,true);assert.equal(s.timers.length,1);
       s.timers[0].fn();assert.deepEqual(s.revoked,['blob:backup']);
     }else assert.equal(s.timers.length,0);
+  }
+});
+
+function startupStorageFault(initial={},beforeRead=()=>{}){
+  const data=new Map(Object.entries(initial)),reads=new Map(),writes=[],alerts=[],timers=[];
+  const context=vm.createContext({
+    localStorage:{
+      getItem(key){
+        const count=(reads.get(key)||0)+1;reads.set(key,count);
+        beforeRead(key,count,data);
+        return data.get(key)??null;
+      },
+      setItem(key,value){data.set(key,String(value));writes.push(key);},
+      removeItem(key){data.delete(key);}
+    },
+    alert:message=>alerts.push(message),setTimeout:fn=>{timers.push(fn);},clearTimeout(){},
+    window:{addEventListener(){}},document:{addEventListener(){}},
+    invalidateWordIndex(){},showToast(){},console
+  });
+  vm.runInContext(app.slice(app.indexOf('// Storage access'),app.indexOf('// ===== 앱 자체 확인창')),context);
+  return {data,reads,writes,alerts,timers,context,run:source=>vm.runInContext(source,context)};
+}
+test('one failed startup deck read cannot overwrite existing examples and notes after reads recover',()=>{
+  const original=JSON.stringify([{id:'saved',name:'Saved',words:[{eng:'cat',kor:'고양이',
+    example:['First saved example.','Second saved example.'],note:[{eng:'kitten',kor:'헷갈리는 단어'}]}],stats:{},dupes:[]}]);
+  const initial={decks:original,activeDeckId:'saved'};
+  const s=startupStorageFault(initial,(key,count)=>{if(key==='decks'&&count===1)throw Error('temporary read failure');});
+  assert.deepEqual(Object.fromEntries(s.data),initial);
+  assert.equal(s.run('safeStorage.getItem("decks")'),original);
+  assert.equal(s.run('flushDecks()'),false);
+  s.run('words.push({eng:"new",kor:"새 단어"})');
+  assert.equal(s.run('saveDeckData()'),false);
+  assert.equal(s.run('safeStorage.removeItem("decks")'),false);
+  assert.deepEqual(Object.fromEntries(s.data),initial);
+  s.timers.forEach(fn=>fn());assert.equal(s.alerts.length,1);
+  const reopened=setup(Object.fromEntries(s.data));
+  assert.equal(reopened.run('words[0].example.length'),2);
+  assert.equal(reopened.run('words[0].note[0].eng'),'kitten');
+});
+test('a failed legacy read never creates empty persistent decks or removes the legacy originals',()=>{
+  const initial={
+    words:JSON.stringify([{eng:'cat',kor:'고양이',example:['one','two'],note:[{eng:'kitten',kor:'새끼'}],wrong:false,mastered:false}]),
+    stats:JSON.stringify({correct:3}),dupes:JSON.stringify([{eng:'cat',sheets:['Sheet'],n:1}]),activeDeckId:'legacy'
+  };
+  for(const failedKey of ['words','stats','dupes']){
+    const s=startupStorageFault(initial,(key,count)=>{if(key===failedKey&&count===1)throw Error('temporary read failure');});
+    assert.deepEqual(Object.fromEntries(s.data),initial);
+    assert.equal(s.data.has('decks'),false);
+    assert.equal(s.run('safeStorage.getItem('+JSON.stringify(failedKey)+')'),initial[failedKey]);
+    assert.equal(s.run('flushDecks()'),false);
+    assert.equal(s.run('saveDeckData()'),false);
+    assert.deepEqual(Object.fromEntries(s.data),initial);
+    assert.equal(s.writes.length,0);
+    const reopened=setup(Object.fromEntries(s.data));
+    assert.equal(reopened.run('words[0].example.join("|")'),'one|two');
+    assert.equal(reopened.run('words[0].note[0].eng'),'kitten');
+    assert.equal(reopened.run('stats.correct'),3);
+  }
+});
+test('the startup comparison baseline is the loaded deck snapshot even when another window saves during initialization',()=>{
+  const original=JSON.stringify([{id:'saved',name:'Saved',words:[{eng:'cat',kor:'고양이',example:['one','two']}],stats:{},dupes:[]}]);
+  const updated=JSON.parse(original);updated[0].words.push({eng:'dog',kor:'다른 창에서 추가'});
+  const latest=JSON.stringify(updated);
+  const s=startupStorageFault({decks:original,activeDeckId:'saved'},(key,count,data)=>{
+    if(key==='activeDeckId'&&count===1)data.set('decks',latest);
+  });
+  assert.equal(s.run('words.length'),1);
+  assert.equal(s.run('_diskDecks'),original);
+  assert.equal(s.run('flushDecks()'),false);
+  assert.equal(s.data.get('decks'),latest);
+  s.run('words[0].example.push("Local addition")');
+  assert.equal(s.run('saveDeckData()'),false);
+  assert.equal(s.data.get('decks'),latest);
+  assert.equal(JSON.parse(s.data.get('decks'))[0].words.length,2);
+  const conflict=[...s.data.keys()].find(key=>key.startsWith('workbook.unsaved.'));
+  assert.ok(conflict);
+  assert.equal(JSON.parse(s.data.get(conflict))[0].words[0].example.at(-1),'Local addition');
+});
+test('an interrupted fresh migration cannot replace a deck saved by another window',()=>{
+  const latest=JSON.stringify([{id:'other',name:'Other window',words:[{eng:'cat',kor:'고양이',note:[{eng:'kitten',kor:'새끼'}]}],stats:{},dupes:[]}]);
+  const s=startupStorageFault({},(key,count,data)=>{if(key==='decks'&&count===2)data.set('decks',latest);});
+  assert.equal(s.data.get('decks'),latest);
+  assert.equal(s.run('flushDecks()'),false);
+  assert.equal(s.data.get('decks'),latest);
+  assert.equal(JSON.parse(s.data.get('decks'))[0].words[0].note[0].eng,'kitten');
+});
+test('successful first migration records its written snapshot and saves later registration immediately',()=>{
+  const s=startupStorageFault();
+  assert.equal(s.run('_diskDecks'),s.data.get('decks'));
+  assert.equal(s.run('flushDecks()'),true);
+  s.run('words.push({eng:"cat",kor:"고양이",example:["one","two"],note:[{eng:"kitten",kor:"새끼"}]})');
+  assert.equal(s.run('saveDeckData()'),true);
+  const reopened=setup(Object.fromEntries(s.data));
+  assert.equal(reopened.run('words[0].example.join("|")'),'one|two');
+  assert.equal(reopened.run('words[0].note[0].eng'),'kitten');
+});
+
+function noteEditorSetup(note=[{eng:'old',kor:'기존 메모'}]){
+  const word={eng:'cat',kor:'고양이',example:['First.','Second.']};
+  if(note!==undefined) word.note=note;
+  const s=setup({decks:JSON.stringify([{id:'a',name:'A',words:[word],stats:{},dupes:[]}]),activeDeckId:'a'});
+  installEditHelpers(s);
+  const rows=[],toasts=[],sounds=[],listeners={},classes=new Set();
+  const modal={classList:{contains:x=>classes.has(x),add:x=>classes.add(x),remove:x=>classes.delete(x)}};
+  const box={set innerHTML(value){rows.length=0;},querySelector:()=>rows[0]?.inputs[0]};
+  const elements={noteBack:modal,noteRows:box,noteTitle:{},noteDelBtn:{style:{}}};
+  s.context.document.getElementById=id=>elements[id];
+  s.context.document.querySelectorAll=()=>rows;
+  s.context.document.addEventListener=(name,fn)=>listeners[name]=fn;
+  Object.assign(s.context,{currentIndex:0,_noteTarget:null,showToast:m=>toasts.push(m),playSound:m=>sounds.push(m),
+    renderCardNote(){},fitCardExample(){},cardReveal(){},
+    addNoteRow(eng='',kor=''){
+      const inputs=[eng,kor].map(value=>({value,focus(){}}));
+      rows.push({inputs,querySelectorAll:()=>inputs});
+    }});
+  vm.runInContext(app.slice(app.indexOf('function noteList('),app.indexOf('function addNoteRow(')),s.context);
+  vm.runInContext(app.slice(app.indexOf('function noteEditorOpen('),app.indexOf('function getDeck(')),s.context);
+  s.run('openNoteEditor()');sounds.length=0;
+  return {...s,rows,toasts,sounds,listeners,modal,setRows(notes){
+    rows.length=0;notes.forEach(n=>s.context.addNoteRow(n.eng,n.kor));
+  }};
+}
+test('note save failures retain all input rows and the editor without claiming success',()=>{
+  for(const failure of ['quota','conflict']){
+    const s=noteEditorSetup(),original=s.run('words[0].note');
+    s.setRows([{eng:'kitten',kor:'새끼 고양이'},{eng:'catnap',kor:'짧은 낮잠'}]);
+    let expectedDisk=s.data.get('decks');
+    if(failure==='quota') s.context.localStorage.setItem=()=>{throw Error('quota');};
+    else {
+      const latest=JSON.parse(expectedDisk);latest[0].words[0].note=[{eng:'other',kor:'다른 창 메모'}];
+      expectedDisk=JSON.stringify(latest);s.data.set('decks',expectedDisk);
+    }
+    assert.equal(s.run('closeNoteEditor(true)'),false);
+    assert.equal(s.run('noteEditorOpen()'),true);assert.equal(s.run('_noteTarget===words[0]'),true);
+    assert.equal(s.run('words[0].note'),original);assert.equal(s.data.get('decks'),expectedDisk);
+    assert.deepEqual(s.rows.map(r=>r.inputs.map(i=>i.value)),[['kitten','새끼 고양이'],['catnap','짧은 낮잠']]);
+    assert.deepEqual(s.sounds,[]);assert.ok(s.toasts.some(m=>m.includes('저장하지 못했습니다')));
+    assert.equal(s.toasts.some(m=>m.includes('저장했어요')),false);
+  }
+});
+test('failed note additions and deletions restore the exact previous note property',()=>{
+  for(const action of ['clearCardNote()','closeNoteEditor(true)']){
+    const s=noteEditorSetup(),original=s.run('words[0].note'),disk=s.data.get('decks');
+    s.setRows([]);s.context.localStorage.setItem=()=>{throw Error('quota');};
+    assert.equal(s.run(action),false);assert.equal(s.run('words[0].note'),original);
+    assert.equal(s.data.get('decks'),disk);assert.equal(s.run('noteEditorOpen()'),true);
+    assert.deepEqual(s.sounds,[]);assert.equal(s.toasts.some(m=>m.includes('지웠어요')),false);
+  }
+  const s=noteEditorSetup(undefined);s.run('delete words[0].note');
+  s.setRows([{eng:'kitten',kor:'새끼 고양이'}]);s.context.localStorage.setItem=()=>{throw Error('quota');};
+  assert.equal(s.run('closeNoteEditor(true)'),false);
+  assert.equal(s.run('Object.hasOwn(words[0],"note")'),false);assert.equal(s.run('noteEditorOpen()'),true);
+});
+test('saved multiple notes persist immediately and remain through repeated reloads',()=>{
+  const notes=[{eng:'kitten',kor:'새끼 고양이'},{eng:'catnap',kor:'짧은 낮잠'}];
+  const s=noteEditorSetup();s.setRows(notes);s.run('closeNoteEditor(true)');
+  assert.equal(s.run('noteEditorOpen()'),false);assert.equal(s.run('_noteTarget'),null);
+  assert.deepEqual(JSON.parse(s.data.get('decks'))[0].words[0].note,notes);
+  assert.deepEqual(s.sounds,['memoSave']);assert.match(s.toasts[0],/2줄을 저장/);
+  s.timers.forEach(fn=>fn());let state=Object.fromEntries(s.data);
+  for(let i=0;i<3;i++){
+    const again=setup(state);assert.deepEqual(JSON.parse(again.run('JSON.stringify(words[0].note)')),notes);
+    assert.equal(again.run('words[0].example.join("|")'),'First.|Second.');
+    again.run('flushDecks()');state=Object.fromEntries(again.data);
+  }
+});
+test('explicit note deletion persists and cannot delete a different or absent editor target',()=>{
+  const s=noteEditorSetup();s.run('clearCardNote()');
+  assert.equal(s.run('noteEditorOpen()'),false);assert.equal(s.run('_noteTarget'),null);
+  assert.equal(Object.hasOwn(JSON.parse(s.data.get('decks'))[0].words[0],'note'),false);
+  assert.equal(setup(Object.fromEntries(s.data)).run('words[0].note'),undefined);
+  const missing=noteEditorSetup(),disk=missing.data.get('decks');missing.run('_noteTarget=null');
+  assert.equal(missing.run('clearCardNote()'),false);assert.equal(missing.data.get('decks'),disk);
+  assert.equal(missing.run('words[0].note[0].eng'),'old');assert.equal(missing.run('noteEditorOpen()'),true);
+});
+test('saving or deleting notes for a removed or replaced word keeps the draft open',()=>{
+  for(const action of ['closeNoteEditor(true)','clearCardNote()']){
+    const s=noteEditorSetup();s.setRows([{eng:'kitten',kor:'초안'}]);
+    s.run('words.splice(0,1,{eng:"cat",kor:"새 단어",note:[{eng:"new",kor:"새 메모"}]});saveOnly()');
+    const disk=s.data.get('decks');
+    assert.equal(s.run(action),false);assert.equal(s.run('noteEditorOpen()'),true);
+    assert.equal(s.run('words[0].note[0].eng'),'new');assert.equal(s.data.get('decks'),disk);
+    assert.equal(s.rows[0].inputs[1].value,'초안');assert.deepEqual(s.sounds,[]);
+    assert.match(s.toasts[0],/단어가 변경/);
+  }
+});
+test('note Enter ignores Korean composition and still saves ordinary Enter',()=>{
+  const s=noteEditorSetup();s.setRows([{eng:'',kor:'헷갈리는 표현'}]);
+  let prevented=0,stopped=0;
+  const enter={key:'Enter',preventDefault(){prevented++;},stopPropagation(){stopped++;}};
+  s.listeners.keydown({...enter,isComposing:true,keyCode:13});
+  s.listeners.keydown({...enter,isComposing:false,keyCode:229});
+  assert.equal(s.run('noteEditorOpen()'),true);assert.equal(s.run('words[0].note[0].eng'),'old');
+  assert.equal(prevented,0);assert.equal(stopped,0);assert.deepEqual(s.sounds,[]);
+  s.listeners.keydown({...enter,isComposing:false,keyCode:13});
+  assert.equal(s.run('noteEditorOpen()'),false);assert.equal(prevented,1);assert.equal(stopped,1);
+  assert.equal(JSON.parse(s.data.get('decks'))[0].words[0].note[0].kor,'헷갈리는 표현');
+});
+test('legacy text notes remain visible in the editor and survive saving and reload',()=>{
+  const text='  헷갈리는 단어와 표현을 적어 둔 메모  ',s=noteEditorSetup(text);
+  assert.equal(s.rows.length,1);assert.equal(s.rows[0].inputs[0].value,'');
+  assert.equal(s.rows[0].inputs[1].value,text.trim());
+  s.run('closeNoteEditor(true)');
+  const again=setup(Object.fromEntries(s.data));
+  assert.equal(again.run('words[0].note[0].kor'),text.trim());
+  assert.equal(s.run('noteList({note:["한글 메모",{eng:"word",kor:"뜻"},null]}).map(n=>n.kor).join("|")'),'한글 메모|뜻');
+});
+
+function registrationSetup(initial={}){
+  const s=setup(initial),rows=[],toasts=[],sounds=[];
+  let renders=0,searchRenders=0;
+  installEditHelpers(s);
+  const elements={eng:{value:''},kor:{value:''},exampleInput:{value:''},
+    sheetUrl:{value:'https://docs.google.com/spreadsheets/d/saved-sheet/edit#gid=0'},
+    bulkRows:{get innerHTML(){return '';},set innerHTML(value){rows.length=0;}}};
+  Object.assign(s.context,{showToast:message=>toasts.push(message),playSound:name=>sounds.push(name),
+    render:()=>renders++,renderGlobalSearch:()=>searchRenders++,
+    addBulkRow(eng='',kor='',example=''){
+      const inputs={'.bulkEng':{value:eng},'.bulkKor':{value:kor},'.bulkEx':{value:example}};
+      rows.push({inputs,querySelector:selector=>inputs[selector]});
+    }});
+  s.context.document.getElementById=id=>elements[id];
+  s.context.document.querySelectorAll=()=>rows;
+  vm.runInContext(app.slice(app.indexOf('function duplicate('),app.indexOf('function addBulkRow(')),s.context);
+  vm.runInContext(app.slice(app.indexOf('function bulkAdd('),app.indexOf('// ===== 중복 단어 기록')),s.context);
+  vm.runInContext(app.slice(app.indexOf('function dictAddWord('),app.indexOf('// 통일된 단어 행 카드')),s.context);
+  return {...s,rows,toasts,sounds,elements,get renders(){return renders;},get searchRenders(){return searchRenders;}};
+}
+function failRegistrationStorage(s,failure){
+  if(failure==='quota'){
+    s.context.localStorage.setItem=()=>{throw Error('quota');};
+    return s.data.get('decks');
+  }
+  const latest=JSON.parse(s.data.get('decks'));
+  latest[0].words.push({eng:'other-window',kor:'다른 창에서 저장한 단어',example:['Saved elsewhere.']});
+  const raw=JSON.stringify(latest);s.data.set('decks',raw);return raw;
+}
+test('failed bulk registration preserves every input and never claims that unsaved words were added',()=>{
+  for(const failure of ['quota','conflict']){
+    const s=registrationSetup();
+    s.run('words.push({eng:"cat",kor:"고양이",example:["one","two"],note:[{eng:"kitten",kor:"새끼"}]});saveOnly()');
+    s.context.addBulkRow(' dog ',' 개 ',' First example. ');
+    s.context.addBulkRow('bird','새','Second example.');
+    const inputs=s.rows.map(row=>Object.values(row.inputs).map(input=>input.value));
+    const original=s.run('words[0]'),disk=failRegistrationStorage(s,failure);
+    assert.equal(s.run('bulkAdd()'),false);
+    assert.equal(s.run('words.length'),1);assert.equal(s.run('words[0]'),original);
+    assert.equal(s.data.get('decks'),disk);
+    assert.deepEqual(s.rows.map(row=>Object.values(row.inputs).map(input=>input.value)),inputs);
+    assert.equal(s.renders,0);assert.deepEqual(s.sounds,[]);
+    assert.ok(s.toasts.some(message=>message.includes('저장하지 못했습니다')));
+    assert.equal(s.toasts.some(message=>message.includes('추가했어요')),false);
+  }
+});
+test('failed dictionary registration leaves the lookup available and does not report success',()=>{
+  for(const failure of ['quota','conflict']){
+    const s=registrationSetup();s.context._dictLast={eng:'cat',kor:'고양이'};
+    const lookup=s.context._dictLast,disk=failRegistrationStorage(s,failure);
+    assert.equal(s.run('dictAddWord()'),false);
+    assert.equal(s.run('words.length'),0);assert.equal(s.context._dictLast,lookup);
+    assert.equal(s.data.get('decks'),disk);assert.equal(s.renders,0);assert.equal(s.searchRenders,0);
+    assert.deepEqual(s.sounds,[]);assert.equal(s.toasts.some(message=>message.includes('추가했어요')),false);
+    assert.ok(s.toasts.some(message=>message.includes('저장하지 못했습니다')));
+  }
+});
+test('bulk and dictionary registration persist immediately and can be retried after a quota error',()=>{
+  const s=registrationSetup();s.context.addBulkRow('cat','고양이','Saved example.');
+  const write=s.context.localStorage.setItem;s.context.localStorage.setItem=()=>{throw Error('quota');};
+  assert.equal(s.run('bulkAdd()'),false);
+  s.context.localStorage.setItem=write;s.run('bulkAdd()');
+  assert.equal(s.rows.length,3);assert.ok(s.rows.every(row=>Object.values(row.inputs).every(input=>input.value==='')));
+  s.context._dictLast={eng:'dog',kor:'개'};s.run('dictAddWord()');
+  assert.deepEqual(JSON.parse(s.data.get('decks'))[0].words.map(word=>word.eng),['cat','dog']);
+  const again=setup(Object.fromEntries(s.data));
+  assert.equal(again.run('words[0].example'),'Saved example.');assert.equal(again.run('words[1].kor'),'개');
+  assert.deepEqual(s.sounds,['add','add']);assert.equal(s.searchRenders,1);
+});
+test('failed CSV imports restore exact existing fields and references, including absent source and examples',()=>{
+  for(const failure of ['quota','conflict']){
+    const s=registrationSetup();
+    s.run('words.push({eng:"cat",kor:"고양이",example:["one","two"],note:[{eng:"kitten",kor:"새끼"}],wrong:true,mastered:true,custom:{value:3}},{eng:"dog",kor:"개"});saveOnly();var originalWords=words.slice(),originalExample=words[0].example,originalNote=words[0].note,originalCustom=words[0].custom');
+    const original=s.run('JSON.stringify(words)'),disk=failRegistrationStorage(s,failure);
+    const result=s.run('addFromCsvText("cat,수정된 뜻,new example\\ncat,수정된 뜻,new example\\ndog,강아지,dog example\\nbird,새,bird example","New sheet")');
+    assert.deepEqual(JSON.parse(JSON.stringify(result)),{added:0,updated:0,dups:[],saved:false});
+    assert.equal(s.run('JSON.stringify(words)'),original);assert.equal(s.data.get('decks'),disk);
+    assert.equal(s.run('words.every((w,i)=>w===originalWords[i])'),true);
+    assert.equal(s.run('words[0].example===originalExample&&words[0].note===originalNote&&words[0].custom===originalCustom'),true);
+    assert.equal(s.run('Object.hasOwn(words[0],"src")||Object.hasOwn(words[1],"src")||Object.hasOwn(words[1],"example")'),false);
+    assert.equal(s.renders,0);assert.deepEqual(s.sounds,[]);
+    assert.ok(s.toasts.some(message=>message.includes('저장하지 못해')));
+  }
+});
+test('CSV merges retain all local examples, notes, manual words and learning state through repeated reloads',()=>{
+  const s=registrationSetup(),notes=[{eng:'kitten',kor:'새끼 고양이'},{eng:'catnap',kor:'짧은 낮잠'}];
+  s.context.savedNotes=notes;
+  s.run('words.push({eng:"cat",kor:"고양이",example:["First local.","Second local."],note:savedNotes,wrong:true,mastered:true,wrongResult:"local",src:"Old sheet"},{eng:"manual",kor:"직접 추가",note:"내 메모"});saveOnly()');
+  const result=s.run('addFromCsvText("cat,새 뜻,Sheet example.\\nbird,새,Bird example.","New sheet")');
+  assert.equal(result.saved,true);assert.equal(result.added,1);assert.equal(result.updated,2);
+  assert.equal(s.renders,1);
+  let state=Object.fromEntries(s.data);
+  for(let i=0;i<3;i++){
+    const again=setup(state);
+    assert.equal(again.run('words.map(w=>w.eng).join(",")'),'cat,manual,bird');
+    assert.equal(again.run('words[0].example.join("|")'),'First local.|Second local.|Sheet example.');
+    assert.deepEqual(JSON.parse(again.run('JSON.stringify(words[0].note)')),notes);
+    assert.equal(again.run('words[0].wrong&&words[0].mastered'),true);
+    assert.equal(again.run('words[0].wrongResult'),'local');assert.equal(again.run('words[0].src'),'New sheet');
+    assert.equal(again.run('words[1].note'),'내 메모');again.run('flushDecks()');state=Object.fromEntries(again.data);
+  }
+});
+test('a removed word or a word from another deck cannot be silently edited',()=>{
+  const s=registrationSetup();
+  s.run('words.push({eng:"cat",kor:"고양이",example:["Saved."]});saveOnly();var removedTarget=words[0];words.splice(0,1,{eng:"dog",kor:"개"});saveOnly()');
+  const disk=s.data.get('decks'),writes=s.writes.length;
+  assert.equal(s.run('persistWordEdit(removedTarget,"cat","새 뜻",["Unsaved."])'),false);
+  assert.equal(s.run('removedTarget.kor'),'고양이');assert.equal(s.run('removedTarget.example[0]'),'Saved.');
+  assert.equal(s.run('words[0].eng'),'dog');assert.equal(s.data.get('decks'),disk);assert.equal(s.writes.length,writes);
+  assert.ok(s.toasts.some(message=>message.includes('대상이 바뀌어')));
+});
+test('legacy arrays of text notes are normalized without losing their content on reload',()=>{
+  const initial={decks:JSON.stringify([{id:'a',name:'A',words:[{eng:'cat',kor:'고양이',
+    note:['한글 메모',{eng:'kitten',kor:'새끼 고양이'},null,42,'두 번째 메모']},
+    {eng:'dog',kor:'개',note:'원래 문자열 메모'}],stats:{},dupes:[]}]),activeDeckId:'a'};
+  const expected=[{eng:'',kor:'한글 메모'},{eng:'kitten',kor:'새끼 고양이'},{eng:'',kor:'두 번째 메모'}];
+  const s=setup(initial);assert.deepEqual(JSON.parse(s.run('JSON.stringify(words[0].note)')),expected);
+  assert.equal(s.run('saveDeckData()'),true);
+  const again=setup(Object.fromEntries(s.data));
+  assert.deepEqual(JSON.parse(again.run('JSON.stringify(words[0].note)')),expected);
+  assert.equal(again.run('words[1].note'),'원래 문자열 메모');
+});
+
+function sheetImportSetup(){
+  const s=registrationSetup({decks:JSON.stringify([
+    {id:'a',name:'A',words:[{eng:'cat',kor:'고양이',example:['First.','Second.'],note:[{eng:'kitten',kor:'새끼'}]}],stats:{},dupes:[]},
+    {id:'b',name:'B',words:[{eng:'dog',kor:'개'}],stats:{},dupes:[]}
+  ]),activeDeckId:'a'}),requests=[],dialogs={word:false,note:false,confirm:false};
+  Object.assign(s.context,{lsEditIndex:-1,wordEditorOpen:()=>dialogs.word,noteEditorOpen:()=>dialogs.note,
+    confirmOpen:()=>dialogs.confirm,withProxies:urls=>({direct:urls,proxied:[]}),
+    fetchFirstOk(urls,validate){
+      return new Promise((resolve,reject)=>requests.push({urls,resolve(text){try{validate(text);resolve(text);}catch(error){reject(error);}},reject}));
+    }});
+  vm.runInContext(app.slice(app.indexOf('function saveDupes('),app.indexOf('function removeDupe(')),s.context);
+  vm.runInContext(app.slice(app.indexOf('let _sheetImportSeq='),app.indexOf('let currentIndex=')),s.context);
+  return {...s,requests,dialogs,get renders(){return s.renders;},get searchRenders(){return s.searchRenders;}};
+}
+test('pending sheet imports cannot modify another deck or a replaced array in the same deck',async()=>{
+  for(const replacement of ['deck','array']){
+    const s=sheetImportSetup(),pending=s.run('importGoogleSheet({sheet:"Sheet"})');
+    assert.ok(pending&&typeof pending.then==='function');
+    if(replacement==='deck')s.run('activeDeckId="b";words=decks[1].words;stats=decks[1].stats;dupes=decks[1].dupes');
+    else s.run('words=words.slice();decks[0].words=words');
+    const memory=s.run('JSON.stringify(decks)'),disk=s.data.get('decks');
+    s.requests[0].resolve('cat,새 뜻,Remote example.\nbird,새,Bird example.');
+    const result=await pending;
+    assert.equal(result.cancelled,true);assert.equal(result.saved,false);
+    assert.equal(s.run('JSON.stringify(decks)'),memory);assert.equal(s.data.get('decks'),disk);
+    assert.deepEqual(s.sounds,[]);assert.deepEqual(s.alerts,[]);assert.equal(s.renders,0);
+    assert.equal(s.toasts.some(message=>message.includes('📥')),false);
+  }
+});
+test('opening any editor or confirmation cancels a pending sheet import without touching drafts',async()=>{
+  for(const editing of ['word','note','confirm','inline','list']){
+    const s=sheetImportSetup(),pending=s.run('importGoogleSheet({sheet:"Sheet"})');
+    if(editing==='inline')s.run('editIndex=0');
+    else if(editing==='list')s.context.lsEditIndex=0;
+    else s.dialogs[editing]=true;
+    const memory=s.run('JSON.stringify(decks)'),disk=s.data.get('decks');
+    s.requests[0].resolve('cat,새 뜻,Remote example.');const result=await pending;
+    assert.equal(result.cancelled,true,editing);
+    assert.equal(s.run('JSON.stringify(decks)'),memory,editing);assert.equal(s.data.get('decks'),disk,editing);
+    assert.deepEqual(s.sounds,[],editing);assert.deepEqual(s.alerts,[],editing);
+    if(editing==='inline')assert.equal(s.run('editIndex'),0);
+    else if(editing==='list')assert.equal(s.context.lsEditIndex,0);
+    else assert.equal(s.dialogs[editing],true);
+  }
+});
+test('only the newest sheet import can apply, whichever network response arrives first',async()=>{
+  for(const order of ['new-first','old-first']){
+    const s=sheetImportSetup();
+    const old=s.run('importGoogleSheet({sheet:"Old"})'),latest=s.run('importGoogleSheet({sheet:"Latest"})');
+    if(order==='old-first'){
+      s.requests[0].resolve('cat,오래된 응답,Old remote.');assert.equal((await old).cancelled,true);
+      assert.equal(s.run('words[0].kor'),'고양이');
+    }
+    s.requests[1].resolve('cat,최신 응답,Latest remote.');await latest;
+    if(order==='new-first'){
+      s.requests[0].resolve('cat,오래된 응답,Old remote.');assert.equal((await old).cancelled,true);
+    }
+    assert.equal(s.run('words[0].kor'),'최신 응답');
+    assert.equal(s.run('words[0].example.join("|")'),'First.|Second.|Latest remote.');
+    assert.equal(JSON.parse(s.data.get('decks'))[0].words[0].src,'Latest');
+    assert.equal(s.alerts.length,1);assert.match(s.alerts[0],/Latest/);assert.deepEqual(s.sounds,['add']);
+  }
+});
+test('sheet import save failures preserve existing data and never trigger success alerts or audio',async()=>{
+  for(const failure of ['quota','conflict']){
+    const s=sheetImportSetup(),disk=failRegistrationStorage(s,failure),memory=s.run('JSON.stringify(words)');
+    const pending=s.run('importGoogleSheet({sheet:"Sheet"})');
+    s.requests[0].resolve('cat,새 뜻,Unsaved example.\ncat,새 뜻,Unsaved example.\nbird,새,Unsaved bird.');
+    const result=await pending;
+    assert.equal(result.saved,false);assert.equal(result.added,0);assert.equal(result.updated,0);
+    assert.equal(s.run('JSON.stringify(words)'),memory);assert.equal(s.data.get('decks'),disk);
+    assert.equal(s.run('dupes.length'),0);assert.deepEqual(s.sounds,[]);assert.deepEqual(s.alerts,[]);
+    assert.equal(s.renders,0);assert.equal(s.toasts.some(message=>message.includes('📥')),false);
+    assert.equal(s.elements.sheetUrl.value,'https://docs.google.com/spreadsheets/d/saved-sheet/edit#gid=0');
+  }
+});
+
+function wordEditorSetup(){
+  const s=registrationSetup({decks:JSON.stringify([{id:'a',name:'A',words:[{eng:'cat',kor:'고양이',
+    example:['First.','Second.'],note:[{eng:'kitten',kor:'새끼'}]}],stats:{},dupes:[]}]),activeDeckId:'a'});
+  const examples=[],classes=new Set(),modal={classList:{contains:name=>classes.has(name),
+    add:name=>classes.add(name),remove:name=>classes.delete(name)}};
+  Object.assign(s.elements,{wordEditBack:modal,wordEditEng:{value:''},wordEditKor:{value:''},
+    wordEditExRows:{set innerHTML(value){examples.length=0;},querySelectorAll:()=>examples},
+    front:{innerText:''},back:{innerText:''},card:{classList:{contains:()=>false}}});
+  s.context.document.querySelectorAll=selector=>selector==='#wordEditExRows textarea'?examples:s.rows;
+  Object.assign(s.context,{currentIndex:0,cardDir:'e2k',confirmOpen:()=>false,noteEditorOpen:()=>false,
+    addExRow(value=''){const input={value,focus(){},scrollIntoView(){}};examples.push(input);return input;},
+    showExample(){},fitCardExample(){}});
+  vm.runInContext(app.slice(app.indexOf('function wordEditorOpen('),app.indexOf('function noteEditorOpen(')),s.context);
+  s.run('openWordEditor(false)');s.sounds.length=0;
+  return {...s,examples,modal,get renders(){return s.renders;},get searchRenders(){return s.searchRenders;}};
+}
+test('failed card example edits keep the modal and all typed examples available',()=>{
+  for(const failure of ['quota','conflict']){
+    const s=wordEditorSetup(),disk=failRegistrationStorage(s,failure);
+    s.elements.wordEditKor.value='새 뜻';s.examples[0].value='Edited first.';s.context.addExRow('Third draft.');
+    s.run('closeWordEditor(true)');
+    assert.equal(s.run('wordEditorOpen()'),true);assert.equal(s.run('_editTarget===words[0]'),true);
+    assert.equal(s.run('words[0].kor'),'고양이');assert.equal(s.run('words[0].example.join("|")'),'First.|Second.');
+    assert.equal(s.elements.wordEditKor.value,'새 뜻');assert.deepEqual(s.examples.map(input=>input.value),['Edited first.','Second.','Third draft.']);
+    assert.equal(s.data.get('decks'),disk);assert.deepEqual(s.sounds,[]);
+    assert.equal(s.toasts.some(message=>message.includes('저장했어요')||message.includes('수정했어요')),false);
+  }
+});
+test('card example saves and later CSV merges keep multiple examples and confusing-word notes after reload',()=>{
+  const s=wordEditorSetup();s.examples[0].value='Edited first.';s.context.addExRow('Third example.');
+  s.run('closeWordEditor(true)');assert.equal(s.run('wordEditorOpen()'),false);
+  assert.equal(s.run('_editTarget'),null);assert.deepEqual(s.sounds,['memoSave']);
+  let again=setup(Object.fromEntries(s.data));
+  assert.equal(again.run('words[0].example.join("|")'),'Edited first.|Second.|Third example.');
+  assert.equal(again.run('words[0].note[0].eng'),'kitten');
+  s.run('addFromCsvText("cat,고양이,Sheet example.","Sheet")');
+  again=setup(Object.fromEntries(s.data));
+  assert.equal(again.run('words[0].example.join("|")'),'Edited first.|Second.|Third example.|Sheet example.');
+  assert.equal(again.run('words[0].note[0].eng'),'kitten');
+});
+test('a card example draft for a replaced target stays open and cannot alter the replacement word',()=>{
+  const s=wordEditorSetup();s.examples[0].value='Draft for previous word.';
+  s.run('words.splice(0,1,{eng:"cat",kor:"교체한 단어",example:["Replacement."]});saveOnly()');
+  const disk=s.data.get('decks');s.run('closeWordEditor(true)');
+  assert.equal(s.run('wordEditorOpen()'),true);assert.equal(s.examples[0].value,'Draft for previous word.');
+  assert.equal(s.run('words[0].kor'),'교체한 단어');assert.equal(s.run('words[0].example[0]'),'Replacement.');
+  assert.equal(s.data.get('decks'),disk);assert.deepEqual(s.sounds,[]);
+});
+test('persistent storage requests are best effort and never turn successful local saves into failures',async()=>{
+  for(const mode of ['already-persistent','granted','denied','async-error','sync-error','unavailable']){
+    const s=setup(),calls=[];
+    const storage=mode==='unavailable'?{}:{
+      persisted(){calls.push('persisted');if(mode==='sync-error')throw Error('unsupported');return Promise.resolve(mode==='already-persistent');},
+      persist(){calls.push('persist');return mode==='async-error'?Promise.reject(Error('denied')):Promise.resolve(mode==='granted');}
+    };
+    s.context.navigator={storage};
+    s.run('words.push({eng:"cat",kor:"고양이",example:["Saved."],note:[{eng:"kitten",kor:"새끼"}]})');
+    assert.equal(s.run('saveDeckData()'),true,mode);
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(JSON.parse(s.data.get('decks'))[0].words[0].example[0],'Saved.',mode);
+    assert.equal(s.alerts.length,0,mode);assert.equal(s.run('saveDeckData()'),true,mode);
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.deepEqual(calls,mode==='unavailable'?[]:mode==='already-persistent'||mode==='sync-error'?['persisted']:['persisted','persist'],mode);
+  }
+});
+
+test('resaving unchanged notes detects another window deleting or replacing them and keeps the draft open',()=>{
+  for(const externalChange of ['delete','replace']){
+    const s=noteEditorSetup();assert.equal(s.run('saveOnly()'),true);
+    const original=s.run('words[0].note'),inputs=s.rows.map(row=>row.inputs.map(input=>input.value));
+    const latest=JSON.parse(s.data.get('decks'));
+    if(externalChange==='delete')delete latest[0].words[0].note;
+    else latest[0].words[0].note=[{eng:'other-window',kor:'다른 창에서 변경한 메모'}];
+    const disk=JSON.stringify(latest);s.data.set('decks',disk);
+    // An unchanged background page remains quiet, but pressing Save must verify current disk data.
+    const timers=s.timers.length,writes=s.writes.length;
+    assert.equal(s.run('flushDecks()'),true);
+    assert.equal(s.data.get('decks'),disk);assert.equal(s.timers.length,timers);assert.equal(s.writes.length,writes);
+    assert.equal(s.run('closeNoteEditor(true)'),false,externalChange);
+    assert.equal(s.run('noteEditorOpen()'),true,externalChange);
+    assert.equal(s.run('_noteTarget===words[0]'),true,externalChange);
+    assert.equal(s.run('words[0].note'),original,externalChange);
+    assert.deepEqual(s.rows.map(row=>row.inputs.map(input=>input.value)),inputs,externalChange);
+    assert.equal(s.data.get('decks'),disk,externalChange);assert.deepEqual(s.sounds,[],externalChange);
+    assert.equal(s.toasts.some(message=>message.includes('저장했어요')||message.includes('지웠어요')),false,externalChange);
+    assert.ok(s.toasts.some(message=>message.includes('저장하지 못했습니다')),externalChange);
+    const reopened=setup(Object.fromEntries(s.data));
+    if(externalChange==='delete')assert.equal(reopened.run('words[0].note'),undefined);
+    else assert.equal(reopened.run('words[0].note[0].eng'),'other-window');
   }
 });
