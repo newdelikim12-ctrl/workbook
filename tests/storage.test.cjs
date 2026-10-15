@@ -1054,9 +1054,9 @@ function sheetImportSetup(){
   const s=registrationSetup({decks:JSON.stringify([
     {id:'a',name:'A',words:[{eng:'cat',kor:'고양이',example:['First.','Second.'],note:[{eng:'kitten',kor:'새끼'}]}],stats:{},dupes:[]},
     {id:'b',name:'B',words:[{eng:'dog',kor:'개'}],stats:{},dupes:[]}
-  ]),activeDeckId:'a'}),requests=[],dialogs={word:false,note:false,confirm:false};
+  ]),activeDeckId:'a'}),requests=[],dialogs={word:false,note:false,confirm:false,move:false};
   Object.assign(s.context,{lsEditIndex:-1,wordEditorOpen:()=>dialogs.word,noteEditorOpen:()=>dialogs.note,
-    confirmOpen:()=>dialogs.confirm,withProxies:urls=>({direct:urls,proxied:[]}),
+    confirmOpen:()=>dialogs.confirm,moveWordsOpen:()=>dialogs.move,withProxies:urls=>({direct:urls,proxied:[]}),
     fetchFirstOk(urls,validate){
       return new Promise((resolve,reject)=>requests.push({urls,resolve(text){try{validate(text);resolve(text);}catch(error){reject(error);}},reject}));
     }});
@@ -1080,7 +1080,7 @@ test('pending sheet imports cannot modify another deck or a replaced array in th
   }
 });
 test('opening any editor or confirmation cancels a pending sheet import without touching drafts',async()=>{
-  for(const editing of ['word','note','confirm','inline','list']){
+  for(const editing of ['word','note','confirm','move','inline','list']){
     const s=sheetImportSetup(),pending=s.run('importGoogleSheet({sheet:"Sheet"})');
     if(editing==='inline')s.run('editIndex=0');
     else if(editing==='list')s.context.lsEditIndex=0;
@@ -1217,4 +1217,135 @@ test('resaving unchanged notes detects another window deleting or replacing them
     if(externalChange==='delete')assert.equal(reopened.run('words[0].note'),undefined);
     else assert.equal(reopened.run('words[0].note[0].eng'),'other-window');
   }
+});
+
+function moveSetup(){
+  const s=setup({decks:JSON.stringify([
+    {id:'week5',name:'5주차',words:[
+      {eng:'cat',kor:'고양이'},
+      {eng:'dog',kor:'개',example:['First example.','Second example.'],
+        note:[{eng:'puppy',kor:'강아지'}],wrong:true,mastered:true,wrongResult:'오답 기록',
+        src:'원래 시트',custom:{reviewCount:7,labels:['keep','all fields']}},
+      {eng:'bird',kor:'새'}
+    ],stats:{learned:3},dupes:[{eng:'cat',sheets:['기존 시트'],n:1}]},
+    {id:'week7',name:'7주차',words:[{eng:'fish',kor:'물고기'}],stats:{learned:1},dupes:[]}
+  ]),activeDeckId:'week5'});
+  const start=app.indexOf('function moveWordsToDeck('),end=app.indexOf('// ===== 단어 이동 창 =====');
+  assert.ok(start>=0&&end>start,'word movement helper must be available independently of its UI');
+  vm.runInContext(app.slice(start,end),s.context);
+  s.run('saveDecks();var moveSourceWords=words,moveTargetWords=decks[1].words;var moveSaveCalls=0,moveOriginalSave=saveDecks;saveDecks=function(){moveSaveCalls++;return moveOriginalSave();}');
+  return s;
+}
+function assertMoveRejected(s,expression,label=''){
+  const memory=s.run('JSON.stringify(decks)'),disk=s.data.get('decks'),writes=s.writes.length,
+    source=s.run('decks[0].words'),target=s.run('decks[1].words'),active=s.run('words'),calls=s.run('moveSaveCalls');
+  const result=s.run(expression);
+  assert.equal(result.ok,false,label);assert.equal(typeof result.error,'string',label);assert.ok(result.error.length,label);
+  assert.equal(s.run('JSON.stringify(decks)'),memory,label);assert.equal(s.data.get('decks'),disk,label);
+  assert.equal(s.run('decks[0].words'),source,label);assert.equal(s.run('decks[1].words'),target,label);
+  assert.equal(s.run('words'),active,label);assert.equal(s.writes.length,writes,label);
+  assert.equal(s.run('moveSaveCalls'),calls,label);
+}
+test('moving one word preserves its entire record and persists both decks immediately',()=>{
+  const s=moveSetup();
+  s.run('var movedWord=words[1],movedExamples=movedWord.example,movedNotes=movedWord.note,movedCustom=movedWord.custom');
+  const original=s.run('JSON.stringify(movedWord)'),sourceStats=s.run('decks[0].stats'),targetStats=s.run('decks[1].stats'),dupes=s.run('decks[0].dupes');
+  const result=s.run('moveWordsToDeck("week5","week7",[words[1]],moveSourceWords)');
+  assert.equal(result.ok,true);assert.equal(result.count,1);assert.equal(s.run('moveSaveCalls'),1);
+  assert.equal(s.run('words.map(w=>w.eng).join(",")'),'cat,bird');
+  assert.equal(s.run('decks[1].words.map(w=>w.eng).join(",")'),'fish,dog');
+  assert.equal(s.run('decks[1].words[1]===movedWord'),true);
+  assert.equal(s.run('JSON.stringify(movedWord)'),original);
+  assert.equal(s.run('movedWord.example===movedExamples&&movedWord.note===movedNotes&&movedWord.custom===movedCustom'),true);
+  assert.equal(s.run('words===decks[0].words&&words!==moveSourceWords&&decks[1].words!==moveTargetWords'),true);
+  assert.equal(s.run('activeDeckId'),'week5');assert.equal(s.run('decks[0].stats'),sourceStats);
+  assert.equal(s.run('decks[1].stats'),targetStats);assert.equal(s.run('decks[0].dupes'),dupes);
+  const again=setup(Object.fromEntries(s.data));
+  assert.equal(again.run('words.map(w=>w.eng).join(",")'),'cat,bird');
+  assert.equal(again.run('JSON.stringify(decks[1].words[1])'),original);
+  assert.deepEqual(JSON.parse(s.data.get('decks')).map(deck=>deck.words.map(word=>word.eng)),[['cat','bird'],['fish','dog']]);
+});
+test('moving multiple words follows their source order and counts duplicate selections once',()=>{
+  const s=moveSetup();s.run('var firstMoveWord=words[0],lastMoveWord=words[2]');
+  const result=s.run('moveWordsToDeck("week5","week7",[lastMoveWord,firstMoveWord,lastMoveWord],moveSourceWords)');
+  assert.equal(result.ok,true);assert.equal(result.count,2);assert.equal(s.run('moveSaveCalls'),1);
+  assert.equal(s.run('words.map(w=>w.eng).join(",")'),'dog');
+  assert.equal(s.run('decks[1].words.map(w=>w.eng).join(",")'),'fish,cat,bird');
+  assert.equal(s.run('decks[1].words[1]===firstMoveWord&&decks[1].words[2]===lastMoveWord'),true);
+});
+test('moving every word leaves a usable empty source deck and does not change the active deck',()=>{
+  const s=moveSetup(),result=s.run('moveWordsToDeck("week5","week7",words.slice().reverse(),moveSourceWords)');
+  assert.equal(result.ok,true);assert.equal(result.count,3);assert.equal(s.run('words.length'),0);
+  assert.equal(s.run('words===decks[0].words'),true);assert.equal(s.run('activeDeckId'),'week5');
+  assert.equal(s.run('decks[1].words.map(w=>w.eng).join(",")'),'fish,cat,dog,bird');
+  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words.length'),0);
+  assert.equal(again.run('activeDeckId'),'week5');
+});
+test('word movement rejects invalid decks, empty selections and nonmember word references without writing',()=>{
+  const cases=[
+    ['missing target','moveWordsToDeck("week5","missing",[words[0]],moveSourceWords)'],
+    ['same deck','moveWordsToDeck("week5","week5",[words[0]],moveSourceWords)'],
+    ['missing source','moveWordsToDeck("missing","week7",[words[0]],moveSourceWords)'],
+    ['inactive source','moveWordsToDeck("week7","week5",[decks[1].words[0]],decks[1].words)'],
+    ['empty selection','moveWordsToDeck("week5","week7",[],moveSourceWords)'],
+    ['null selection','moveWordsToDeck("week5","week7",null,moveSourceWords)'],
+    ['copied word','moveWordsToDeck("week5","week7",[{...words[0]}],moveSourceWords)'],
+    ['foreign word','moveWordsToDeck("week5","week7",[decks[1].words[0]],moveSourceWords)'],
+    ['invalid member','moveWordsToDeck("week5","week7",[words[0],null],moveSourceWords)']
+  ];
+  for(const [label,expression] of cases)assertMoveRejected(moveSetup(),expression,label);
+});
+test('a move opened before a word is removed, a deck switches or the source array changes is rejected',()=>{
+  const cases=[
+    ['removed word','var staleMoveWord=words[0];words.splice(0,1);saveDecks()',
+      'moveWordsToDeck("week5","week7",[staleMoveWord],moveSourceWords)'],
+    ['replaced active array','words=words.slice();decks[0].words=words;saveDecks()',
+      'moveWordsToDeck("week5","week7",[words[0]],moveSourceWords)'],
+    ['detached deck array','decks[0].words=words.slice()',
+      'moveWordsToDeck("week5","week7",[words[0]],moveSourceWords)'],
+    ['switched deck','activeDeckId="week7";words=decks[1].words',
+      'moveWordsToDeck("week5","week7",[moveSourceWords[0]],moveSourceWords)']
+  ];
+  for(const [label,change,expression] of cases){const s=moveSetup();s.run(change);assertMoveRejected(s,expression,label);}
+});
+test('case and whitespace duplicates in the target or the selection reject the whole move',()=>{
+  for(const duplicate of ['target','selection']){
+    const s=moveSetup();
+    s.run(duplicate==='target'?'decks[1].words.push({eng:"  DOG ",kor:"이미 있는 단어"});saveDecks()':'words.push({eng:"  DOG ",kor:"중복 단어"});saveDecks()');
+    assertMoveRejected(s,duplicate==='target'
+      ?'moveWordsToDeck("week5","week7",[words[0],words[1]],moveSourceWords)'
+      :'moveWordsToDeck("week5","week7",[words[1],words[3]],moveSourceWords)',duplicate);
+  }
+});
+test('quota errors and conflicting external saves roll back both deck arrays and protect disk data',()=>{
+  for(const failure of ['quota','conflict']){
+    const s=moveSetup();
+    const memory=s.run('JSON.stringify(decks)'),source=s.run('words'),target=s.run('decks[1].words'),moved=s.run('words[1]');
+    let disk=s.data.get('decks');
+    if(failure==='quota')s.context.localStorage.setItem=()=>{throw Error('quota');};
+    else{
+      const latest=JSON.parse(disk);latest[1].words.push({eng:'external',kor:'다른 창에서 저장'});
+      disk=JSON.stringify(latest);s.data.set('decks',disk);
+    }
+    const result=s.run('moveWordsToDeck("week5","week7",[words[1]],moveSourceWords)');
+    assert.equal(result.ok,false,failure);assert.equal(typeof result.error,'string',failure);
+    assert.equal(s.run('moveSaveCalls'),1,failure);assert.equal(s.run('JSON.stringify(decks)'),memory,failure);
+    assert.equal(s.run('words'),source,failure);assert.equal(s.run('decks[0].words'),source,failure);
+    assert.equal(s.run('decks[1].words'),target,failure);assert.equal(s.run('words[1]'),moved,failure);
+    assert.equal(s.data.get('decks'),disk,failure);
+    const again=setup(Object.fromEntries(s.data));
+    assert.equal(again.run('words.map(w=>w.eng).join(",")'),'cat,dog,bird',failure);
+    assert.equal(again.run('decks[1].words.map(w=>w.eng).join(",")'),failure==='conflict'?'fish,external':'fish',failure);
+  }
+});
+test('a failed move can be retried after storage becomes writable without losing any word',()=>{
+  const s=moveSetup(),write=s.context.localStorage.setItem;
+  s.context.localStorage.setItem=()=>{throw Error('quota');};
+  assert.equal(s.run('moveWordsToDeck("week5","week7",[words[1]],moveSourceWords).ok'),false);
+  s.context.localStorage.setItem=write;
+  const result=s.run('moveWordsToDeck("week5","week7",[words[1]],moveSourceWords)');
+  assert.equal(result.ok,true);assert.equal(result.count,1);assert.equal(s.run('moveSaveCalls'),2);
+  const again=setup(Object.fromEntries(s.data));
+  assert.equal(again.run('words.map(w=>w.eng).join(",")'),'cat,bird');
+  assert.equal(again.run('decks[1].words.map(w=>w.eng).join(",")'),'fish,dog');
 });
