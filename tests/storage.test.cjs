@@ -754,16 +754,16 @@ function noteEditorSetup(note=[{eng:'old',kor:'기존 메모'}]){
   installEditHelpers(s);
   const rows=[],toasts=[],sounds=[],listeners={},classes=new Set();
   const modal={classList:{contains:x=>classes.has(x),add:x=>classes.add(x),remove:x=>classes.delete(x)}};
-  const box={set innerHTML(value){rows.length=0;},querySelector:()=>rows[0]?.inputs[0]};
+  const box={set innerHTML(value){rows.length=0;},querySelector(selector){assert.equal(selector,'textarea');return rows[0]?.inputs[0];}};
   const elements={noteBack:modal,noteRows:box,noteTitle:{},noteDelBtn:{style:{}}};
   s.context.document.getElementById=id=>elements[id];
-  s.context.document.querySelectorAll=()=>rows;
+  s.context.document.querySelectorAll=selector=>{assert.equal(selector,'#noteRows .note-row');return rows;};
   s.context.document.addEventListener=(name,fn)=>listeners[name]=fn;
   Object.assign(s.context,{currentIndex:0,_noteTarget:null,showToast:m=>toasts.push(m),playSound:m=>sounds.push(m),
     renderCardNote(){},fitCardExample(){},cardReveal(){},
     addNoteRow(eng='',kor=''){
-      const inputs=[eng,kor].map(value=>({value,focus(){}}));
-      rows.push({inputs,querySelectorAll:()=>inputs});
+      const inputs=[eng,kor].map(value=>({tagName:'TEXTAREA',value,focus(){}}));
+      rows.push({inputs,querySelectorAll(selector){assert.equal(selector,'textarea');return inputs;}});
     }});
   vm.runInContext(app.slice(app.indexOf('function noteList('),app.indexOf('function addNoteRow(')),s.context);
   vm.runInContext(app.slice(app.indexOf('function noteEditorOpen('),app.indexOf('function getDeck(')),s.context);
@@ -808,7 +808,7 @@ test('saved multiple notes persist immediately and remain through repeated reloa
   const s=noteEditorSetup();s.setRows(notes);s.run('closeNoteEditor(true)');
   assert.equal(s.run('noteEditorOpen()'),false);assert.equal(s.run('_noteTarget'),null);
   assert.deepEqual(JSON.parse(s.data.get('decks'))[0].words[0].note,notes);
-  assert.deepEqual(s.sounds,['memoSave']);assert.match(s.toasts[0],/2줄을 저장/);
+  assert.deepEqual(s.sounds,['memoSave']);assert.match(s.toasts[0],/메모 2개를 저장/);
   s.timers.forEach(fn=>fn());let state=Object.fromEntries(s.data);
   for(let i=0;i<3;i++){
     const again=setup(state);assert.deepEqual(JSON.parse(again.run('JSON.stringify(words[0].note)')),notes);
@@ -836,17 +836,44 @@ test('saving or deleting notes for a removed or replaced word keeps the draft op
     assert.match(s.toasts[0],/단어가 변경/);
   }
 });
-test('note Enter ignores Korean composition and still saves ordinary Enter',()=>{
-  const s=noteEditorSetup();s.setRows([{eng:'',kor:'헷갈리는 표현'}]);
-  let prevented=0,stopped=0;
-  const enter={key:'Enter',preventDefault(){prevented++;},stopPropagation(){stopped++;}};
-  s.listeners.keydown({...enter,isComposing:true,keyCode:13});
-  s.listeners.keydown({...enter,isComposing:false,keyCode:229});
-  assert.equal(s.run('noteEditorOpen()'),true);assert.equal(s.run('words[0].note[0].eng'),'old');
-  assert.equal(prevented,0);assert.equal(stopped,0);assert.deepEqual(s.sounds,[]);
-  s.listeners.keydown({...enter,isComposing:false,keyCode:13});
-  assert.equal(s.run('noteEditorOpen()'),false);assert.equal(prevented,1);assert.equal(stopped,1);
-  assert.equal(JSON.parse(s.data.get('decks'))[0].words[0].note[0].kor,'헷갈리는 표현');
+test('note Enter allows newlines and saves only Ctrl or Command Enter outside Korean composition',()=>{
+  for(const modifier of ['ctrlKey','metaKey']){
+    const s=noteEditorSetup();s.setRows([{eng:'look up\nlook over',kor:'찾아보다\n검토하다'}]);
+    const disk=s.data.get('decks');
+    let prevented=0,stopped=0;
+    const enter={key:'Enter',keyCode:13,isComposing:false,ctrlKey:false,metaKey:false,
+      preventDefault(){prevented++;},stopPropagation(){stopped++;}};
+    for(const target of s.rows[0].inputs)s.listeners.keydown({...enter,target});
+    s.listeners.keydown({...enter,shiftKey:true});
+    s.listeners.keydown({...enter,[modifier]:true,isComposing:true});
+    s.listeners.keydown({...enter,[modifier]:true,keyCode:229});
+    assert.equal(s.run('noteEditorOpen()'),true);assert.equal(s.run('words[0].note[0].eng'),'old');
+    assert.equal(s.data.get('decks'),disk);
+    assert.equal(prevented,0);assert.equal(stopped,0);assert.deepEqual(s.sounds,[]);
+    s.listeners.keydown({...enter,[modifier]:true});
+    assert.equal(s.run('noteEditorOpen()'),false);assert.equal(prevented,1);assert.equal(stopped,1);
+    assert.deepEqual(JSON.parse(s.data.get('decks'))[0].words[0].note,[{eng:'look up\nlook over',kor:'찾아보다\n검토하다'}]);
+  }
+});
+test('multiline confusing-word notes survive saving, editor reopening, card display and reload',()=>{
+  const notes=[{eng:'look up\nlook over',kor:'찾아보다\n검토하다'},
+    {eng:'<word> & phrase\nnext expression',kor:'헷갈리는 뜻 첫 줄\n\n빈 줄 뒤 설명'}];
+  const s=noteEditorSetup();s.setRows(notes);s.run('closeNoteEditor(true)');
+  assert.deepEqual(JSON.parse(s.data.get('decks'))[0].words[0].note,notes);
+  s.run('openNoteEditor()');
+  assert.deepEqual(s.rows.map(row=>row.inputs.map(input=>input.value)),notes.map(note=>[note.eng,note.kor]));
+  s.run('closeNoteEditor(false)');
+  const reopened=cardDisplaySetup([],Object.fromEntries(s.data));
+  assert.deepEqual(JSON.parse(reopened.run('JSON.stringify(words[0].note)')),notes);
+  reopened.run('showWord(words[0],0);cardClick()');
+  const rendered=reopened.element('cardNote').innerHTML;
+  assert.ok(rendered.includes('look up\nlook over'));
+  assert.ok(rendered.includes('찾아보다\n검토하다'));
+  assert.ok(rendered.includes('&lt;word&gt; &amp; phrase\nnext expression'));
+  assert.ok(rendered.includes('헷갈리는 뜻 첫 줄\n\n빈 줄 뒤 설명'));
+  assert.equal((rendered.match(/class="nt-item"/g)||[]).length,notes.length);
+  assert.equal(reopened.run('words[0].example.join("|")'),'First.|Second.');
+  assert.deepEqual(reopened.requests,[]);
 });
 test('legacy text notes remain visible in the editor and survive saving and reload',()=>{
   const text='  헷갈리는 단어와 표현을 적어 둔 메모  ',s=noteEditorSetup(text);
