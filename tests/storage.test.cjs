@@ -141,7 +141,7 @@ function cardDisplaySetup(wordRecords=[],initial){
     return elements.get(id);
   };
   const unexpectedFetch=url=>{requests.push(url);throw Error('Card display must not request generated information');};
-  Object.assign(s.context,{currentIndex:-1,cardHistory:[],recentSeen:[],cardDir:'e2k',bothMode:false,
+  Object.assign(s.context,{currentIndex:-1,cardHistory:[],recentSeen:[],cardDir:'e2k',bothMode:false,lastMode:'all',
     autoPlay:false,autoSpeak:false,autoPlaySpeed:3,fetch:unexpectedFetch,fetchT:unexpectedFetch,
     fitCardExample(){},playSound(){},icon:()=>'',startCardTimer(){},updateBothModeBtn(){},updateCardDirBtn(){},
     updateAutoSpeakBtn(){},updateAutoPlayBtn(){},updateSpeakBtns(){},updateCardUndoBtn(){}});
