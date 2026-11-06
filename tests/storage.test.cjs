@@ -128,36 +128,108 @@ test('sheet reload retains all saved examples and does not remove manually added
   s.run('addFromCsvText("cat,고양이,sheet example","Sheet")');assert.equal(s.run('words[0].example.length'),3);
 });
 
-function lexicalContext(fetcher){
-  const c=vm.createContext({fetchT:fetcher,console});
-  vm.runInContext(app.slice(app.indexOf('// ===== Explicit lexical relations'),app.indexOf('// ===== 예문 찾기')),c);
-  vm.runInContext(app.slice(app.indexOf('const _dictionaryChecks='),app.indexOf('async function findBaseWord(')),c);
-  return s=>vm.runInContext(s,c);
+function cardDisplaySetup(wordRecords=[],initial){
+  const s=setup(initial||{decks:JSON.stringify([{id:'a',name:'A',words:wordRecords,stats:{},dupes:[]}]),activeDeckId:'a'});
+  const elements=new Map(),requests=[];
+  const element=id=>{
+    if(!elements.has(id)){
+      const classes=new Set();
+      elements.set(id,{innerHTML:'',innerText:'',style:{},scrollTop:0,
+        classList:{contains:name=>classes.has(name),add:name=>classes.add(name),remove:name=>classes.delete(name),
+          toggle(name,force){const show=force===undefined?!classes.has(name):force;if(show)classes.add(name);else classes.delete(name);return show;}}});
+    }
+    return elements.get(id);
+  };
+  const unexpectedFetch=url=>{requests.push(url);throw Error('Card display must not request generated information');};
+  Object.assign(s.context,{currentIndex:-1,cardHistory:[],recentSeen:[],cardDir:'e2k',bothMode:false,
+    autoPlay:false,autoSpeak:false,autoPlaySpeed:3,fetch:unexpectedFetch,fetchT:unexpectedFetch,
+    fitCardExample(){},playSound(){},icon:()=>'',startCardTimer(){},updateBothModeBtn(){},updateCardDirBtn(){},
+    updateAutoSpeakBtn(){},updateAutoPlayBtn(){},updateSpeakBtns(){},updateCardUndoBtn(){}});
+  s.context.document.getElementById=element;
+  for(const [start,end] of [
+    ['function escapeHtml(','// 캐시 무효화 파라미터 추가'],
+    ['function exList(','function openNaverExample('],
+    ['function showWord(','function updateBothModeBtn('],
+    ['function toggleCardDir(','function updateCardDirBtn('],
+    ['function showCardActions(','// ===== 내 메모'],
+    ['function renderCardNote(','function addNoteRow('],
+    ['function cardClick(',"// ===== '오답노트' 단어장 자동 수집"]
+  ]){
+    const from=app.indexOf(start),to=app.indexOf(end,from);
+    assert.ok(from>=0&&to>from,'Missing card display source boundary: '+start);
+    vm.runInContext(app.slice(from,to),s.context);
+  }
+  return {...s,element,requests};
 }
-test('relations use two explicit endpoints, deduplicate taps and cache successful results',async()=>{
-  const urls=[];const run=lexicalContext(async url=>{urls.push(url);return {ok:true,json:async()=>url.includes('rel_syn')?[{word:'happy'},{word:'Glad'},{word:'glad'},{}]:[{word:'sad'}]};});
-  const results=await run('Promise.all([lookupRelations(" Happy "),lookupRelations("happy")])');
-  assert.equal(urls.length,2);assert.ok(urls.every(u=>!u.includes('ml=')));
-  assert.equal(results[0].syn.join(','),'glad');assert.equal(results[0].ant.join(','),'sad');
-  await run('lookupRelations("happy")');assert.equal(urls.length,2);
+test('revealing cards without saved examples generates no roots, base forms, relations or requests',()=>{
+  const s=cardDisplaySetup([{eng:'gregarious',kor:'사교적인'},{eng:'aggregating',kor:'모으는 중'},{eng:'go over',kor:'검토하다'}]);
+  for(let i=0;i<3;i++){
+    s.run('showWord(words['+i+'],'+i+');cardClick()');
+    assert.equal(s.element('card').classList.contains('revealed'),true);
+    assert.equal(s.element('cardExample').style.display,'none');
+    assert.equal(s.element('cardExample').innerHTML,'');
+    assert.equal(s.element('cardNote').style.display,'none');
+  }
+  assert.deepEqual(s.requests,[]);
 });
-test('temporary errors remain retryable and are not reported as confirmed empty results',async()=>{
-  let calls=0,fail=true;const run=lexicalContext(async()=>{calls++;if(fail)return {ok:false,status:429};return {ok:true,json:async()=>[]};});
-  assert.equal((await run('lookupRelations("unknown")')).failed,true);
-  fail=false;assert.equal((await run('lookupRelations("unknown")')).failed,false);assert.equal(calls,4);
-  await run('lookupRelations("unknown")');assert.equal(calls,4);
+test('cards show all saved legacy and multiple examples as escaped text without generated footer controls',()=>{
+  const s=cardDisplaySetup([
+    {eng:'gregarious',kor:'사교적인',example:'My own example.'},
+    {eng:'aggregating',kor:'모으는 중',example:['Keep my first example.','<img src=x onerror="bad()"> & my second example.']}
+  ]);
+  s.run('showWord(words[0],0);cardClick()');
+  assert.equal(s.element('cardExample').style.display,'block');
+  assert.ok(s.element('cardExample').innerHTML.includes('My own example.'));
+  s.run('showWord(words[1],1);cardClick()');
+  const rendered=s.element('cardExample').innerHTML;
+  assert.equal((rendered.match(/class="card-ex"/g)||[]).length,2);
+  assert.ok(rendered.includes('Keep my first example.'));
+  assert.ok(rendered.includes('&lt;img src=x onerror=&quot;bad()&quot;&gt; &amp; my second example.'));
+  assert.doesNotMatch(rendered,/<(?:a|button|img)\b|어원|어근|원형 후보|유의·반의/);
+  assert.deepEqual(s.requests,[]);
 });
-test('dictionary checks share pending work and do not cache transport errors',async()=>{
-  let calls=0,fail=true;const run=lexicalContext(async()=>{calls++;if(fail)throw Error('offline');return {ok:true,status:200};});
-  await assert.rejects(run('dictionaryHasWord("happy")'));
-  fail=false;await run('Promise.all([dictionaryHasWord("happy"),dictionaryHasWord("happy")])');assert.equal(calls,2);
-  await run('dictionaryHasWord("happy")');assert.equal(calls,2);
+test('switching cards and concealing answers clears old examples without changing saved content',()=>{
+  const s=cardDisplaySetup([{eng:'first',kor:'첫째',example:['First saved example.','Second saved example.']},{eng:'gregarious',kor:'사교적인'}]);
+  const before=s.run('JSON.stringify(words)');
+  s.run('showWord(words[0],0);cardClick()');
+  assert.ok(s.element('cardExample').innerHTML.includes('First saved example.'));
+  s.run('cardClick()');
+  assert.equal(s.element('cardExample').style.display,'none');
+  assert.equal(s.element('cardExample').innerHTML,'');
+  s.run('showWord(words[1],1);cardClick()');
+  assert.equal(s.element('cardExample').style.display,'none');
+  assert.equal(s.element('cardExample').innerHTML,'');
+  assert.equal(s.run('JSON.stringify(words)'),before);
 });
-test('root heuristic does not silently discard unmatched letters',()=>{
-  const c=vm.createContext({_ROOTSKIP:new Set(),_ROOTKEYS:['port'],_ROOT:{port:'carry'},_PREKEYS:[],_PRE:{},_SUFKEYS:['able'],_SUF:{able:'able'}});
-  vm.runInContext(app.slice(app.indexOf('function analyzeRoots('),app.indexOf('// ===== 합성어 분해')),c);
-  assert.equal(vm.runInContext('analyzeRoots("portable").length',c),2);
-  assert.equal(vm.runInContext('analyzeRoots("portfolio").length',c),0);
+test('display direction and answer toggles preserve every saved example and confusing-word note through reload',()=>{
+  const original={eng:'gregarious',kor:'사교적인',example:['My first saved sentence.','My second saved sentence.'],
+    note:[{eng:'egregious',kor:'지독한·터무니없는'},{eng:'aggregate',kor:'한데 모으다'}]};
+  const s=cardDisplaySetup([original]),before=s.run('JSON.stringify(words)');
+  s.run('showWord(words[0],0);toggleBothMode()');
+  assert.equal(s.element('cardExample').style.display,'block');
+  assert.ok(s.element('cardNote').innerHTML.includes('egregious'));
+  assert.ok(s.element('cardNote').innerHTML.includes('한데 모으다'));
+  s.run('cardClick()');
+  assert.equal(s.element('cardNote').style.display,'none');
+  s.run('cardClick();toggleCardDir()');
+  assert.equal(s.element('front').innerText,'사교적인');
+  assert.equal(s.element('back').innerText,'gregarious');
+  assert.equal(s.element('cardNote').style.display,'inline-block');
+  assert.ok(s.element('cardExample').innerHTML.includes('My second saved sentence.'));
+  s.run('toggleBothMode()');
+  assert.equal(s.element('cardExample').style.display,'none');
+  assert.equal(s.element('cardNote').style.display,'none');
+  s.run('flushDecks()');
+  assert.equal(s.run('JSON.stringify(words)'),before);
+  const reopened=cardDisplaySetup([],Object.fromEntries(s.data));
+  reopened.run('showWord(words[0],0);cardClick()');
+  assert.deepEqual(JSON.parse(reopened.run('JSON.stringify(words[0].example)')),original.example);
+  assert.deepEqual(JSON.parse(reopened.run('JSON.stringify(words[0].note)')),original.note);
+  assert.ok(reopened.element('cardExample').innerHTML.includes('My first saved sentence.'));
+  assert.ok(reopened.element('cardExample').innerHTML.includes('My second saved sentence.'));
+  assert.ok(reopened.element('cardNote').innerHTML.includes('egregious'));
+  assert.ok(reopened.element('cardNote').innerHTML.includes('aggregate'));
+  assert.deepEqual([...s.requests,...reopened.requests],[]);
 });
 
 function installEditHelpers(s){
@@ -458,35 +530,6 @@ test('successful examples still fill the original untouched editor',async()=>{
   assert.equal(s.toasts.some(message=>message.includes('예문을 채웠어요')),true);
 });
 
-function rootAnalysisSetup(){
-  const context=vm.createContext({});
-  vm.runInContext(app.slice(app.indexOf('const _PRE='),app.indexOf('// ===== 합성어 분해')),context);
-  return word=>JSON.parse(vm.runInContext('JSON.stringify(analyzeRoots('+JSON.stringify(word)+'))',context));
-}
-test('root hints retain a whole root when a longer suffix would hide it',()=>{
-  const analyze=rootAnalysisSetup();
-  for(const [word,root] of [['tension','tens'],['extension','tens'],['prediction','dict'],['diction','dict'],['question','quest']]){
-    const parts=analyze(word);
-    assert.equal(parts.find(part=>part.t==='root').p,root,word);
-    assert.equal(parts.map(part=>part.p).join(''),word,word);
-  }
-});
-test('layered roots remain available for common prefixes and inflected derivatives',()=>{
-  const analyze=rootAnalysisSetup();
-  for(const [word,root] of [['unpredictable','dict'],['reconstruction','struct'],['aggregates','greg'],['congregations','greg'],['attractively','tract'],['artists','art']]){
-    const parts=analyze(word);
-    assert.equal(parts.find(part=>part.t==='root').p,root,word);
-    assert.equal(parts.map(part=>part.p).join(''),word,word);
-  }
-  assert.equal(analyze('aggregates').at(-1).g,'~들(복수·3인칭)');
-});
-test('layered matching still rejects unknown tails, unrelated words and standalone roots',()=>{
-  const analyze=rootAnalysisSetup();
-  for(const word of ['portfolio','portablex','unpredictablexyz','mother','summer','person','personally','personalize','reason','reasonable','season','seasonally','general','generous','generation','greg','port'])
-    assert.deepEqual(analyze(word),[],word);
-  assert.equal(analyze('portable').find(part=>part.t==='root').p,'port');
-});
-
 function backupRestoreSetup(backup){
   const initialDecks=[{id:'a',name:'A',words:[{eng:'original',kor:'기존 단어',example:['Old.']}],stats:{old:1},dupes:[]},
     {id:'b',name:'B',words:[{eng:'other',kor:'다른 단어'}],stats:{},dupes:[]}];
@@ -566,118 +609,6 @@ test('restored deck IDs are safe and distinct and the selected deck follows its 
   assert.equal(new Set(ids).size,4);assert.ok(ids.every(id=>/^[a-zA-Z0-9_-]+$/.test(id)));
   assert.equal(s.run('activeDeckId'),ids[1]);assert.equal(s.run('words[0].eng'),'second');
   const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words[0].eng'),'second');
-});
-
-function morphologySetup(decks=[],fetcher=async()=>{throw Error('offline');},options={}){
-  const toasts=[],dialog={open:false,shows:0,showModal(){this.open=true;this.shows++;}},title={textContent:''},body={innerHTML:''};
-  if(options.unsupportedDialog)delete dialog.showModal;
-  const elements={etymologyDialog:options.missingDialog?null:dialog,etymologyTitle:title,etymologyBody:body};
-  const context=vm.createContext({decks,activeDeckId:decks[0]?.id||'a',words:decks[0]?.words||[],fetchT:fetcher,
-    document:{getElementById:id=>elements[id]||null},showToast:message=>toasts.push(message)});
-  vm.runInContext(app.slice(app.indexOf('function escapeHtml('),app.indexOf('// 캐시 무효화 파라미터 추가')),context);
-  vm.runInContext(app.slice(app.indexOf('const _PRE='),app.indexOf('// 카드 안 남은 공간')),context);
-  return {run:source=>vm.runInContext(source,context),toasts,
-    html:word=>vm.runInContext('rootsHtml('+JSON.stringify(word)+')',context),
-    open(word){
-      vm.runInContext('openEtymology('+JSON.stringify(word)+')',context);
-      return {title:title.textContent,body:body.innerHTML,open:dialog.open,shows:dialog.shows};
-    },
-    hint:word=>JSON.parse(vm.runInContext('JSON.stringify(etymologyHint('+JSON.stringify(word)+'))',context))};
-}
-test('greg family memory hints work offline even when the card already exists in a deck',()=>{
-  let calls=0;
-  const s=morphologySetup([{id:'a',words:[{eng:'gregarious',kor:'사교적인'},{eng:'egregious',kor:'터무니없는'}]}],async()=>{calls++;throw Error('offline');});
-  assert.match(s.html('gregarious'),/어원·암기/);
-  assert.match(s.html('gregarious'),/greg<\/b>\(무리·모이다\)/);
-  assert.match(s.html('gregarious'),/무리에 어울리는 → 사교적인/);
-  assert.match(s.html('egregious'),/무리 밖으로 두드러진다는 뜻에서 → 지독한·터무니없는/);
-  const modal=s.open('egregious');
-  assert.equal(modal.open,true);assert.equal(modal.title,'egregious · 어원·암기');
-  assert.match(modal.body,/>gregarious<\/button>/);
-  assert.match(modal.body,/>aggregate<\/button>/);assert.match(modal.body,/>segregate<\/button>/);
-  assert.match(modal.body,/한데 모으다/);assert.match(modal.body,/무리에서 떼어 놓다/);
-  assert.match(modal.body,/라틴어 grex, gregis/);
-  assert.equal(calls,0);
-});
-test('common missing word families now show useful memory hints instead of unrelated splits',()=>{
-  const s=morphologySetup();
-  for(const [word,meaning] of [['biology','생물학'],['photography','사진 촬영'],['unpredictable','예측 불가능한'],['valuable','가치가 있는'],['reduce','되돌려 줄이다'],['benefit','혜택']]){
-    const html=s.html(word);
-    assert.match(html,/어원·암기/,word);assert.ok(html.includes(meaning),word);
-    assert.ok(html.includes('관련 단어'),word);assert.ok(html.includes('어원 출처'),word);
-    assert.ok(html.includes('https://en.wiktionary.org/wiki/'+word+'#Etymology'),word);
-    const modal=s.open(word);
-    assert.equal(modal.open,true,word);assert.match(modal.body,/같은 어근[\s\S]*<button/,word);
-    assert.ok(modal.body.includes(meaning),word);
-  }
-  assert.match(s.html('display'),/접힌 것을 펼쳐 보이다/);
-  assert.doesNotMatch(s.html('display'),/play<\/b>|놀다/);
-  assert.match(s.html('salty'),/salt\(소금\) \+ y\(~한\) → 짠/);
-  assert.doesNotMatch(s.html('salty'),/뛰다|~성질\(명사\)/);
-});
-test('common inflections retain the correct curated lemma and its source',()=>{
-  const s=morphologySetup();
-  for(const [word,lemma] of [['aggregates','aggregate'],['aggregated','aggregate'],['aggregating','aggregate'],['congregations','congregation'],['incredibly','incredible'],['predictably','predictable'],['gregariously','gregarious'],['gregariousness','gregarious'],['unpredictability','unpredictable'],['flexibility','flexible'],['portability','portable']]){
-    assert.equal(s.hint(word).word,lemma,word);
-    const html=s.html(word);
-    assert.match(html,/어원·암기/,word);
-    assert.ok(html.includes(lemma+'의 어형'),word);
-    assert.ok(html.includes('/wiki/'+lemma+'#Etymology'),word);
-  }
-});
-test('ordinary phrase explanations remain available without inventing historical hints for unknown words',()=>{
-  const s=morphologySetup();
-  const phrase=s.html('go over');
-  assert.match(phrase,/구성 추정/);assert.match(phrase,/go<\/b>/);assert.match(phrase,/over<\/b>/);
-  assert.doesNotMatch(phrase,/어원·암기/);
-  for(const word of ['grag','portfolio']){
-    assert.equal(s.hint(word),null,word);assert.equal(s.html(word),'',word);
-  }
-});
-test('every curated memory note has a defined family, useful explanation and valid related entries',()=>{
-  const s=morphologySetup();
-  const {families,hints}=JSON.parse(s.run('JSON.stringify({families:_ETYMOLOGY_FAMILIES,hints:_ETYMOLOGY_HINTS})'));
-  for(const [word,[family,memory]] of Object.entries(hints)){
-    assert.ok(families[family],word);
-    assert.equal(typeof memory,'string',word);assert.ok(memory.trim().length>4,word);
-    assert.ok(memory.includes('→'),word);
-  }
-  for(const [key,family] of Object.entries(families)){
-    for(const field of ['root','meaning','origin'])assert.ok(typeof family[field]==='string'&&family[field].trim(),key+' '+field);
-    assert.ok(family.words.length>=2,key);
-    assert.equal(new Set(family.words).size,family.words.length,key);
-    for(const related of family.words)assert.ok(hints[related],key+' '+related);
-  }
-});
-test('ordinary dictionary keys are not mistaken for inherited JavaScript properties',()=>{
-  const s=morphologySetup();
-  assert.equal(s.hint('constructor'),null);assert.equal(s.hint('constructors'),null);
-  assert.match(s.html('constructor'),/struct/);
-  assert.equal(s.open('constructor').open,false);
-});
-test('known false base-word matches cannot trigger dictionary requests or reuse unrelated deck words',async()=>{
-  let calls=0;
-  const s=morphologySetup([{id:'a',words:[{eng:'flow',kor:'흐르다'},{eng:'sum',kor:'합'},{eng:'corn',kor:'옥수수'}]}],async()=>{calls++;return {ok:true,status:200};});
-  for(const word of ['flower','summer','corner','seven','seventy'])
-    assert.equal(await s.run('findBaseWord('+JSON.stringify(word)+')'),null,word);
-  assert.equal(calls,0);
-});
-test('unknown words cannot open or populate the related-word dialog',()=>{
-  const s=morphologySetup();
-  for(const word of ['grag','portfolio','go over']){
-    const modal=s.open(word);
-    assert.equal(modal.open,false,word);assert.equal(modal.shows,0,word);
-    assert.equal(modal.title,'',word);assert.equal(modal.body,'',word);
-  }
-  assert.deepEqual(s.toasts,[]);
-});
-test('related-word details fall back to the useful memory note when native dialogs are unavailable',()=>{
-  for(const options of [{missingDialog:true},{unsupportedDialog:true}]){
-    const s=morphologySetup([],undefined,options),modal=s.open('gregarious');
-    assert.equal(modal.open,false);assert.equal(modal.shows,0);
-    assert.equal(modal.title,'');assert.equal(modal.body,'');
-    assert.deepEqual(s.toasts,['무리에 어울리는 → 사교적인']);
-  }
 });
 
 function backupExportSetup(failure=''){
@@ -1349,3 +1280,4 @@ test('a failed move can be retried after storage becomes writable without losing
   assert.equal(again.run('words.map(w=>w.eng).join(",")'),'cat,bird');
   assert.equal(again.run('decks[1].words.map(w=>w.eng).join(",")'),'fish,dog');
 });
+
