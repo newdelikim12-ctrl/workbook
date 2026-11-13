@@ -25,6 +25,7 @@ jobs:
       - name: Test storage and application logic
         run: |
           node --test tests/storage.test.cjs
+          node --test tests/spelling.test.cjs
           node --check captures-store.js
           node --check captures-media.js
           node --check captures.js
