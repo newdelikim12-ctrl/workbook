@@ -78,7 +78,9 @@ def exercise(browser, base, width):
     page.wait_for_function("document.querySelector('#waStatus').textContent.includes('검사 완료')", timeout=90000)
     assert page.evaluate("localStorage.getItem('decks')") == original
     words = page.locator('#waResults .wa-word').all_inner_texts()
-    assert 'recieve' in words and 'cat' in words and 'Xylophonix' in words, words
+    assert 'recieve' in words and 'cat' in words and 'Xylophonix' not in words, words
+    page.locator('#waShowReview').check()
+    assert 'Xylophonix' in page.locator('#waResults .wa-word').all_inner_texts()
     assert not any(word in words for word in ['colour', 'responsibilities', "don't", 'take care']), words
     direct = page.evaluate("""async()=>({
       valid:await WordSpelling.checkEnglish('colour responsibilities don’t take care ＡＰＰＬＥ'),
@@ -105,6 +107,10 @@ def exercise(browser, base, width):
     page.locator('#waKorean').fill('받다\n수령하다')
     page.locator('#waEditor button[type=submit]').click()
     assert not page.locator('#waEditor').is_visible()
+    page.wait_for_function("document.getElementById('waActionMessage').textContent.includes('나머지 검사 결과')")
+    assert 'recieve' not in page.locator('#waResults .wa-word').all_inner_texts()
+    assert 'cat' in page.locator('#waResults .wa-word').all_inner_texts()
+    assert 'Xylophonix' in page.locator('#waResults .wa-word').all_inner_texts()
     saved = page.evaluate("decks[0].words.find(w=>w.eng==='receive')")
     assert saved['kor'] == '받다\n수령하다'
     assert saved['example'] == DECKS[0]['words'][1]['example'] and saved['note'] == DECKS[0]['words'][1]['note']
@@ -166,6 +172,19 @@ def resilience(browser,base):
     page.locator('#wordAuditOpen').click();page.locator('#waSpellingTab').click();page.locator('#waScan').click()
     page.wait_for_function("document.getElementById('waStatus').textContent.includes('검사 완료')",timeout=90000)
     assert 'recieve' in page.locator('#waResults').inner_text()
+    # Obsolete unversioned modules in an installed app must not replace this release.
+    before=page.evaluate("localStorage.getItem('decks')")
+    page.evaluate("""async()=>{
+      const keys=await caches.keys();
+      for(const key of keys.filter(key=>key.startsWith('wordbook-'))){const cache=await caches.open(key);
+        for(const path of ['word-audit.js','word-spelling.js'])await cache.put(path,new Response('window.auditObsoleteModule=true;',{
+          headers:{'Content-Type':'application/javascript'}}));}
+    }""")
+    page.reload(wait_until='domcontentloaded')
+    assert page.evaluate("typeof window.auditObsoleteModule")=='undefined'
+    assert page.evaluate("localStorage.getItem('decks')")==before
+    page.locator('#wordAuditOpen').click();page.locator('#waSpellingTab').click();page.locator('#waScan').click()
+    page.wait_for_function("document.getElementById('waStatus').textContent.includes('검사 완료')",timeout=90000)
     context.close()
     # A failed English dictionary load must retain Korean findings and support retry.
     context=browser.new_context(service_workers='block')
@@ -183,7 +202,7 @@ def resilience(browser,base):
     page.wait_for_function("document.getElementById('waStatus').textContent.includes('검사 완료')",timeout=90000)
     assert 'recieve' in page.locator('#waResults').inner_text()
     context.close()
-    return {'offlineEnglishAndKorean':True,'dictionaryFailureAndRetry':True}
+    return {'offlineEnglishAndKorean':True,'dictionaryFailureAndRetry':True,'obsoleteCachedModulesBypassed':True}
 
 
 def main():
