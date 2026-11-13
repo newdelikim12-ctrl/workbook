@@ -62,7 +62,8 @@ def exercise(browser, base, width):
     page.locator('#tabDecks').click()
     page.locator('#wordAuditOpen').click()
     page.wait_for_selector('#wordAuditDialog[open]')
-    assert '4개 단어장' in page.locator('#waSummary').inner_text()
+    assert '일반 단어장 3개' in page.locator('#waSummary').inner_text()
+    assert '오답노트 1개 제외' in page.locator('#waSummary').inner_text()
     assert page.locator('.wa-group').count() == 1
     assert page.locator('.wa-group .wa-entry').count() == 2
     assert '오답노트' not in page.locator('#waResults').inner_text()
