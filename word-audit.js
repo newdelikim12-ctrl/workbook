@@ -71,7 +71,7 @@
     if(autoPlay&&currentIndex>=0)scheduleAutoPlay();
   }
   function snapshot(){
-    entries=getAllWordEntries().map(entry=>({...entry,eng:entry.word.eng,kor:entry.word.kor}));
+    entries=getAllWordEntries().filter(entry=>!entry.isWrongDeck).map(entry=>({...entry,eng:entry.word.eng,kor:entry.word.kor}));
     const byKey=new Map(),byWord=new Map();
     entries.forEach((entry,index)=>{
       entry.auditIndex=index;byWord.set(entry.word,entry);
@@ -86,7 +86,9 @@
     for(const [word,values] of checked){const entry=byWord.get(word);if(!entry||entry.eng!==values.eng||entry.kor!==values.kor)checked.delete(word);}
     progress=checked.size;
     if(scanState==='done'&&progress<entries.length)scanState='stopped';
-    ui.summary.textContent=decks.length+'개 단어장 · '+entries.length+'개 단어를 확인합니다.';
+    const ordinaryCount=decks.filter(deck=>!isWrongNotebookDeck(deck)).length;
+    const excludedCount=decks.length-ordinaryCount;
+    ui.summary.textContent='일반 단어장 '+ordinaryCount+'개 · '+entries.length+'개 단어'+(excludedCount?' · 오답노트 '+excludedCount+'개 제외':'');
   }
   function refresh(){
     const saved=position();++sequence;snapshot();deleting=null;deleteError='';renderKeepingPosition(saved);
@@ -125,10 +127,10 @@
     const reviewCount=findings.reduce((sum,item)=>sum+item.issues.filter(review).length,0);
     ui.reviewCount.textContent=reviewCount?'('+reviewCount+')':'';
     if(mode==='duplicates'){
-      ui.notice.textContent='대소문자·전각 문자·띄어쓰기 차이를 정리해 영어 단어를 비교합니다. 오답노트의 복사본은 중복 집계에서 제외합니다. 각 위치의 항목을 수정하거나 삭제할 수 있습니다.';
+      ui.notice.textContent='일반 단어장끼리만 비교합니다. 모든 오답노트는 중복·오탈자 검사에서 제외합니다. 각 위치의 항목을 수정하거나 삭제할 수 있습니다.';
       ui.status.textContent=groups.length?groups.length+'개 단어가 중복되어 있습니다. 각 위치와 뜻을 비교해 주세요.':'현재 저장된 전체 단어장에서 중복된 영어 단어가 없습니다.';
     }else{
-      ui.notice.textContent='영어는 미국·영국 사전과 철자 유사도를 함께 확인합니다. 고유명사·전문용어·문맥 확인이 필요한 표현은 추가 검토로 나눕니다. 한글은 자주 틀리는 표현을 검사하며, 문법·뜻의 정확성이나 모든 띄어쓰기를 판정하지는 않습니다.';
+      ui.notice.textContent='오답노트는 검사에서 제외합니다. 영어는 미국·영국 사전과 철자 유사도를 확인하고, 고유명사·전문용어·문맥이 필요한 표현은 추가 검토로 나눕니다. 한글은 흔한 오탈자 위주로 검사합니다.';
       const statuses={idle:'영어 단어와 한글 뜻을 검사합니다. 예문·메모는 검사 대상에 포함하지 않습니다.',running:progress?progress+' / '+entries.length+'개 검사 중…':'영어 사전 준비 중…',done:entries.length+'개 검사 완료 · 수정 후보 '+likelyCount+'개 · 추가 검토 '+reviewCount+'개',stopped:progress+' / '+entries.length+'개를 확인했습니다. 아래는 일부 검사 결과입니다.',error:'검사를 모두 완료하지 못했습니다. '+scanError};
       ui.status.textContent=statuses[scanState]||'';
     }
