@@ -1508,3 +1508,107 @@ test('edit collision scope follows the edited word owner rather than the current
   assert.equal(s.run('getDuplicateWordEntries("a").some(entry=>entry.isWrongDeck)'),false);
 });
 
+function auditedDeletionInitial(){
+  const initial=globalRegistrationInitial(),decks=JSON.parse(initial.decks);
+  decks[0].words.push({eng:'cat',kor:'같은 단어장의 다른 기록',example:['Keep the second cat.'],note:'남겨 둘 메모',custom:{keep:2}},
+    {eng:'bird',kor:'새',example:['Keep the bird.'],note:[{eng:'wing',kor:'날개'}]});
+  decks[0].stats={correct:7,custom:3};decks[0].dupes=[{eng:'cat',sheets:['Saved sheet'],n:2}];
+  decks[1].words[0].eng='cat';decks[1].words[0].kor='다른 단어장 고양이';decks[1].stats={correct:4};
+  initial.decks=JSON.stringify(decks);return initial;
+}
+test('audit deletion removes only the selected inactive record and persists the latest active word array',()=>{
+  const s=setup(auditedDeletionInitial());
+  s.run('words=words.concat({eng:"latest",kor:"활성 배열의 최신 단어",example:["Newest."]});var deletionEntry=getAllWordEntries().find(entry=>entry.deckId==="b"&&entry.index===0);var deletionBefore={words,target:decks[1].words,remaining:decks[1].words[1],wrong:decks[2].words,stats,dupes,targetStats:decks[1].stats};');
+  const word=s.run('deletionEntry.word'),wrong=s.run('JSON.stringify(decks[2])');
+  const result=s.run('removeAuditedWord(deletionEntry)');
+  assert.equal(result.ok,true);assert.equal(result.deckId,'b');assert.equal(result.isActive,false);assert.equal(result.index,0);assert.equal(result.remainingCount,1);assert.equal(result.word,word);
+  assert.equal(s.run('words===deletionBefore.words&&decks[0].words===words'),true);
+  assert.equal(s.run('decks[1].words!==deletionBefore.target&&deletionBefore.target.length===2'),true);
+  assert.equal(s.run('decks[1].words[0]===deletionBefore.remaining'),true);
+  assert.equal(s.run('stats===deletionBefore.stats&&dupes===deletionBefore.dupes&&decks[1].stats===deletionBefore.targetStats'),true);
+  assert.equal(s.run('JSON.stringify(decks[2])'),wrong);assert.equal(s.run('activeDeckId'),'a');
+  const again=setup(Object.fromEntries(s.data));
+  assert.equal(again.run('words.length'),4);assert.equal(again.run('words[3].eng'),'latest');
+  assert.equal(again.run('decks[1].words.map(word=>word.eng).join(",")'),'Take  Care');
+  assert.equal(again.run('words[0].eng'),'cat');assert.equal(again.run('words[1].eng'),'cat');
+  assert.equal(again.run('decks[2].words[0].eng'),'CAT');
+});
+test('audit deletion of an active duplicate synchronizes arrays without changing remaining fields or UI indices',()=>{
+  const s=setup(auditedDeletionInitial());
+  Object.assign(s.context,{currentIndex:2,cardHistory:[0,2],recentSeen:[1,2]});
+  s.run('var deletionEntry=getAllWordEntries().find(entry=>entry.deckId==="a"&&entry.index===0);var deletionBefore={words,remaining:words.slice(1),stats,dupes,foreign:decks[1].words,wrong:decks[2].words};');
+  const remaining=s.run('JSON.stringify(words.slice(1))'),otherDecks=s.run('JSON.stringify(decks.slice(1))');
+  const result=s.run('removeAuditedWord(deletionEntry)');
+  assert.equal(result.ok,true);assert.equal(result.isActive,true);assert.equal(result.index,0);assert.equal(result.remainingCount,2);
+  assert.equal(s.run('decks[0].words===words&&words!==deletionBefore.words'),true);
+  assert.equal(s.run('deletionBefore.words.length'),3);
+  assert.equal(s.run('words.every((word,index)=>word===deletionBefore.remaining[index])'),true);
+  assert.equal(s.run('JSON.stringify(words)'),remaining);assert.equal(s.run('JSON.stringify(decks.slice(1))'),otherDecks);
+  assert.equal(s.run('stats===deletionBefore.stats&&dupes===deletionBefore.dupes'),true);
+  assert.equal(s.run('currentIndex'),2);assert.equal(s.run('cardHistory.join(",")'),'0,2');assert.equal(s.run('recentSeen.join(",")'),'1,2');
+  const again=setup(Object.fromEntries(s.data));
+  assert.equal(again.run('words.length'),2);assert.equal(again.run('words[0].note'),'남겨 둘 메모');
+  assert.equal(again.run('words[0].custom.keep'),2);assert.equal(again.run('stats.correct'),7);assert.equal(again.run('dupes[0].n'),2);
+});
+test('audit deletion leaves a usable empty deck when its final active or inactive word is removed',()=>{
+  for(const deckId of ['a','b']){
+    const initial=globalRegistrationInitial(),decks=JSON.parse(initial.decks);
+    decks[1].words=decks[1].words.slice(0,1);initial.decks=JSON.stringify(decks);
+    const s=setup(initial),wrong=s.run('JSON.stringify(decks[2])');
+    s.context.targetDeletionDeck=deckId;
+    const result=s.run('removeAuditedWord(getAllWordEntries().find(entry=>entry.deckId===targetDeletionDeck))');
+    assert.equal(result.ok,true);assert.equal(result.remainingCount,0);assert.equal(result.isActive,deckId==='a');
+    assert.equal(s.run('decks.length'),3);assert.equal(s.run('decks.find(deck=>deck.id===targetDeletionDeck).words.length'),0);
+    assert.equal(s.run('JSON.stringify(decks[2])'),wrong);
+    if(deckId==='a')assert.equal(s.run('words===decks[0].words&&words.length===0'),true);
+    const again=setup(Object.fromEntries(s.data));again.context.targetDeletionDeck=deckId;
+    assert.equal(again.run('decks.find(deck=>deck.id===targetDeletionDeck).words.length'),0);
+    assert.equal(again.run('decks[2].words[0].note'),'원본과 별도 메모');
+  }
+});
+test('audit deletion rejects invalid or stale entry identity and English or meaning snapshots without writes',()=>{
+  for(const scenario of ['null','missing-snapshot','missing-deck','wrong-deck','removed-word','replaced-array','changed-English','changed-meaning']){
+    const s=setup(auditedDeletionInitial());
+    s.run('var deletionEntry=getAllWordEntries().find(entry=>entry.deckId==="a"&&entry.index===0);');
+    if(scenario==='null')s.run('deletionEntry=null');
+    else if(scenario==='missing-snapshot')s.run('delete deletionEntry.eng');
+    else if(scenario==='missing-deck')s.run('deletionEntry.deckId="absent"');
+    else if(scenario==='wrong-deck')s.run('deletionEntry.deckId="b"');
+    else if(scenario==='removed-word')s.run('words=decks[0].words=words.slice(1)');
+    else if(scenario==='replaced-array')s.run('words=decks[0].words=words.map(word=>({...word}))');
+    else if(scenario==='changed-English')s.run('deletionEntry.word.eng="changed"');
+    else s.run('deletionEntry.word.kor="바뀐 뜻"');
+    s.run('var deletionBefore={decks,words,activeWords:decks[0].words,foreign:decks[1].words,wrong:decks[2].words};');
+    const memory=s.run('JSON.stringify(decks)'),disk=s.data.get('decks'),writes=s.writes.length;
+    const result=s.run('removeAuditedWord(deletionEntry)');
+    assert.equal(result.ok,false,scenario);assert.equal(typeof result.error,'string',scenario);
+    assert.equal(s.run('JSON.stringify(decks)'),memory,scenario);assert.equal(s.data.get('decks'),disk,scenario);assert.equal(s.writes.length,writes,scenario);
+    assert.equal(s.run('decks===deletionBefore.decks&&words===deletionBefore.words&&decks[0].words===deletionBefore.activeWords&&decks[1].words===deletionBefore.foreign&&decks[2].words===deletionBefore.wrong'),true,scenario);
+  }
+});
+test('audit deletion rolls back exact live and deck arrays on quota errors, disk conflicts or thrown writers',()=>{
+  for(const deckId of ['a','b']){
+    for(const failure of ['quota','conflict','throw']){
+      const s=setup(auditedDeletionInitial());s.context.targetDeletionDeck=deckId;
+      s.run('words=words.slice();var deletionEntry=getAllWordEntries().find(entry=>entry.deckId===targetDeletionDeck&&entry.index===0);var deletionBefore={decks,words,activeWords:decks[0].words,targetWords:decks.find(deck=>deck.id===targetDeletionDeck).words,wrong:decks[2].words,stats,dupes,activeDeckId};');
+      const memory=s.run('JSON.stringify(decks)'),target=s.run('deletionEntry.word');
+      let disk=s.data.get('decks');
+      if(failure==='quota')s.context.localStorage.setItem=()=>{throw Error('quota');};
+      else if(failure==='conflict'){
+        const latest=JSON.parse(disk);latest[1].words.push({eng:'external',kor:'다른 창에서 추가한 단어'});
+        disk=JSON.stringify(latest);s.data.set('decks',disk);
+      }else s.context.saveDecks=()=>{throw Error('writer failed');};
+      const result=s.run('removeAuditedWord(deletionEntry)');
+      assert.equal(result.ok,false,deckId+' '+failure);assert.match(result.error,/삭제하지 않았습니다/);
+      assert.equal(s.run('decks===deletionBefore.decks&&words===deletionBefore.words&&decks[0].words===deletionBefore.activeWords&&decks.find(deck=>deck.id===targetDeletionDeck).words===deletionBefore.targetWords&&decks[2].words===deletionBefore.wrong'),true,deckId+' '+failure);
+      assert.equal(s.run('stats===deletionBefore.stats&&dupes===deletionBefore.dupes&&activeDeckId===deletionBefore.activeDeckId'),true);
+      assert.equal(s.run('JSON.stringify(decks)'),memory);assert.equal(s.data.get('decks'),disk);
+      assert.equal(s.run('decks.find(deck=>deck.id===targetDeletionDeck).words.includes(deletionEntry.word)'),true);
+      assert.equal(s.run('deletionEntry.word'),target);assert.equal(target.eng,'cat');
+      const again=setup(Object.fromEntries(s.data));again.context.targetDeletionDeck=deckId;
+      assert.equal(again.run('decks.find(deck=>deck.id===targetDeletionDeck).words[0].eng'),'cat');
+      assert.equal(again.run('decks[2].words[0].note'),'원본과 별도 메모');
+    }
+  }
+});
+
