@@ -64,8 +64,15 @@ def exercise(browser, base, width):
     page.wait_for_selector('#wordAuditDialog[open]')
     assert '4개 단어장' in page.locator('#waSummary').inner_text()
     assert page.locator('.wa-group').count() == 1
-    assert page.locator('.wa-group .wa-entry').count() == 3
+    assert page.locator('.wa-group .wa-entry').count() == 2
+    assert '오답노트' not in page.locator('#waResults').inner_text()
     assert '심화' in page.locator('#waResults').inner_text()
+    # One ordinary original plus its review copy must produce no duplicate group.
+    page.evaluate("""()=>{window.auditForeignCopy=decks[1].words.shift();WordAudit.close();WordAudit.open();}""")
+    assert page.locator('.wa-group').count() == 0
+    assert page.evaluate("localStorage.getItem('decks')") == original
+    page.evaluate("""()=>{decks[1].words.unshift(auditForeignCopy);WordAudit.close();WordAudit.open();}""")
+    assert page.locator('.wa-group .wa-entry').count() == 2
     page.locator('#waSpellingTab').click()
     page.locator('#waScan').click()
     page.wait_for_function("document.querySelector('#waStatus').textContent.includes('검사 완료')", timeout=90000)
@@ -142,7 +149,7 @@ def exercise(browser, base, width):
     page.locator('[data-action=close]').click()
     assert not errors and not external, (errors,external)
     context.close()
-    return {'width':width,'globalBlocking':True,'duplicateLocations':True,'spellingAndVariants':True,
+    return {'width':width,'globalBlocking':True,'duplicateLocations':True,'wrongNotebookExcluded':True,'spellingAndVariants':True,
             'editPreservesData':True,'quotaDraftAndStaleGuard':True,'scanCancellation':True,'errors':errors}
 
 
@@ -153,8 +160,7 @@ def resilience(browser,base):
       localStorage.setItem('activeTab','decks');localStorage.setItem('soundOn','0');}""",DECKS)
     page.reload(wait_until='domcontentloaded')
     page.evaluate('()=>navigator.serviceWorker.ready')
-    page.wait_for_function("""async()=>{const cache=await caches.open('wordbook-v36');
-      return !!(await cache.match('./vendor/word-check/en-GB.dic'));}""",timeout=60000)
+    page.wait_for_function("async()=>!!(await caches.match('./vendor/word-check/en-GB.dic'))",timeout=60000)
     context.set_offline(True)
     page.reload(wait_until='domcontentloaded')
     page.locator('#wordAuditOpen').click();page.locator('#waSpellingTab').click();page.locator('#waScan').click()

@@ -1324,29 +1324,41 @@ test('headword screening normalizes NFKC case and whitespace and reads the activ
   assert.equal(s.run('normalizeHeadword("  ＴＡＫＥ\\u3000\\n  ＣＡＲＥ\\t ")'),'take care');
   assert.equal(s.run('findWordDuplicates("take\\n care")[0].deckId'),'b');
   assert.equal(s.run('findWordDuplicates("take care")[0].number'),2);
-  assert.equal(s.run('findWordDuplicates(" LOOK  AFTER ")[0].deckName'),'오답노트');
+  assert.equal(s.run('findWordDuplicates(" LOOK  AFTER ").length'),0);
+  assert.equal(s.run('getAllWordEntries().find(entry=>entry.key==="look after").isWrongDeck'),true);
   s.run('words=[{eng:" Cat\\nnap ",kor:"선택한 단어장의 최신 배열"}]');
   assert.equal(s.run('getAllWordEntries().find(entry=>entry.isActive).word===words[0]'),true);
   assert.equal(s.run('getAllWordEntries().some(entry=>entry.isActive&&entry.key==="cat")'),false);
   assert.equal(s.run('findWordDuplicates("catnap").length'),0);
   assert.equal(s.run('findWordDuplicates("cat nap",words[0]).length'),0);
   const entry=JSON.parse(s.run('JSON.stringify(findWordDuplicates("cat nap")[0],(key,value)=>key==="word"?undefined:value)'));
-  assert.deepEqual(entry,{deckId:'a',deckName:'기본 단어장',index:0,number:1,eng:' Cat\nnap ',kor:'선택한 단어장의 최신 배열',key:'cat nap',isActive:true});
+  assert.deepEqual(entry,{deckId:'a',deckName:'기본 단어장',index:0,number:1,eng:' Cat\nnap ',kor:'선택한 단어장의 최신 배열',key:'cat nap',isActive:true,isWrongDeck:false});
 });
-test('manual and dictionary registration block English already in any deck including the wrong notebook',()=>{
-  const s=registrationSetup(globalRegistrationInitial()),disk=s.data.get('decks'),before=s.run('JSON.stringify(decks)'),writes=s.writes.length;
-  Object.assign(s.elements.eng,{value:' ＤＯＧ '});Object.assign(s.elements.kor,{value:'입력한 뜻'});Object.assign(s.elements.exampleInput,{value:'Keep draft.'});
-  s.run('addWord()');
-  assert.equal(s.run('words.length'),1);assert.equal(s.run('JSON.stringify(decks)'),before);
-  assert.equal(s.elements.eng.value,' ＤＯＧ ');assert.equal(s.elements.exampleInput.value,'Keep draft.');
-  assert.ok(s.alerts.some(message=>message.includes('다른 단어장 1번')));
-  s.context._dictLast={eng:'LOOK\n  AFTER',kor:'추가하면 안 되는 뜻'};
-  s.run('dictAddWord()');
-  assert.ok(s.toasts.some(message=>message.includes('오답노트 2번')));
-  assert.equal(s.run('JSON.stringify(decks)'),before);assert.equal(s.data.get('decks'),disk);assert.equal(s.writes.length,writes);
-  assert.deepEqual(s.sounds,[]);assert.equal(s.renders,0);assert.equal(s.searchRenders,0);
+test('manual and dictionary registration block ordinary-deck English but allow words found only in wrong notes',()=>{
+  for(const source of ['manual','dictionary']){
+    const s=registrationSetup(globalRegistrationInitial()),disk=s.data.get('decks'),before=s.run('JSON.stringify(decks)'),writes=s.writes.length;
+    const register=(eng,kor)=>{
+      if(source==='manual'){
+        s.elements.eng.value=eng;s.elements.kor.value=kor;s.elements.exampleInput.value='Keep draft.';
+        return s.run('addWord()');
+      }
+      s.context._dictLast={eng,kor};return s.run('dictAddWord()');
+    };
+    register(' ＤＯＧ ','입력한 뜻');
+    assert.equal(s.run('words.length'),1);assert.equal(s.run('JSON.stringify(decks)'),before);
+    assert.equal(s.data.get('decks'),disk);assert.equal(s.writes.length,writes);
+    assert.ok([...s.alerts,...s.toasts].some(message=>message.includes('다른 단어장 1번')));
+    if(source==='manual'){assert.equal(s.elements.eng.value,' ＤＯＧ ');assert.equal(s.elements.exampleInput.value,'Keep draft.');}
+    assert.deepEqual(s.sounds,[]);assert.equal(s.renders,0);assert.equal(s.searchRenders,0);
+    const wrong=s.run('JSON.stringify(decks[2])');
+    register('LOOK\n  AFTER','새로 등록한 뜻');
+    assert.equal(s.run('words.length'),2);assert.equal(s.run('normalizeHeadword(words[1].eng)'),'look after');
+    assert.equal(s.run('words[1].kor'),'새로 등록한 뜻');assert.equal(s.run('JSON.stringify(decks[2])'),wrong);
+    const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words.length'),2);
+    assert.equal(again.run('decks[2].words[1].kor'),'보살피다');
+  }
 });
-test('bulk registration screens all decks and normalized same-batch entries while preserving skipped drafts',()=>{
+test('bulk registration screens ordinary decks and same-batch entries while allowing wrong-note copies',()=>{
   const s=registrationSetup(globalRegistrationInitial()),foreign=s.run('JSON.stringify(decks.slice(1))');
   const drafts=[
     ['bird','새','Saved bird.'],['ＢＩＲＤ','다른 뜻','Keep duplicate draft.'],
@@ -1354,29 +1366,31 @@ test('bulk registration screens all decks and normalized same-batch entries whil
     ['fish','물고기','Saved fish.']
   ];
   drafts.forEach(values=>s.context.addBulkRow(...values));s.run('bulkAdd()');
-  assert.equal(s.run('words.map(word=>word.eng).join(",")'),'cat,bird,fish');
+  assert.equal(s.run('words.map(word=>word.eng).join(",")'),'cat,bird,LOOK   AFTER,fish');
   assert.equal(s.run('JSON.stringify(decks.slice(1))'),foreign);
-  assert.equal(s.run('words[1].example'),'Saved bird.');assert.equal(s.run('words[2].example'),'Saved fish.');
-  assert.deepEqual(s.rows.map(row=>Object.values(row.inputs).map(input=>input.value)),drafts.slice(1,4));
-  assert.ok(s.alerts.some(message=>message.includes('기본 단어장 2번')&&message.includes('다른 단어장 2번')&&message.includes('오답노트 2번')));
-  assert.ok(s.toasts.some(message=>message.includes('중복 3행 제외')));
-  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words.length'),3);
+  assert.equal(s.run('words[1].example'),'Saved bird.');assert.equal(s.run('words[2].example'),'Keep wrong-deck draft.');assert.equal(s.run('words[3].example'),'Saved fish.');
+  assert.deepEqual(s.rows.map(row=>Object.values(row.inputs).map(input=>input.value)),drafts.slice(1,3));
+  assert.ok(s.alerts.some(message=>message.includes('기본 단어장 2번')&&message.includes('다른 단어장 2번')));
+  assert.equal(s.alerts.some(message=>message.includes('오답노트 2번')),false);
+  assert.ok(s.toasts.some(message=>message.includes('중복 2행 제외')));
+  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words.length'),4);
   assert.equal(again.run('words[0].note[0].eng'),'kitten');
 });
-test('CSV import skips foreign and same-batch English while updating only the existing current-deck record',()=>{
+test('CSV import skips ordinary-deck and same-batch English but allows wrong-note copies without changing them',()=>{
   const s=registrationSetup(globalRegistrationInitial()),foreign=s.run('JSON.stringify(decks.slice(1))'),note=s.run('words[0].note'),custom=s.run('words[0].custom');
   const csv='English,Meaning,Example\n\nＣＡＴ,새 뜻,New local example.\ndog,덮지 말아야 할 뜻,Foreign replacement.\nbird,새,First bird.\n ＢＩＲＤ ,둘째 행의 뜻,Second bird.\nLOOK   AFTER,복제 금지,Wrong replacement.';
   s.context.importCsv=csv;
   const result=JSON.parse(s.run('JSON.stringify(addFromCsvText(importCsv,"새 시트"))'));
-  assert.equal(result.saved,true);assert.equal(result.added,1);assert.equal(result.updated,2);
-  assert.deepEqual(result.skipped.map(entry=>[entry.row,entry.reason]),[[4,'existing'],[6,'batch'],[7,'existing']]);
+  assert.equal(result.saved,true);assert.equal(result.added,2);assert.equal(result.updated,2);
+  assert.deepEqual(result.skipped.map(entry=>[entry.row,entry.reason]),[[4,'existing'],[6,'batch']]);
   assert.deepEqual(result.skipped[0].locations.map(location=>[location.deckId,location.number]),[['b',1]]);
   assert.deepEqual(result.skipped[1].locations.map(location=>[location.deckId,location.number]),[['a',2]]);
-  assert.deepEqual(result.skipped[2].locations.map(location=>[location.deckId,location.number]),[['wrong',2]]);
-  assert.equal(s.run('words.map(word=>word.eng).join(",")'),'cat,bird');
+  assert.equal(result.dups.some(entry=>entry.locations.some(location=>location.deckId==='wrong')),false);
+  assert.equal(s.run('words.map(word=>word.eng).join(",")'),'cat,bird,LOOK   AFTER');
   assert.equal(s.run('words[0].kor'),'새 뜻');assert.equal(s.run('words[1].kor'),'새');
   assert.equal(s.run('words[0].example.join("|")'),'Local one.|Local two.|New local example.');
   assert.equal(s.run('words[1].example'),'First bird.');
+  assert.equal(s.run('words[2].example'),'Wrong replacement.');
   assert.equal(s.run('words[0].note'),note);assert.equal(s.run('words[0].custom'),custom);
   assert.equal(s.run('words[0].mastered&&words[0].wrong&&words[0].wrongResult==="correct"'),true);
   assert.equal(s.run('JSON.stringify(decks.slice(1))'),foreign);
@@ -1384,12 +1398,12 @@ test('CSV import skips foreign and same-batch English while updating only the ex
   assert.equal(again.run('words[0].note[0].eng'),'kitten');
   assert.equal(again.run('decks[2].words[0].kor'),'독립 복사본');
 });
-test('word edits block changed English collisions globally while unchanged normalized names remain editable',()=>{
+test('word edits block ordinary-deck English collisions while unchanged normalized names remain editable',()=>{
   const s=registrationSetup(globalRegistrationInitial()),before=s.run('JSON.stringify(decks)'),disk=s.data.get('decks'),writes=s.writes.length;
   assert.equal(s.run('persistWordEdit(words[0],"ＤＯＧ","충돌",["Unsaved."])'),false);
-  assert.equal(s.run('persistWordEdit(words[0],"look\\n after","충돌",["Unsaved."])'),false);
+  assert.equal(s.run('persistWordEdit(words[0],"take\\n care","충돌",["Unsaved."])'),false);
   assert.equal(s.run('JSON.stringify(decks)'),before);assert.equal(s.data.get('decks'),disk);assert.equal(s.writes.length,writes);
-  assert.ok(s.toasts.some(message=>message.includes('다른 단어장 1번')));assert.ok(s.toasts.some(message=>message.includes('오답노트 2번')));
+  assert.ok(s.toasts.some(message=>message.includes('다른 단어장 1번')));assert.ok(s.toasts.some(message=>message.includes('다른 단어장 2번')));
   assert.equal(s.run('persistWordEdit(words[0],"ＣＡＴ","원본만 수정",["Saved one.","Saved two."])'),true);
   assert.equal(s.run('decks[2].words[0].kor'),'독립 복사본');
   assert.equal(s.run('words[0].note[0].eng'),'kitten');
@@ -1400,10 +1414,10 @@ test('inline study and list editors keep their drafts and edit mode after global
   vm.runInContext(app.slice(app.indexOf('function startEdit('),app.indexOf('function exportBackup(')),s.context);
   vm.runInContext(app.slice(app.indexOf('function lsStartEdit('),app.indexOf('let lsAutoSpeak=')),s.context);
   Object.assign(s.elements,{editEng:{value:' ＤＯＧ '},editKor:{value:'입력한 뜻'},editEx:{value:'Saved draft.'},
-    lsEditEng:{value:'LOOK\n AFTER'},lsEditKor:{value:'목록 초안'},lsEditEx:{value:'List draft.'}});
+    lsEditEng:{value:'TAKE\n CARE'},lsEditKor:{value:'목록 초안'},lsEditEx:{value:'List draft.'}});
   s.run('editIndex=0;lsEditIndex=0');
   s.run('saveEdit(0)');assert.equal(s.run('editIndex'),0);assert.equal(s.elements.editEng.value,' ＤＯＧ ');
-  s.run('lsSaveEdit(0)');assert.equal(s.run('lsEditIndex'),0);assert.equal(s.elements.lsEditEng.value,'LOOK\n AFTER');
+  s.run('lsSaveEdit(0)');assert.equal(s.run('lsEditIndex'),0);assert.equal(s.elements.lsEditEng.value,'TAKE\n CARE');
   assert.equal(s.run('words[0].eng'),'cat');assert.equal(s.run('words[0].kor'),'고양이');assert.equal(s.data.get('decks'),disk);
 });
 test('Google Sheet duplicate reporting names the skipped foreign deck and word number without replacing it',async()=>{
@@ -1426,6 +1440,71 @@ test('intentional wrong-notebook copies remain separate from proactive registrat
   assert.equal(s.run('duplicate("ＣＡＴ")'),true);s.run('addToWrongDeck(words[0])');
   assert.equal(s.run('decks[1].words.length'),1);assert.equal(s.run('decks[1].words[0].eng'),'cat');
   assert.equal(s.run('decks[1].words[0].example[0]'),'Saved example.');assert.equal(s.run('decks[1].words[0].note[0].eng'),'kitten');
-  assert.equal(s.run('findWordDuplicates("cat").length'),2);
+  assert.equal(s.run('findWordDuplicates("cat").length'),1);
+  assert.equal(s.run('getAllWordEntries().filter(entry=>entry.key==="cat").length'),2);
+});
+
+test('wrong-notebook identification prefers its saved ID, supports renaming, and does not exclude ordinary wrong-marked words',()=>{
+  const initial=globalRegistrationInitial(),decks=JSON.parse(initial.decks);
+  decks[2].name='다시 볼 단어';decks[1].words[0].wrong=true;
+  decks.push({id:'named-wrong',name:'오답 별도 단어장',words:[{eng:'turtle',kor:'거북이'}],stats:{},dupes:[]});
+  initial.decks=JSON.stringify(decks);initial.wrongDeckId='wrong';
+  const s=setup(initial),writes=s.writes.length;
+  assert.equal(s.run('duplicateWrongDeckId()'),'wrong');
+  assert.deepEqual(JSON.parse(s.run('JSON.stringify([...new Set(getAllWordEntries().filter(entry=>entry.isWrongDeck).map(entry=>entry.deckId))])')),['wrong']);
+  assert.equal(s.run('findWordDuplicates("look after").length'),0);
+  assert.equal(s.run('findWordDuplicates("turtle")[0].deckId'),'named-wrong');
+  assert.equal(s.run('findWordDuplicates("cat")[0].deckId'),'a');
+  assert.equal(s.run('findWordDuplicates("cat")[0].word.wrong'),true);
+  assert.equal(s.run('findWordDuplicates("dog")[0].deckId'),'b');
+  assert.equal(s.run('findWordDuplicates("dog")[0].word.wrong'),true);
+  assert.equal(s.writes.length,writes);
+  const fallback=globalRegistrationInitial();fallback.wrongDeckId='deleted-wrong-deck';
+  const f=setup(fallback);assert.equal(f.run('duplicateWrongDeckId()'),'wrong');
+  assert.equal(f.run('getAllWordEntries().find(entry=>entry.deckId==="wrong").isWrongDeck'),true);
+  assert.equal(f.run('findWordDuplicates("look after").length'),0);
+});
+test('registration inside the wrong notebook accepts ordinary-deck words and prevents its own normalized duplicates',()=>{
+  for(const source of ['manual','dictionary','bulk','csv']){
+    const initial=globalRegistrationInitial();initial.activeDeckId='wrong';
+    const s=registrationSetup(initial),ordinary=s.run('JSON.stringify(decks.slice(0,2))');
+    if(source==='manual'){
+      s.elements.eng.value='dog';s.elements.kor.value='오답노트에 따로 등록';s.run('addWord()');
+    }else if(source==='dictionary'){
+      s.context._dictLast={eng:'dog',kor:'오답노트에 따로 등록'};s.run('dictAddWord()');
+    }else if(source==='bulk'){
+      s.context.addBulkRow('dog','오답노트에 따로 등록','원래 예문');
+      s.context.addBulkRow('ＤＯＧ','반복 입력은 제외','보존할 초안');s.run('bulkAdd()');
+      assert.equal(s.rows.length,1);assert.equal(s.rows[0].inputs['.bulkEng'].value,'ＤＯＧ');
+    }else{
+      const result=s.run('addFromCsvText("dog,오답노트에 따로 등록,원래 예문\\nＤＯＧ,반복 입력은 제외,반복 예문","Sheet")');
+      assert.equal(result.added,1);assert.equal(result.skipped.length,1);assert.equal(result.skipped[0].reason,'batch');
+    }
+    assert.equal(s.run('words.length'),3,source);assert.equal(s.run('words[2].eng'),'dog',source);
+    assert.equal(s.run('words[2].kor'),'오답노트에 따로 등록',source);
+    assert.equal(s.run('JSON.stringify(decks.slice(0,2))'),ordinary,source);
+    assert.equal(s.run('getDuplicateWordEntries().every(entry=>entry.deckId==="wrong"&&entry.isWrongDeck)'),true);
+    assert.equal(s.run('findWordDuplicates("ＤＯＧ").length'),1);
+    assert.equal(s.run('findWordDuplicates("dog")[0].number'),3);
+    const disk=s.data.get('decks'),writes=s.writes.length;
+    s.elements.eng.value=' ＤＯＧ ';s.elements.kor.value='같은 오답노트 안의 반복';s.run('addWord()');
+    assert.equal(s.run('words.length'),3);assert.equal(s.data.get('decks'),disk);assert.equal(s.writes.length,writes);
+    assert.ok(s.alerts.some(message=>message.includes('오답노트 3번')));
+    assert.equal(s.run('words[0].note'),'원본과 별도 메모');
+  }
+});
+test('edit collision scope follows the edited word owner rather than the currently active page',()=>{
+  const s=registrationSetup(globalRegistrationInitial()),wrong=s.run('JSON.stringify(decks[2])');
+  assert.equal(s.run('findWordDuplicates("dog",decks[2].words[0]).length'),0);
+  assert.equal(s.run('findWordDuplicates("look after",decks[2].words[0])[0].deckId'),'wrong');
+  assert.equal(s.run('findWordDuplicates("look after",words[0]).length'),0);
+  assert.equal(s.run('persistWordEdit(words[0],"look after","일반 단어장에서 따로 수정",["Saved."])'),true);
+  assert.equal(s.run('JSON.stringify(decks[2])'),wrong);
+  assert.equal(s.run('words[0].note[0].eng'),'kitten');
+  s.run('activeDeckId="wrong";words=decks[2].words;stats=decks[2].stats;dupes=decks[2].dupes');
+  assert.equal(s.run('findWordDuplicates("dog",decks[0].words[0])[0].deckId'),'b');
+  assert.equal(s.run('findWordDuplicates("take care",words[0]).length'),0);
+  assert.equal(s.run('findWordDuplicates("look after",words[0])[0].deckId'),'wrong');
+  assert.equal(s.run('getDuplicateWordEntries("a").some(entry=>entry.isWrongDeck)'),false);
 });
 

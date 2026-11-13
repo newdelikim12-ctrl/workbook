@@ -167,7 +167,7 @@ def run():
                     assert page.evaluate('CaptureStore.ready()')==snapshot
                     page.locator('#cnEditor button[type=button]').click()
                     page.evaluate('()=>navigator.serviceWorker.ready');page.wait_for_function('!!navigator.serviceWorker.controller')
-                    assert page.evaluate("async()=>!!(await(await caches.open('wordbook-v35')).match('vendor/pdfjs/pdf.worker.min.mjs'))")
+                    assert page.evaluate("async()=>!!(await caches.match('vendor/pdfjs/pdf.worker.min.mjs'))")
                     context.set_offline(True);page.reload(wait_until='domcontentloaded')
                     page.wait_for_selector('#cnItems .cn-item');assert page.locator('#cnItems .cn-item').count()==4
                     pdf_card=page.locator('#cnItems .cn-item').filter(has_text='lesson.pdf');pdf_card.scroll_into_view_if_needed()

@@ -60,7 +60,7 @@
   function snapshot(){
     entries=getAllWordEntries().map(entry=>({...entry,eng:entry.word.eng,kor:entry.word.kor}));
     const byKey=new Map();
-    entries.forEach((entry,index)=>{entry.auditIndex=index;let group=byKey.get(entry.key);if(!group)byKey.set(entry.key,group=[]);group.push(entry);});
+    entries.forEach((entry,index)=>{entry.auditIndex=index;if(entry.isWrongDeck)return;let group=byKey.get(entry.key);if(!group)byKey.set(entry.key,group=[]);group.push(entry);});
     groups=[...byKey.values()].filter(group=>group.length>1);
     ui.summary.textContent=decks.length+'개 단어장 · '+entries.length+'개 단어를 확인합니다.';
   }
@@ -80,7 +80,7 @@
     ui.scan.textContent=mode==='duplicates'?'현재 단어 다시 검사':scanState==='idle'?'오탈자 검사 시작':'오탈자 다시 검사';
     ui.scan.disabled=scanState==='running'||!!editing;ui.cancel.hidden=scanState!=='running';
     if(mode==='duplicates'){
-      ui.notice.textContent='대소문자·전각 문자·띄어쓰기 차이를 정리해 영어 단어를 비교합니다. 오답노트에 만든 복사본도 포함됩니다. 단어는 자동 삭제하지 않습니다.';
+      ui.notice.textContent='대소문자·전각 문자·띄어쓰기 차이를 정리해 영어 단어를 비교합니다. 오답노트의 복사본은 중복 집계에서 제외합니다. 단어는 자동 삭제하지 않습니다.';
       ui.status.textContent=groups.length?groups.length+'개 단어가 중복되어 있습니다. 각 위치와 뜻을 비교해 주세요.':'현재 저장된 전체 단어장에서 중복된 영어 단어가 없습니다.';
     }else{
       ui.notice.textContent='영어는 미국·영국 사전, 한글 뜻은 자주 틀리는 표현만 확인합니다. 고유명사·전문용어도 후보에 포함될 수 있으며, 문법·뜻의 정확성이나 모든 한글 띄어쓰기를 검사하지는 않습니다. 검사는 기기 안에서 진행됩니다.';
