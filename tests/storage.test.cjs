@@ -1451,9 +1451,9 @@ test('wrong-notebook identification prefers its saved ID, supports renaming, and
   initial.decks=JSON.stringify(decks);initial.wrongDeckId='wrong';
   const s=setup(initial),writes=s.writes.length;
   assert.equal(s.run('duplicateWrongDeckId()'),'wrong');
-  assert.deepEqual(JSON.parse(s.run('JSON.stringify([...new Set(getAllWordEntries().filter(entry=>entry.isWrongDeck).map(entry=>entry.deckId))])')),['wrong']);
+  assert.deepEqual(JSON.parse(s.run('JSON.stringify([...new Set(getAllWordEntries().filter(entry=>entry.isWrongDeck).map(entry=>entry.deckId))])')),['wrong','named-wrong']);
   assert.equal(s.run('findWordDuplicates("look after").length'),0);
-  assert.equal(s.run('findWordDuplicates("turtle")[0].deckId'),'named-wrong');
+  assert.equal(s.run('findWordDuplicates("turtle").length'),0);
   assert.equal(s.run('findWordDuplicates("cat")[0].deckId'),'a');
   assert.equal(s.run('findWordDuplicates("cat")[0].word.wrong'),true);
   assert.equal(s.run('findWordDuplicates("dog")[0].deckId'),'b');
@@ -1612,3 +1612,58 @@ test('audit deletion rolls back exact live and deck arrays on quota errors, disk
   }
 });
 
+
+test('all wrong notebook identities are excluded while ordinary wrong-marked originals remain eligible',()=>{
+  const initial=globalRegistrationInitial(),model=JSON.parse(initial.decks);
+  model.push({id:'spaced',name:'📕 오\u3000답 노트 ２',words:[{eng:'cat',kor:'띄어 쓴 오답 복사본'}]},
+    {id:'deck_wrong_123',name:'다시 볼 단어',words:[{eng:'cat',kor:'이름 바꾼 복사본'}]},
+    {id:'marked',name:'개인 복습',kind:'wrong',words:[{eng:'cat',kor:'표시한 복사본'}]});
+  model[1].words.push({eng:'CAT',kor:'실제 일반 중복'});initial.decks=JSON.stringify(model);initial.wrongDeckId='wrong';
+  const s=setup(initial),before=s.run('JSON.stringify(decks)'),writes=s.writes.length;
+  assert.deepEqual(JSON.parse(s.run('JSON.stringify(getAllWordEntries().filter(e=>e.isWrongDeck).map(e=>e.deckId))')),['wrong','wrong','spaced','deck_wrong_123','marked']);
+  assert.equal(s.run('getOrdinaryDuplicateGroups().length'),1);
+  assert.deepEqual(JSON.parse(s.run('JSON.stringify(getOrdinaryDuplicateGroups()[0].map(e=>e.deckId))')),['a','b']);
+  assert.equal(s.run('getOrdinaryDuplicateGroups()[0][0].word.wrong'),true);
+  for(const id of ['spaced','deck_wrong_123','marked']){
+    s.context.checkedWrongId=id;
+    assert.equal(s.run('getDuplicateWordEntries(checkedWrongId).every(e=>e.deckId===checkedWrongId)'),true);
+  }
+  assert.equal(s.run('JSON.stringify(decks)'),before);assert.equal(s.writes.length,writes);
+});
+test('legacy duplicate list derives ordinary locations and never replays wrong-only or obsolete import history',()=>{
+  const initial=globalRegistrationInitial(),model=JSON.parse(initial.decks);
+  model[0].dupes=[{eng:'ghost',sheets:['오답노트'],n:3},{eng:'look after',sheets:['오답노트'],n:1}];
+  model[1].words.push({eng:'CAT',kor:'남겨 둔 일반 중복'});initial.decks=JSON.stringify(model);
+  const s=setup(initial),box={innerHTML:''},query={value:''},before=s.run('JSON.stringify(decks)'),writes=s.writes.length;
+  s.context.document.getElementById=id=>id==='dupesList'?box:query;
+  Object.assign(s.context,{sectionOpen:()=>true,escapeHtml:value=>String(value)});
+  vm.runInContext(app.slice(app.indexOf('function renderDupes('),app.indexOf('// ===== 시트(탭) 선택해서 불러오기')),s.context);
+  s.run('renderDupes()');assert.match(box.innerHTML,/기본 단어장 1번/);assert.match(box.innerHTML,/다른 단어장 3번/);
+  assert.equal(/ghost|오답노트|look after/.test(box.innerHTML),false);
+  s.run('var restoreDuplicate=decks[1].words.pop();renderDupes()');assert.equal(s.run('getOrdinaryDuplicateGroups().length'),0);
+  assert.match(box.innerHTML,/겹치는 단어가 없습니다/);assert.equal(box.innerHTML.includes('ghost'),false);
+  s.run('decks[1].words.push(restoreDuplicate)');
+  assert.equal(s.run('JSON.stringify(decks)'),before);assert.equal(s.writes.length,writes);
+});
+test('backup exports portable wrong notebook identity without changing stored deck fields',()=>{
+  const s=backupExportSetup();
+  s.run('decks.push({id:"manual",name:"이름을 바꾼 복습장",words:[{eng:"cat",kor:"별도 복사본",note:"보존할 메모"}],stats:{},dupes:[]});safeStorage.setItem("wrongDeckId","manual");saveDecks();');
+  const before=s.run('JSON.stringify(decks)'),disk=s.data.get('decks');s.run('exportBackup()');
+  const exported=JSON.parse(s.box.value);assert.equal(exported.decks[1].kind,'wrong');assert.equal(exported.decks[1].words[0].note,'보존할 메모');
+  assert.equal(s.run('JSON.stringify(decks)'),before);assert.equal(s.data.get('decks'),disk);
+  const fresh=setup({decks:JSON.stringify(exported.decks),activeDeckId:exported.activeDeckId});
+  assert.equal(fresh.run('getAllWordEntries().find(e=>e.deckId==="manual").isWrongDeck'),true);
+  assert.equal(fresh.run('getOrdinaryDuplicateGroups().length'),0);
+});
+test('renaming a wrong notebook preserves its role and a failed save rolls back its exact fields',()=>{
+  for(const failure of [false,true]){
+    const s=setup(globalRegistrationInitial());
+    Object.assign(s.context,{prompt:()=> '개인 복습',renderDeckPanel(){},renderRecentDecks(){},showToast(){}});
+    vm.runInContext(app.slice(app.indexOf('function renameDeck('),app.indexOf('function deleteDeck(')),s.context);
+    const before=s.run('JSON.stringify(decks)');if(failure)s.context.localStorage.setItem=()=>{throw Error('quota');};
+    s.run('renameDeck("wrong")');
+    if(failure){assert.equal(s.run('JSON.stringify(decks)'),before);assert.equal(s.run('Object.hasOwn(decks[2],"kind")'),false);}
+    else{assert.equal(s.run('decks[2].kind'),'wrong');assert.equal(s.run('decks[2].name'),'개인 복습');
+      const fresh=setup({decks:s.data.get('decks'),activeDeckId:'a'});assert.equal(fresh.run('getAllWordEntries().find(e=>e.deckId==="wrong").isWrongDeck'),true);}
+  }
+});
