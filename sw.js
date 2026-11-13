@@ -1,6 +1,6 @@
 // 단어 연습장 서비스워커
-const CACHE='wordbook-v35';
-const SHELL=["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./captures-store.js", "./captures-media.js", "./captures.js", "./captures.css", "./vendor/pdfjs/font-assets-01.json", "./vendor/pdfjs/font-assets-02.json", "./vendor/pdfjs/font-assets-03.json", "./vendor/pdfjs/font-assets-04.json", "./vendor/pdfjs/font-assets-05.json", "./vendor/pdfjs/font-assets-06.json", "./vendor/pdfjs/font-assets-07.json", "./vendor/pdfjs/font-assets.json", "./vendor/pdfjs/jbig2_nowasm_fallback.js", "./vendor/pdfjs/openjpeg_nowasm_fallback.js", "./vendor/pdfjs/pdf.min.mjs", "./vendor/pdfjs/pdf.worker.min.mjs"];
+const CACHE='wordbook-v36';
+const SHELL=["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./captures-store.js", "./captures-media.js", "./captures.js", "./captures.css", "./vendor/pdfjs/font-assets-01.json", "./vendor/pdfjs/font-assets-02.json", "./vendor/pdfjs/font-assets-03.json", "./vendor/pdfjs/font-assets-04.json", "./vendor/pdfjs/font-assets-05.json", "./vendor/pdfjs/font-assets-06.json", "./vendor/pdfjs/font-assets-07.json", "./vendor/pdfjs/font-assets.json", "./vendor/pdfjs/jbig2_nowasm_fallback.js", "./vendor/pdfjs/openjpeg_nowasm_fallback.js", "./vendor/pdfjs/pdf.min.mjs", "./vendor/pdfjs/pdf.worker.min.mjs", "./word-audit.js", "./word-audit.css", "./word-spelling.js", "./vendor/word-check/nspell.mjs", "./vendor/word-check/en-US.aff", "./vendor/word-check/en-US.dic", "./vendor/word-check/en-GB.aff", "./vendor/word-check/en-GB.dic"];
 
 self.addEventListener('install',e=>{
   self.skipWaiting();
