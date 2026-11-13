@@ -23,15 +23,22 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Test storage and application logic
-        run: node --test tests/storage.test.cjs
+        run: |
+          node --test tests/storage.test.cjs
+          node --check captures-store.js
+          node --check captures-media.js
+          node --check captures.js
       - uses: actions/configure-pages@v5
       - name: Prepare public files only
         run: |
           mkdir -p _site
-          cp index.html sw.js manifest.json icon-192.png icon-512.png _site/
+          cp index.html sw.js manifest.json icon-192.png icon-512.png captures-store.js captures-media.js captures.js captures.css _site/
+          cp -R vendor _site/vendor
+          cp .nojekyll _site/.nojekyll
       - uses: actions/upload-pages-artifact@v4
         with:
           path: _site
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
