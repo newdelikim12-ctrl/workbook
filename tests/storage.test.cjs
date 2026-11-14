@@ -1744,9 +1744,12 @@ test('study deletion supports every wrong-notebook identity and preserves ordina
     assert.equal(s.run('words[0]'),remaining);assert.equal(s.run('words.includes(selectedRemovedWord)'),false);assert.equal(s.run('words[0].custom.keep'),7);
     assert.equal(s.run('JSON.stringify(decks[0])'),original);assert.equal(s.run('JSON.stringify(decks[2])'),other);
     assert.equal(s.run('stats'),statistics);assert.equal(s.run('dupes'),history);assert.equal(s.run('words===decks[1].words'),true);
+    assert.equal(s.run('decks[1].wrongArchive.length'),1);assert.equal(s.run('decks[1].wrongArchive[0].word'),target);
+    assert.equal(s.run('decks[1].wrongArchive[0].originalIndex'),0);
     assert.equal(s.shown.at(-1)?.word,remaining);assert.equal(s.run('currentIndex'),0);assert.equal(target.eng,'cat');
     assert.equal(s.run('cardHistory.length===0&&recentSeen.length===0&&lsPeeked.size===0&&lsSelected.size===0&&wlSelected.size===0'),true);
     const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words.map(word=>word.eng).join(",")'),'dog,bird');
+    assert.equal(again.run('getWrongArchiveEntries().length'),1);assert.equal(again.run('getWrongArchiveEntries()[0].word.note'),'삭제할 복사본 메모');
     assert.equal(again.run('decks[0].words[0].note[0].kor'),'원본 메모');assert.equal(again.run('decks[2].words[0].note'),'보존할 메모');
   }
 });
@@ -1800,6 +1803,7 @@ test('deleting the final wrong-notebook word empties only that deck and resets t
   assert.equal(s.run('words.length'),0);assert.equal(s.run('decks.length'),3);assert.equal(s.run('currentIndex'),-1);
   assert.equal(s.calls.reset,1);assert.equal(s.shown.length,0);assert.equal(s.run('JSON.stringify(decks[0])'),original);assert.equal(s.run('JSON.stringify(decks[2])'),other);
   const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words.length'),0);assert.equal(again.run('activeDeckId'),'review');
+  assert.equal(again.run('getWrongArchiveEntries().length'),1);assert.equal(again.run('getWrongArchiveEntries()[0].word.eng'),'cat');
 });
 test('wrong-notebook deletion advances to the next eligible card, wraps when needed and clears an exhausted session',()=>{
   for(const scenario of ['next','wrap','exhausted']){
@@ -1818,4 +1822,185 @@ test('wrong-notebook deletion advances to the next eligible card, wraps when nee
       assert.equal(s.run('words.find(word=>word.eng==="fish").mastered'),false);
     }
   }
+});
+
+test('wrong archives stay absent on untouched decks and retain complete original records through reopening',()=>{
+  const s=setup(wrongStudyDeletionInitial()),writes=s.writes.length,before=s.run('JSON.stringify(decks)');
+  assert.equal(s.run('getWrongArchiveEntries().length'),0);assert.equal(s.run('decks.every(deck=>!Object.hasOwn(deck,"wrongArchive"))'),true);
+  assert.equal(s.writes.length,writes);assert.equal(s.run('JSON.stringify(decks)'),before);
+  s.run('words[0].note=[{eng:"kitten",kor:"메모",custom:{keep:[1,2]}}];words[0].custom={nested:{keep:true}};var archivedRecord=words[0];');
+  const original=s.run('JSON.stringify(archivedRecord)'),ordinary=s.run('JSON.stringify(decks[0])'),other=s.run('JSON.stringify(decks[2])');
+  const result=s.run('archiveWrongWord({deckId:activeDeckId,word:words[0],eng:words[0].eng,kor:words[0].kor})');
+  assert.equal(result.ok,true);assert.equal(result.isActive,true);assert.equal(result.index,0);assert.equal(result.remainingCount,2);
+  assert.equal(result.entries[0].word,s.run('archivedRecord'));assert.equal(s.run('decks[1].wrongArchive[0].word'),s.run('archivedRecord'));
+  assert.equal(s.run('decks[1].kind'),'wrong');assert.equal(s.run('Object.hasOwn(decks[0],"wrongArchive")'),false);
+  assert.equal(s.run('JSON.stringify(decks[0])'),ordinary);assert.equal(s.run('JSON.stringify(decks[2])'),other);
+  assert.equal(s.run('getAllWordEntries().filter(entry=>entry.deckId==="review").length'),2);
+  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('JSON.stringify(getWrongArchiveEntries()[0].word)'),original);
+  assert.equal(again.run('getWrongArchiveEntries()[0].word.mastered'),true);assert.equal(again.run('getWrongArchiveEntries()[0].deckId'),'review');
+});
+test('batch archival is atomic in original source order and persists the latest inactive active-word array',()=>{
+  const s=setup(wrongStudyDeletionInitial());
+  s.run('activeDeckId="ordinary";words=decks[0].words.concat({eng:"latest",kor:"활성 배열 최신 기록"});stats=decks[0].stats;dupes=decks[0].dupes;var batchSource=decks[1].words,batchFirst=batchSource[0],batchLast=batchSource[2];');
+  const writes=s.writes.filter(key=>key==='decks').length;
+  const result=s.run('archiveWrongWords("review",[batchLast,batchFirst])');
+  assert.equal(result.ok,true);assert.equal(result.isActive,false);assert.equal(result.remainingCount,1);
+  assert.deepEqual([...result.entries].map(entry=>entry.originalIndex),[0,2]);assert.equal(result.entries[0].word,s.run('batchFirst'));assert.equal(result.entries[1].word,s.run('batchLast'));
+  assert.equal(s.run('decks[1].words[0].eng'),'dog');assert.equal(s.run('batchSource.length'),3);assert.equal(s.run('words===decks[0].words'),true);
+  assert.equal(s.writes.filter(key=>key==='decks').length,writes+1);
+  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words[1].eng'),'latest');assert.equal(again.run('getWrongArchiveEntries().length'),2);
+});
+test('archival rejects ordinary decks, invalid selections and stale snapshots without creating properties or writing',()=>{
+  const expressions=['archiveWrongWords("ordinary",[decks[0].words[0]])','archiveWrongWords("review",[])',
+    'archiveWrongWords("review",[words[0],words[0]])','archiveWrongWords("review",[{...words[0]}])',
+    'archiveWrongWords("review",[decks[2].words[0]])','archiveWrongWord({deckId:"review",word:words[0],eng:"stale",kor:words[0].kor})',
+    'archiveWrongWord({deckId:"review",word:words[0],eng:words[0].eng,kor:"stale"})','archiveWrongWord({deckId:"review",word:words[0]})'];
+  for(const expression of expressions){
+    const s=setup(wrongStudyDeletionInitial()),before=s.run('JSON.stringify(decks)'),disk=s.data.get('decks'),writes=s.writes.length;
+    assert.equal(s.run(expression).ok,false,expression);assert.equal(s.run('JSON.stringify(decks)'),before,expression);
+    assert.equal(s.data.get('decks'),disk);assert.equal(s.writes.length,writes);assert.equal(s.run('decks.every(deck=>!Object.hasOwn(deck,"wrongArchive"))'),true);
+  }
+});
+test('individual restoration keeps same-English live records and all archived fields without overwriting either record',()=>{
+  const s=setup(wrongStudyDeletionInitial());s.run('archiveWrongWords("review",[words[0]]);var archivedId=getWrongArchiveEntries()[0].id,originalArchived=getWrongArchiveEntries()[0].word;words.push({eng:"cat",kor:"다시 등록한 별도 뜻",note:"별도 기록"});saveDecks();');
+  const original=s.run('JSON.stringify(originalArchived)'),result=s.run('restoreWrongArchive([archivedId])');
+  assert.equal(result.ok,true);assert.equal(result.restoredCount,1);assert.equal(result.activeChanged,true);assert.deepEqual([...result.deckIds],['review']);
+  assert.equal(s.run('words.filter(word=>word.eng==="cat").length'),2);assert.equal(s.run('words[0]'),s.run('originalArchived'));
+  assert.equal(s.run('JSON.stringify(words[0])'),original);assert.equal(s.run('words.at(-1).note'),'별도 기록');assert.equal(s.run('getWrongArchiveEntries().length'),0);
+  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words.filter(word=>word.eng==="cat").length'),2);
+});
+test('all-book restoration is atomic and reverses removal batches while supporting partial batch restoration',()=>{
+  for(const partial of [false,true]){
+    const initial=wrongStudyDeletionInitial(),model=JSON.parse(initial.decks);model[1].words=['a','b','c','d','e'].map(eng=>({eng,kor:eng}));initial.decks=JSON.stringify(model);
+    const s=setup(initial);s.run('archiveWrongWords("review",[words[1],words[3]])');
+    if(partial){s.run('restoreWrongArchive([getWrongArchiveEntries().find(entry=>entry.word.eng==="d").id])');assert.equal(s.run('words.map(word=>word.eng).join("")'),'acde');}
+    s.run('archiveWrongWords("review",[words.find(word=>word.eng==="c")]);archiveWrongWords("deck_wrong_other",[decks[2].words[0]])');
+    const before=s.writes.filter(key=>key==='decks').length,result=s.run('restoreWrongArchive()');
+    assert.equal(result.ok,true);assert.equal(result.activeChanged,true);assert.equal(result.restoredCount,partial?3:4);
+    assert.equal(s.writes.filter(key=>key==='decks').length,before+1);assert.equal(s.run('words.map(word=>word.eng).join("")'),'abcde');
+    assert.equal(s.run('decks[2].words[0].note'),'보존할 메모');assert.equal(s.run('getWrongArchiveEntries().length'),0);
+  }
+});
+test('purge removes only captured archive IDs and never touches remaining live words or late archive entries',()=>{
+  const s=setup(wrongStudyDeletionInitial());s.run('archiveWrongWords("review",[words[0]]);var capturedArchiveIds=getWrongArchiveEntries().map(entry=>entry.id);archiveWrongWords("deck_wrong_other",[decks[2].words[0]]);');
+  const live=s.run('JSON.stringify(decks.map(deck=>deck.words))'),result=s.run('purgeWrongArchive(capturedArchiveIds)');
+  assert.equal(result.ok,true);assert.equal(result.purgedCount,1);assert.equal(s.run('getWrongArchiveEntries().length'),1);
+  assert.equal(s.run('getWrongArchiveEntries()[0].deckId'),'deck_wrong_other');assert.equal(s.run('JSON.stringify(decks.map(deck=>deck.words))'),live);
+  const all=s.run('purgeWrongArchive()');assert.equal(all.ok,true);assert.equal(all.purgedCount,1);assert.equal(s.run('getWrongArchiveEntries().length'),0);
+  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('getWrongArchiveEntries().length'),0);assert.equal(again.run('decks[0].words[0].note[0].kor'),'원본 메모');
+});
+test('restore and purge reject stale or duplicate IDs as an entire operation and empty selections never write',()=>{
+  for(const operation of ['restoreWrongArchive','purgeWrongArchive']){
+    const s=setup(wrongStudyDeletionInitial());s.run('archiveWrongWords("review",[words[0],words[1]]);var archiveIds=getWrongArchiveEntries().map(entry=>entry.id);');
+    const before=s.run('JSON.stringify(decks)'),disk=s.data.get('decks'),writes=s.writes.length;
+    for(const argument of ['[archiveIds[0],"missing"]','[archiveIds[0],archiveIds[0]]','"id"','[null]']){
+      assert.equal(s.run(operation+'('+argument+')').ok,false,operation+' '+argument);assert.equal(s.run('JSON.stringify(decks)'),before);assert.equal(s.data.get('decks'),disk);assert.equal(s.writes.length,writes);
+    }
+    assert.equal(s.run(operation+'([])').ok,true);assert.equal(s.writes.length,writes);
+  }
+});
+test('archive, restore and purge roll back exact arrays and property absence on quota errors or disk conflicts',()=>{
+  for(const operation of ['archive','restore','purge'])for(const active of [true,false])for(const failure of ['quota','conflict']){
+    const s=setup(wrongStudyDeletionInitial());
+    if(operation!=='archive')s.run('archiveWrongWords("review",[words[0]]);archiveWrongWords("deck_wrong_other",[decks[2].words[0]])');
+    if(!active)s.run('activeDeckId="ordinary";words=decks[0].words;stats=decks[0].stats;dupes=decks[0].dupes');
+    s.run('words=words.slice();var archiveBefore={words,deckArrays:decks.map(deck=>deck.words),archives:decks.map(deck=>deck.wrongArchive),hasArchive:decks.map(deck=>Object.hasOwn(deck,"wrongArchive")),kinds:decks.map(deck=>deck.kind),hasKind:decks.map(deck=>Object.hasOwn(deck,"kind")),stats,dupes};');
+    const memory=s.run('JSON.stringify(decks)');let disk=s.data.get('decks');
+    if(failure==='quota')s.context.localStorage.setItem=()=>{throw Error('quota');};
+    else{const latest=JSON.parse(disk);latest[0].words.push({eng:'external',kor:'다른 창의 기록'});disk=JSON.stringify(latest);s.data.set('decks',disk);}
+    const expression=operation==='archive'?'archiveWrongWords("review",[decks[1].words[0]])':operation==='restore'?'restoreWrongArchive()':'purgeWrongArchive()';
+    assert.equal(s.run(expression).ok,false,operation+' '+active+' '+failure);assert.equal(s.run('JSON.stringify(decks)'),memory);assert.equal(s.data.get('decks'),disk);
+    assert.equal(s.run('words===archiveBefore.words&&decks.every((deck,index)=>deck.words===archiveBefore.deckArrays[index]&&deck.wrongArchive===archiveBefore.archives[index]&&Object.hasOwn(deck,"wrongArchive")===archiveBefore.hasArchive[index]&&deck.kind===archiveBefore.kinds[index]&&Object.hasOwn(deck,"kind")===archiveBefore.hasKind[index])&&stats===archiveBefore.stats&&dupes===archiveBefore.dupes'),true);
+  }
+});
+test('empty wrong archives retain notebook identity after restore or purge without overwriting unfamiliar deck kinds',()=>{
+  for(const operation of ['restoreWrongArchive','purgeWrongArchive']){
+    const initial=wrongStudyDeletionInitial(),model=JSON.parse(initial.decks);
+    model[1].name='개인 기록';model[1].kind='custom';model[1].wrongArchive=[{id:'identity',word:{eng:'archived',kor:'보관 단어'},originalIndex:0,removedAt:'2026-11-14T10:00:00.000Z'}];
+    initial.decks=JSON.stringify(model);const s=setup(initial);assert.equal(s.run('isWrongNotebookDeck(decks[1])'),true);
+    assert.equal(s.run(operation+'()').ok,true);assert.equal(s.run('decks[1].wrongArchive.length'),0);
+    assert.equal(s.run('decks[1].kind'),'custom');assert.equal(s.run('isWrongNotebookDeck(decks[1])'),true);
+    const again=setup(Object.fromEntries(s.data));assert.equal(again.run('isWrongNotebookDeck(decks[1])'),true);assert.equal(again.run('decks[1].kind'),'custom');
+  }
+});
+function archiveBackupRestoreSetup(){
+  const s=setup(wrongStudyDeletionInitial()),box={value:''},calls={confirm:0,render:0,reset:0};
+  Object.assign(s.context,{currentIndex:0,needConfirm2(){calls.confirm++;return true;},afterWordsRemoved(){calls.reset++;},resetCardView(){calls.reset++;},
+    render(){calls.render++;},renderDeckPanel(){calls.render++;},renderRecentDecks(){calls.render++;}});
+  s.context.document.getElementById=()=>box;
+  vm.runInContext(app.slice(app.indexOf('function prepareBackupRestore('),app.indexOf('function matchQ(')),s.context);
+  s.run('archiveWrongWords("review",[words[0]])');
+  return {...s,box,calls};
+}
+test('full and legacy backup restore preserve archives and archive overwritten wrong words while leaving identical incoming records alone',()=>{
+  for(const full of [true,false]){
+    const s=archiveBackupRestoreSetup(),dog=JSON.parse(s.run('JSON.stringify(words[0])'));
+    const reorderedDog=Object.fromEntries(Object.entries(dog).reverse());
+    const backup=full?{decks:[{id:'ordinary',name:'새 일반 단어장',words:[{eng:'new',kor:'일반 교체'}]},
+      {id:'review',name:'복원한 복습장',words:[reorderedDog]}],activeDeckId:'review'}:{words:[reorderedDog]};
+    s.box.value=JSON.stringify(backup);s.context.backupCandidateInput=backup;
+    const memory=s.run('JSON.stringify(decks)'),disk=s.data.get('decks');
+    const candidate=s.run('prepareBackupRestore(backupCandidateInput)');
+    assert.ok(candidate);assert.equal(s.run('JSON.stringify(decks)'),memory);assert.equal(s.data.get('decks'),disk);
+    s.run('restoreBackup()');assert.equal(s.calls.confirm,1);assert.equal(s.run('words.length'),1);assert.equal(s.run('words[0].eng'),'dog');
+    assert.equal(s.run('getWrongArchiveEntries().filter(entry=>entry.deckId==="review").map(entry=>entry.word.eng).sort().join(",")'),'bird,cat');
+    assert.equal(s.run('getWrongArchiveEntries().some(entry=>entry.word.eng==="dog")'),false);
+    if(full){
+      assert.equal(s.run('decks.find(deck=>deck.id==="deck_wrong_other").words.length'),0);
+      assert.equal(s.run('getWrongArchiveEntries().find(entry=>entry.deckId==="deck_wrong_other").word.note'),'보존할 메모');
+      assert.equal(s.run('decks[0].words[0].eng'),'new');assert.equal(s.run('Object.hasOwn(decks[0],"wrongArchive")'),false);
+    }else{assert.equal(s.run('decks[2].words[0].eng'),'cat');assert.equal(s.run('Object.hasOwn(decks[2],"wrongArchive")'),false);}
+    const again=setup(Object.fromEntries(s.data));assert.equal(again.run('getWrongArchiveEntries().length'),full?3:2);assert.equal(again.run('words[0].custom.keep'),7);
+  }
+});
+test('archive backup merge keeps current records on ID collisions and cancellation never changes live data',()=>{
+  const s=archiveBackupRestoreSetup(),currentId=s.run('getWrongArchiveEntries()[0].id'),current=s.run('JSON.stringify(getWrongArchiveEntries()[0].word)');
+  const backup={decks:[{id:'review',name:'복원 대상',words:JSON.parse(s.run('JSON.stringify(words)')),
+    wrongArchive:[{id:currentId,word:{eng:'forged',kor:'바꾸면 안 되는 기록'},originalIndex:0,removedAt:'2026-11-14T00:00:00.000Z'}]}],activeDeckId:'review'};
+  s.box.value=JSON.stringify(backup);s.context.collisionBackup=backup;
+  const before=s.run('JSON.stringify(decks)'),disk=s.data.get('decks');
+  const candidate=s.run('prepareBackupRestore(collisionBackup)');
+  assert.equal(JSON.stringify(candidate.decks[0].wrongArchive.find(entry=>entry.id===currentId).word),current);
+  s.context.needConfirm2=()=>false;s.run('restoreBackup()');
+  assert.equal(s.run('JSON.stringify(decks)'),before);assert.equal(s.data.get('decks'),disk);assert.equal(s.calls.render,0);assert.equal(s.calls.reset,0);
+});
+test('archive-aware backup restore rolls back exact live arrays and archives after quota failures or conflicting external writes',()=>{
+  for(const full of [true,false])for(const failure of ['quota','conflict']){
+    const s=archiveBackupRestoreSetup();
+    s.box.value=JSON.stringify(full?{decks:[{id:'replacement',name:'교체',words:[]}]}:{words:[]});
+    s.run('var archiveRestoreBefore={decks,words,stats,dupes,activeDeckId,archives:decks.map(deck=>deck.wrongArchive),deckWords:decks.map(deck=>deck.words)};');
+    const memory=s.run('JSON.stringify(decks)');let disk=s.data.get('decks');
+    if(failure==='quota')s.context.localStorage.setItem=()=>{throw Error('quota');};
+    else{const latest=JSON.parse(disk);latest[0].words.push({eng:'external',kor:'다른 창의 기록'});disk=JSON.stringify(latest);s.data.set('decks',disk);}
+    assert.equal(s.run('restoreBackup()'),false);assert.equal(s.run('JSON.stringify(decks)'),memory);assert.equal(s.data.get('decks'),disk);
+    assert.equal(s.run('decks===archiveRestoreBefore.decks&&words===archiveRestoreBefore.words&&stats===archiveRestoreBefore.stats&&dupes===archiveRestoreBefore.dupes&&activeDeckId===archiveRestoreBefore.activeDeckId&&decks.every((deck,index)=>deck.words===archiveRestoreBefore.deckWords[index]&&deck.wrongArchive===archiveRestoreBefore.archives[index])'),true);
+    assert.equal(s.calls.render,0);assert.equal(s.calls.reset,0);
+  }
+});
+test('malformed archive backups are rejected before confirmation and globally repeated archive IDs are invalid',()=>{
+  const valid={id:'valid-id',word:{eng:'cat',kor:'고양이',note:{eng:'kitten',kor:'메모',extra:7}},originalIndex:0,removedAt:'2026-11-14T10:00:00.000Z'};
+  const malformed=[null,{},[{...valid,id:' '}],[{...valid,word:null}],[{...valid,word:{eng:'cat'}}],
+    [{...valid,originalIndex:-1}],[{...valid,originalIndex:0.5}],[{...valid,removedAt:'yesterday'}],[{...valid,batchId:4}],[valid,{...valid}]];
+  for(const archive of malformed){
+    const s=backupRestoreSetup({decks:[{id:'wrong',name:'오답노트',words:[],wrongArchive:archive}]});s.run('restoreBackup()');
+    s.assertOriginal();assert.equal(s.calls.confirm,0);assert.equal(s.data.get('decks'),s.originalDisk);
+  }
+  const repeated=backupRestoreSetup({decks:[{id:'a',words:[],wrongArchive:[valid]},{id:'b',words:[],wrongArchive:[valid]}]});
+  repeated.run('restoreBackup()');repeated.assertOriginal();assert.equal(repeated.calls.confirm,0);
+});
+test('archive backups retain exact word fields and recognize an archive-only renamed notebook without inventing old deletions',()=>{
+  const archived={id:'portable',word:{eng:'cat',kor:'보관한 단어',note:{eng:'kitten',kor:'메모',custom:{keep:true}},custom:{keep:[1,2]}},originalIndex:2,removedAt:'2026-11-14T10:00:00.000Z'};
+  const s=backupRestoreSetup({decks:[{id:'portable-book',name:'이름 바꾼 기록',words:[],wrongArchive:[archived]}],activeDeckId:'portable-book'});
+  s.run('restoreBackup()');assert.equal(s.run('isWrongNotebookDeck(decks[0])'),true);assert.equal(s.run('decks[0].kind'),'wrong');
+  assert.equal(s.run('JSON.stringify(getWrongArchiveEntries()[0].word)'),JSON.stringify(archived.word));
+  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('getWrongArchiveEntries()[0].word.note.custom.keep'),true);
+  const old=setup({decks:JSON.stringify([{id:'deck_wrong_old',name:'예전 복습장',words:[]}]),activeDeckId:'deck_wrong_old'});
+  assert.equal(old.run('getWrongArchiveEntries().length'),0);assert.equal(old.run('Object.hasOwn(decks[0],"wrongArchive")'),false);
+  const exported=backupExportSetup();exported.run('decks.push({id:"portable-book",name:"보관함",kind:"wrong",words:[],stats:{},dupes:[],wrongArchive:'+JSON.stringify([archived])+'});exportBackup()');
+  assert.deepEqual(JSON.parse(exported.box.value).decks[1].wrongArchive,[archived]);
+});
+test('new archive IDs remain globally unique even when timestamps and randomness collide',()=>{
+  const s=setup(wrongStudyDeletionInitial());s.run('Date.now=()=>123;Math.random=()=>0;archiveWrongWords("review",[words[0],words[1]]);archiveWrongWords("deck_wrong_other",[decks[2].words[0]]);');
+  assert.equal(s.run('getWrongArchiveEntries().length'),3);assert.equal(s.run('new Set(getWrongArchiveEntries().map(entry=>entry.id)).size'),3);
+  assert.equal(s.run('restoreWrongArchive().ok'),true);assert.equal(s.run('words.length'),3);
 });
