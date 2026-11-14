@@ -31,12 +31,14 @@ jobs:
           node --check captures.js
           node --check word-audit.js
           node --check word-spelling.js
+          node --check wrong-archive.js
       - uses: actions/configure-pages@v5
       - name: Prepare public files only
         run: |
           mkdir -p _site
           cp index.html sw.js manifest.json icon-192.png icon-512.png captures-store.js captures-media.js captures.js captures.css _site/
           cp word-audit.js word-audit.css word-spelling.js _site/
+          cp wrong-archive.js wrong-archive.css _site/
           cp -R vendor _site/vendor
           cp .nojekyll _site/.nojekyll
       - uses: actions/upload-pages-artifact@v4

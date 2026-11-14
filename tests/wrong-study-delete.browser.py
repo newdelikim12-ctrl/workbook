@@ -36,7 +36,7 @@ def run(browser,base,width):
     page.reload(wait_until='domcontentloaded');page.evaluate('flushDecks();lsOpenInStudy(0)')
     original=page.evaluate('JSON.stringify(decks[0])');other=page.evaluate('JSON.stringify(decks[2])')
     assert page.locator('#front').inner_text()=='cat'
-    assert page.locator('#cardNextBtn').inner_text()=='외웠음·삭제'
+    assert page.locator('#cardNextBtn').inner_text()=='외웠음·보관'
     assert page.locator('#cardNextBtn').evaluate('(e)=>e.scrollWidth<=e.clientWidth+1')
     if os.environ.get('WORD_STUDY_SCREENSHOTS'):
         directory=Path(os.environ['WORD_STUDY_SCREENSHOTS']);directory.mkdir(parents=True,exist_ok=True)
@@ -44,12 +44,14 @@ def run(browser,base,width):
     # Cancel does not touch either the copy or the original.
     before=page.evaluate("localStorage.getItem('decks')")
     page.locator('#cardNextBtn').click()
-    assert '다시 볼 단어에서만 삭제' in page.locator('#confirmMsg').inner_text()
+    assert '다시 볼 단어의 학습 목록에서 빼고 보관함' in page.locator('#confirmMsg').inner_text()
     page.locator('#confirmBack .cf-cancel').click()
     assert page.evaluate("localStorage.getItem('decks')")==before and page.locator('#front').inner_text()=='cat'
     page.locator('#cardNextBtn').click();confirm(page)
     assert page.locator('#front').inner_text()=='dog'
     assert page.evaluate('words.map(w=>w.eng)')==['dog','bird']
+    assert page.evaluate('getWrongArchiveEntries().length')==1
+    assert page.evaluate('getWrongArchiveEntries()[0].word.note')=='지울 복사본 메모'
     assert page.evaluate('JSON.stringify(decks[0])')==original and page.evaluate('JSON.stringify(decks[2])')==other
     # A quota failure leaves the current card and exact in-memory array intact.
     before=page.evaluate("localStorage.getItem('decks')")
@@ -77,6 +79,7 @@ def run(browser,base,width):
     page.reload(wait_until='domcontentloaded')
     assert page.evaluate('decks.find(d=>d.id==="deck_wrong_review").words.length')==0
     assert page.evaluate('decks.find(d=>d.id==="otherwrong").words.length')==0
+    assert page.evaluate('getWrongArchiveEntries().length')==4
     assert page.evaluate('JSON.stringify(decks[0])')==original
     # Ordinary originals, even when marked wrong, have no new delete action.
     page.evaluate("switchDeck('ordinary','study');lsOpenInStudy(0)")
