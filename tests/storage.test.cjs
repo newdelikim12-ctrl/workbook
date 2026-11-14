@@ -1667,3 +1667,155 @@ test('renaming a wrong notebook preserves its role and a failed save rolls back 
       const fresh=setup({decks:s.data.get('decks'),activeDeckId:'a'});assert.equal(fresh.run('getAllWordEntries().find(e=>e.deckId==="wrong").isWrongDeck'),true);}
   }
 });
+
+function wrongStudyDeletionInitial(deckFields={}){
+  const review={id:'review',name:'오답노트',...deckFields,words:[
+    {eng:'cat',kor:'복습장 고양이',mastered:true,example:['Review cat.'],note:'삭제할 복사본 메모'},
+    {eng:'dog',kor:'복습장 개',example:['Keep the dog.'],note:[{eng:'puppy',kor:'강아지'}],custom:{keep:7}},
+    {eng:'bird',kor:'복습장 새',mastered:true,wrong:true,wrongResult:'correct'}
+  ],stats:{correct:9},dupes:[{eng:'cat',sheets:['복습 시트'],n:2}]};
+  return {decks:JSON.stringify([
+    {id:'ordinary',name:'일반 단어장',words:[{eng:'cat',kor:'원본 고양이',wrong:true,mastered:true,
+      example:['Original one.','Original two.'],note:[{eng:'kitten',kor:'원본 메모'}],custom:{original:true}}],stats:{correct:4},dupes:[]},
+    review,
+    {id:'deck_wrong_other',name:'별도 복습장',words:[{eng:'cat',kor:'다른 복사본',note:'보존할 메모'}],stats:{},dupes:[]}
+  ]),activeDeckId:review.id};
+}
+function wrongStudyDeletionSetup(initial=wrongStudyDeletionInitial()){
+  const s=setup(initial),toasts=[],shown=[],sounds=[],calls={render:0,reset:0,range:0,actions:0};
+  let pending=null,armed=false;
+  Object.assign(s.context,{currentIndex:0,cardHistory:[1,0],recentSeen:[0,1],lsPeeked:new Set([1]),
+    lsEditIndex:-1,lsSelMode:true,lsSelected:new Set([0]),wlSelMode:true,wlSelected:new Set([1]),
+    rangeFrom:null,rangeTo:null,lastMode:'all',autoPlay:false,autoPlayTimer:null,_sheetImportSeq:7,anyDialogOpen:()=>false,
+    showToast:message=>toasts.push(message),playSound:name=>sounds.push(name),
+    needConfirm2(callback,message){
+      if(armed){armed=false;return true;}
+      pending={callback,message};return false;
+    },
+    render(){calls.render++;},renderDeckPanel(){},renderRecentDecks(){},
+    saveRangeMemo(){calls.range++;},showCardActions(){calls.actions++;},
+    showWord(word,index){shown.push({word,index});s.context.currentIndex=index;},
+    resetCardView(){calls.reset++;s.context.currentIndex=-1;},
+    updateRangeCnt(){},updateCardUndoBtn(){},fitCardExample(){},renderCardNote(){}
+  });
+  s.context.document.getElementById=()=>null;
+  vm.runInContext(app.slice(app.indexOf('function getDeck('),app.indexOf('function randomMode(')),s.context);
+  vm.runInContext(app.slice(app.indexOf('function afterWordsRemoved('),app.indexOf('function bulkDelete(')),s.context);
+  const start=app.indexOf('function deleteWrongStudyWord('),end=app.indexOf('function markCorrect(',start);
+  assert.ok(start>=0&&end>start,'wrong-notebook deletion helper must be independently testable');
+  vm.runInContext(app.slice(start,end),s.context);
+  return {...s,toasts,shown,sounds,calls,get pending(){return pending;},
+    confirm(){assert.ok(pending,'deletion should ask for confirmation');const callback=pending.callback;pending=null;armed=true;try{return callback();}finally{armed=false;}},
+    cancel(){pending=null;}
+  };
+}
+test('study deletion is limited to wrong notebooks and rejects invalid word indices without writes',()=>{
+  for(const wrongFlag of [false,true]){
+    const initial=wrongStudyDeletionInitial();initial.activeDeckId='ordinary';
+    const model=JSON.parse(initial.decks);model[0].words[0].wrong=wrongFlag;initial.decks=JSON.stringify(model);
+    const s=wrongStudyDeletionSetup(initial),memory=s.run('JSON.stringify(decks)'),disk=s.data.get('decks'),writes=s.writes.length;
+    s.run('deleteWrongStudyWord()');
+    assert.equal(s.pending,null);assert.equal(s.run('JSON.stringify(decks)'),memory);assert.equal(s.data.get('decks'),disk);
+    assert.equal(s.writes.length,writes);assert.equal(s.run('currentIndex'),0);assert.equal(s.shown.length,0);assert.equal(s.calls.reset,0);
+  }
+  for(const draft of ['editIndex=0','lsEditIndex=0','anyDialogOpen=()=>true']){
+    const s=wrongStudyDeletionSetup(),memory=s.run('JSON.stringify(decks)'),disk=s.data.get('decks'),writes=s.writes.length;
+    s.run(draft);s.run('deleteWrongStudyWord()');
+    assert.equal(s.pending,null,draft);assert.equal(s.run('JSON.stringify(decks)'),memory,draft);
+    assert.equal(s.data.get('decks'),disk,draft);assert.equal(s.writes.length,writes,draft);
+  }
+  for(const index of [-1,99,0.5,NaN]){
+    const s=wrongStudyDeletionSetup(),memory=s.run('JSON.stringify(decks)'),disk=s.data.get('decks'),writes=s.writes.length;
+    s.context.invalidStudyIndex=index;s.run('deleteWrongStudyWord(invalidStudyIndex)');
+    assert.equal(s.pending,null,String(index));assert.equal(s.run('JSON.stringify(decks)'),memory);assert.equal(s.data.get('decks'),disk);assert.equal(s.writes.length,writes);
+  }
+});
+test('study deletion supports every wrong-notebook identity and preserves ordinary originals and other copies',()=>{
+  const cases=[{}, {id:'deck_wrong_123',name:'이름 바꾼 복습장'}, {name:'📕 오\u3000답 노트 ２'},
+    {name:'개인 복습장',kind:'wrong'}, {id:'saved-review',name:'저장된 복습장'}];
+  for(const fields of cases){
+    const initial=wrongStudyDeletionInitial(fields);if(fields.id==='saved-review')initial.wrongDeckId=fields.id;
+    const s=wrongStudyDeletionSetup(initial),original=s.run('JSON.stringify(decks[0])'),other=s.run('JSON.stringify(decks[2])'),disk=s.data.get('decks');
+    const target=s.run('words[0]'),remaining=s.run('words[1]'),statistics=s.run('stats'),history=s.run('dupes');
+    s.context.selectedRemovedWord=target;
+    s.run('deleteWrongStudyWord()');assert.ok(s.pending);assert.equal(s.data.get('decks'),disk);assert.equal(s.run('words.length'),3);
+    assert.match(s.pending.message,/cat/);s.confirm();
+    assert.equal(s.run('words.length'),2);assert.equal(s.run('words.includes(decks[0].words[0])'),false);
+    assert.equal(s.run('words[0]'),remaining);assert.equal(s.run('words.includes(selectedRemovedWord)'),false);assert.equal(s.run('words[0].custom.keep'),7);
+    assert.equal(s.run('JSON.stringify(decks[0])'),original);assert.equal(s.run('JSON.stringify(decks[2])'),other);
+    assert.equal(s.run('stats'),statistics);assert.equal(s.run('dupes'),history);assert.equal(s.run('words===decks[1].words'),true);
+    assert.equal(s.shown.at(-1)?.word,remaining);assert.equal(s.run('currentIndex'),0);assert.equal(target.eng,'cat');
+    assert.equal(s.run('cardHistory.length===0&&recentSeen.length===0&&lsPeeked.size===0&&lsSelected.size===0&&wlSelected.size===0'),true);
+    const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words.map(word=>word.eng).join(",")'),'dog,bird');
+    assert.equal(again.run('decks[0].words[0].note[0].kor'),'원본 메모');assert.equal(again.run('decks[2].words[0].note'),'보존할 메모');
+  }
+});
+test('deleting a wrong-notebook list row keeps the displayed surviving card by identity',()=>{
+  const s=wrongStudyDeletionSetup(),viewed=s.run('words[1]');
+  s.run('currentIndex=1;deleteWrongStudyWord(0)');s.confirm();
+  assert.equal(s.run('currentIndex'),0);assert.equal(s.run('words[currentIndex]'),viewed);
+  assert.equal(s.run('words[0].note[0].eng'),'puppy');assert.equal(s.calls.reset,0);
+  assert.equal(s.shown.every(item=>item.word===viewed),true);
+});
+test('wrong-notebook confirmation binds to the selected record rather than a later card or reordered index',()=>{
+  const s=wrongStudyDeletionSetup(),target=s.run('words[0]'),viewed=s.run('words[1]');
+  s.run('deleteWrongStudyWord(0);words.reverse();currentIndex=words.findIndex(word=>word.eng==="dog")');
+  s.confirm();
+  assert.equal(s.run('words.length'),2);assert.equal(s.run('words[currentIndex]'),viewed);
+  assert.equal(s.run('words.some(word=>word.eng==="cat")'),false);assert.equal(target.eng,'cat');
+  assert.equal(s.run('decks[0].words[0].eng'),'cat');
+});
+test('stale wrong-notebook confirmations reject changed snapshots, removed records and deck switches',()=>{
+  const changes={
+    english:'words[0].eng="changed"',meaning:'words[0].kor="바뀐 뜻"',
+    nonmember:'words=decks[1].words=words.map(word=>({...word}))',removed:'words.splice(0,1)',
+    switched:'activeDeckId="ordinary";words=decks[0].words;stats=decks[0].stats;dupes=decks[0].dupes',
+    role:'decks[1].name="일반 복습 자료"'
+  };
+  for(const [label,change] of Object.entries(changes)){
+    const s=wrongStudyDeletionSetup();s.run('deleteWrongStudyWord(0)');s.run(change);
+    const memory=s.run('JSON.stringify(decks)'),array=s.run('words'),disk=s.data.get('decks'),writes=s.writes.length,index=s.run('currentIndex');
+    s.confirm();assert.equal(s.run('JSON.stringify(decks)'),memory,label);assert.equal(s.run('words'),array,label);
+    assert.equal(s.data.get('decks'),disk,label);assert.equal(s.writes.length,writes,label);assert.equal(s.run('currentIndex'),index,label);
+    assert.equal(s.shown.length,0,label);assert.equal(s.calls.reset,0,label);assert.equal(s.calls.render,0,label);
+  }
+});
+test('failed wrong-notebook study deletion keeps exact data arrays and current card on quota or cross-window conflicts',()=>{
+  for(const failure of ['quota','conflict']){
+    const s=wrongStudyDeletionSetup();s.run('deleteWrongStudyWord(0);var studyDeleteBefore={words,deckWords:decks[1].words,original:decks[0].words,other:decks[2].words,stats,dupes};');
+    const memory=s.run('JSON.stringify(decks)'),target=s.run('words[0]');let disk=s.data.get('decks');
+    if(failure==='quota')s.context.localStorage.setItem=()=>{throw Error('quota');};
+    else{const latest=JSON.parse(disk);latest[0].words.push({eng:'external',kor:'다른 창의 단어'});disk=JSON.stringify(latest);s.data.set('decks',disk);}
+    s.confirm();
+    assert.equal(s.run('words===studyDeleteBefore.words&&decks[1].words===studyDeleteBefore.deckWords&&decks[0].words===studyDeleteBefore.original&&decks[2].words===studyDeleteBefore.other&&stats===studyDeleteBefore.stats&&dupes===studyDeleteBefore.dupes'),true,failure);
+    assert.equal(s.run('JSON.stringify(decks)'),memory);assert.equal(s.data.get('decks'),disk);assert.equal(s.run('words[currentIndex]'),target);
+    assert.equal(s.shown.length,0);assert.equal(s.calls.reset,0);assert.equal(s.calls.render,0);
+    assert.ok(s.toasts.some(message=>/저장|삭제하지/.test(message)));
+  }
+});
+test('deleting the final wrong-notebook word empties only that deck and resets the study card',()=>{
+  const initial=wrongStudyDeletionInitial(),model=JSON.parse(initial.decks);model[1].words=model[1].words.slice(0,1);initial.decks=JSON.stringify(model);
+  const s=wrongStudyDeletionSetup(initial),original=s.run('JSON.stringify(decks[0])'),other=s.run('JSON.stringify(decks[2])');
+  s.run('deleteWrongStudyWord()');s.confirm();
+  assert.equal(s.run('words.length'),0);assert.equal(s.run('decks.length'),3);assert.equal(s.run('currentIndex'),-1);
+  assert.equal(s.calls.reset,1);assert.equal(s.shown.length,0);assert.equal(s.run('JSON.stringify(decks[0])'),original);assert.equal(s.run('JSON.stringify(decks[2])'),other);
+  const again=setup(Object.fromEntries(s.data));assert.equal(again.run('words.length'),0);assert.equal(again.run('activeDeckId'),'review');
+});
+test('wrong-notebook deletion advances to the next eligible card, wraps when needed and clears an exhausted session',()=>{
+  for(const scenario of ['next','wrap','exhausted']){
+    const initial=wrongStudyDeletionInitial(),model=JSON.parse(initial.decks);
+    model[1].words=[{eng:'cat',kor:'완료한 단어',mastered:true},{eng:'dog',kor:'남은 앞 단어',mastered:scenario==='exhausted'},
+      {eng:'bird',kor:'가운데 완료 단어',mastered:true},{eng:'fish',kor:'남은 뒤 단어',mastered:scenario==='exhausted'},
+      {eng:'horse',kor:'마지막 완료 단어',mastered:true}];
+    initial.decks=JSON.stringify(model);const s=wrongStudyDeletionSetup(initial),index=scenario==='wrap'?4:2;
+    s.context.viewedDeletionIndex=index;s.run('currentIndex=viewedDeletionIndex;deleteWrongStudyWord()');s.confirm();
+    if(scenario==='exhausted'){
+      assert.equal(s.run('currentIndex'),-1);assert.equal(s.calls.reset,1);assert.equal(s.shown.length,0);assert.equal(s.run('words.length'),4);
+    }else{
+      const expected=scenario==='next'?'fish':'dog';
+      assert.equal(s.run('words[currentIndex].eng'),expected);assert.equal(s.shown.at(-1).word.eng,expected);assert.equal(s.calls.reset,0);
+      assert.equal(s.run('words.find(word=>word.eng==="dog").mastered'),false);
+      assert.equal(s.run('words.find(word=>word.eng==="fish").mastered'),false);
+    }
+  }
+});
