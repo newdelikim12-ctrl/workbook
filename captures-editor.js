@@ -57,12 +57,14 @@ function clearDraft(s){clearGesture(s);s.crop=null;s.textAnchor=null;}
 function draw(s,reset=false){if(current!==s||!s.engine)return;s.engine.render(s.ui.canvas);s.ui.overlay.width=s.engine.width;s.ui.overlay.height=s.engine.height;layout(s,reset);}
 function textDraft(s){const size=Number(s.ui.textSize.value)||24,lines=s.ui.text.value.replace(/\r\n?/g,'\n').split('\n'),ctx=s.ui.overlay.getContext('2d');ctx.font=size+'px sans-serif';const width=Math.max(0,...lines.map(line=>ctx.measureText(line).width)),height=lines.length*size*1.3;const anchor=s.textAnchor||{x:0,y:0};return {size,lines,text:lines.join('\n'),x:clamp(anchor.x,0,Math.max(0,s.engine.width-width)),y:clamp(anchor.y,0,Math.max(0,s.engine.height-height)),width,height};}
 function preview(s){
+ if(s.previewFrame){cancelAnimationFrame(s.previewFrame);s.previewFrame=0;}
  if(current!==s||!s.engine)return;const canvas=s.ui.overlay,ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);const g=s.gesture,pixel=1/Math.max(.001,s.scale||1);
  if(s.tool==='crop'&&(s.crop||g?.type==='crop')){const rect=g?.type==='crop'?rectFrom(g.start,g.last):s.crop;ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.clearRect(rect.x,rect.y,rect.width,rect.height);ctx.strokeStyle='#ffffff';ctx.lineWidth=2*pixel;ctx.setLineDash([7*pixel,4*pixel]);ctx.strokeRect(rect.x,rect.y,rect.width,rect.height);ctx.setLineDash([]);ctx.fillStyle='#ffffff';for(const [x,y]of[[rect.x,rect.y],[rect.x+rect.width,rect.y],[rect.x,rect.y+rect.height],[rect.x+rect.width,rect.y+rect.height]])ctx.fillRect(x-3*pixel,y-3*pixel,6*pixel,6*pixel);s.ui.cropHint.textContent=Math.round(rect.width)+' × '+Math.round(rect.height)+' · 영역을 다시 드래그해 바꿀 수 있어요.';}
  if(g?.type==='line'){ctx.strokeStyle=g.color;ctx.lineWidth=g.width;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(g.start.x,g.start.y);ctx.lineTo(g.last.x,g.horizontal?g.start.y:g.last.y);ctx.stroke();}
  if(g?.type==='draw'){ctx.strokeStyle=g.color;ctx.lineWidth=g.width;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();g.points.forEach((point,i)=>i?ctx.lineTo(point.x,point.y):ctx.moveTo(point.x,point.y));ctx.stroke();}
  if(s.tool==='text'&&s.textAnchor){const draft=textDraft(s);ctx.font=draft.size+'px sans-serif';ctx.textBaseline='top';ctx.fillStyle=s.ui.color.value;draft.lines.forEach((line,i)=>ctx.fillText(line,draft.x,draft.y+i*draft.size*1.3));ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.5*pixel;ctx.beginPath();ctx.moveTo(draft.x-5*pixel,draft.y);ctx.lineTo(draft.x+5*pixel,draft.y);ctx.moveTo(draft.x,draft.y-5*pixel);ctx.lineTo(draft.x,draft.y+5*pixel);ctx.stroke();s.ui.textHint.textContent='사진을 다시 누르면 글자 위치가 바뀝니다.';}
 }
+function schedulePreview(s){if(!s.previewFrame)s.previewFrame=requestAnimationFrame(()=>{s.previewFrame=0;preview(s);});}
 function point(s,event){const r=s.ui.overlay.getBoundingClientRect();return {x:clamp((event.clientX-r.left)/Math.max(.001,r.width)*s.engine.width,0,s.engine.width),y:clamp((event.clientY-r.top)/Math.max(.001,r.height)*s.engine.height,0,s.engine.height)};}
 function rectFrom(a,b){return {x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),width:Math.abs(a.x-b.x),height:Math.abs(a.y-b.y)};}
 function mutate(s,method,arg,reset=false){if(!ready(s))return false;try{const changed=s.engine[method](arg);if(changed){clearDraft(s);error(s,'');draw(s,reset);}else update(s);return !!changed;}catch(err){error(s,friendly(err));update(s);return false;}}
@@ -74,7 +76,7 @@ function pointerDown(s,e){
  if(s.tool==='text'){s.textAnchor=p;preview(s);update(s);s.ui.text.focus({preventScroll:true});return;}
  s.gesture={id:e.pointerId,type:s.tool,start:p,last:p,points:[p],color:s.ui.color.value,width:Number(s.ui.width.value)||2,horizontal:s.ui.lineLock.checked,clientX:e.clientX,clientY:e.clientY,scrollX:s.ui.viewport.scrollLeft,scrollY:s.ui.viewport.scrollTop};s.ui.overlay.setPointerCapture(e.pointerId);update(s);preview(s);
 }
-function pointerMove(s,e){const g=s.gesture;if(!g||g.id!==e.pointerId||!ready(s))return;e.preventDefault();if(g.type==='pan'){s.ui.viewport.scrollLeft=g.scrollX-(e.clientX-g.clientX);s.ui.viewport.scrollTop=g.scrollY-(e.clientY-g.clientY);return;}g.last=point(s,e);if(g.type==='draw'){const last=g.points[g.points.length-1];if(Math.hypot(g.last.x-last.x,g.last.y-last.y)>.4)g.points.push(g.last);}preview(s);}
+function pointerMove(s,e){const g=s.gesture;if(!g||g.id!==e.pointerId||!ready(s))return;e.preventDefault();if(g.type==='pan'){s.ui.viewport.scrollLeft=g.scrollX-(e.clientX-g.clientX);s.ui.viewport.scrollTop=g.scrollY-(e.clientY-g.clientY);return;}g.last=point(s,e);if(g.type==='draw'){const last=g.points[g.points.length-1];if(Math.hypot(g.last.x-last.x,g.last.y-last.y)>.4)g.points.push(g.last);}schedulePreview(s);}
 function pointerUp(s,e){const g=s.gesture;if(!g||g.id!==e.pointerId)return;if(!ready(s)){clearGesture(s);return;}e.preventDefault();g.last=point(s,e);clearGesture(s);
  if(g.type==='crop'){const rect=rectFrom(g.start,g.last);s.crop=rect.width>=2&&rect.height>=2?rect:null;preview(s);update(s);return;}
  if(g.type==='line'){mutate(s,'line',{x1:g.start.x,y1:g.start.y,x2:g.last.x,y2:g.horizontal?g.start.y:g.last.y,color:g.color,width:g.width});}
@@ -90,7 +92,7 @@ async function save(s){
  catch(err){if(current!==s||s.closed)return;s.saving=false;error(s,friendly(err));update(s);}
 }
 function finish(s,result,restoreFocus){
- if(current!==s||s.closed)return false;if(s.saving&&!result.saved)return false;s.closed=true;current=null;clearGesture(s);s.abort.abort();s.resize?.disconnect();try{s.engine?.destroy();}catch(e){}s.engine=null;
+ if(current!==s||s.closed)return false;if(s.saving&&!result.saved)return false;s.closed=true;current=null;if(s.previewFrame)cancelAnimationFrame(s.previewFrame);s.previewFrame=0;clearGesture(s);s.abort.abort();s.resize?.disconnect();try{s.engine?.destroy();}catch(e){}s.engine=null;
  document.documentElement.style.overflow=s.previousOverflow;try{if(dialog.open)dialog.close();}catch(e){}dialog.replaceChildren();
  if(restoreFocus&&s.previousFocus?.isConnected){try{s.previousFocus.focus({preventScroll:true});}catch(e){}}
  s.resolve(result);return true;
@@ -116,7 +118,7 @@ function open(options={}){
  try{mount();}catch(err){return Promise.resolve({saved:false,error:friendly(err)});}
  if(current){dialog.focus();return Promise.resolve({saved:false});}
  return new Promise(resolve=>{
-  const s=current={id:++serial,item:options.item||{},onSave:options.onSave,engine:null,loading:true,saving:false,closed:false,tool:'pan',zoom:1,scale:1,fitScale:1,crop:null,textAnchor:null,gesture:null,abort:new AbortController(),resize:null,resolve,previousFocus:document.activeElement,previousOverflow:document.documentElement.style.overflow};
+  const s=current={id:++serial,item:options.item||{},onSave:options.onSave,engine:null,loading:true,saving:false,closed:false,tool:'pan',zoom:1,scale:1,fitScale:1,crop:null,textAnchor:null,gesture:null,previewFrame:0,abort:new AbortController(),resize:null,resolve,previousFocus:document.activeElement,previousOverflow:document.documentElement.style.overflow};
   createUI(s);attach(s);update(s);document.documentElement.style.overflow='hidden';dialog.showModal();s.ui.cancel.focus();
   (async()=>{try{if(!(options.blob instanceof Blob)||!options.blob.size)throw Error('편집할 이미지를 읽지 못했어요.');if(typeof s.onSave!=='function')throw Error('저장 기능을 연결하지 못했어요. 새로고침한 뒤 다시 시도해 주세요.');if(!window.CaptureImage?.create)throw Error('사진 편집 도구를 불러오지 못했어요. 새로고침한 뒤 다시 시도해 주세요.');const config={rotation:s.item.rotation||0};if(s.item.editedFileId&&options.originalBlob instanceof Blob)config.originalBlob=options.originalBlob;const engine=await window.CaptureImage.create(options.blob,config);if(current!==s||s.closed){engine.destroy();return;}s.engine=engine;s.ui.overlay.lang=engine.language||document.documentElement.lang||'ko';s.loading=false;configureSizes(s);draw(s,true);update(s);s.ui.viewport.focus({preventScroll:true});}catch(err){if(current!==s||s.closed)return;s.loading=false;error(s,friendly(err));update(s);}})();
  });
