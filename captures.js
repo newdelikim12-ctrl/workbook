@@ -3,7 +3,7 @@
 'use strict';
 const root=document.getElementById('captureView');
 if(!root) return;
-const state={mounted:false,visible:false,groups:[],items:[],groupId:null,mode:'feed',query:'',loadSeq:0,renderSeq:0,handles:new Set(),observer:null,busy:0,uploadTarget:null,viewerHandle:null,viewerSeq:0,viewerItem:null,zoom:1,editorBusy:false};
+const state={mounted:false,visible:false,groups:[],items:[],groupId:null,mode:'feed',query:'',loadSeq:0,renderSeq:0,handles:new Set(),observer:null,busy:0,uploadTarget:null,viewerHandle:null,viewerSeq:0,viewerItem:null,zoom:1,editorBusy:false,imageEditorOpening:false,imageEditorSeq:0};
 let ui={};
 const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const action=(label,name,cls='cn-button',id)=>{const b=node('button',cls,label);b.type='button';b.dataset.action=name;if(id)b.dataset.id=id;return b;};
@@ -11,7 +11,7 @@ const pref={get(key,fallback){try{return localStorage.getItem('captureNotebook.'
 state.mode=pref.get('mode','feed')==='list'?'list':'feed';state.groupId=pref.get('group','');
 function errorText(err){if(err&&(/quota/i.test(err.name||'')||/quota/i.test(err.message||'')))return '저장 공간이 부족해요. 캡처를 백업한 뒤 필요 없는 자료를 정리해 주세요.';return err&&/[가-힣]/.test(err.message||'')?err.message:'처리하지 못했어요. 잠시 후 다시 시도해 주세요.';}
 function status(text,isError=false){ui.status.textContent=text||'';ui.status.classList.toggle('cn-status-error',isError);}
-function hasOpenDialog(){return !!(ui.editor?.open||ui.viewer?.open);}
+function hasOpenDialog(){return !!(ui.editor?.open||ui.viewer?.open||state.imageEditorOpening||window.CaptureEditor?.hasOpenDialog?.());}
 function disposeMedia(){state.renderSeq++;state.observer?.disconnect();state.observer=null;for(const h of state.handles){try{h.destroy();}catch(e){}}state.handles.clear();}
 function lock(){root.classList.toggle('cn-busy',state.busy>0);root.setAttribute('aria-busy',String(state.busy>0));root.querySelectorAll('[data-cn-lock]').forEach(b=>{b.disabled=state.busy>0||!state.groups.length;});if(ui.deleteGroup)ui.deleteGroup.disabled=state.busy>0||state.groups.length<=1;}
 async function busy(fn,success){state.busy++;lock();try{const out=await fn();if(success)status(success);return out;}catch(err){status(errorText(err),true);throw err;}finally{state.busy--;lock();}}
@@ -43,7 +43,7 @@ function mount(){
  document.addEventListener('paste',e=>{if(!state.visible||hasOpenDialog()||e.target.matches?.('input,textarea,select')||e.target.isContentEditable)return;const files=[...(e.clipboardData?.files||[])];if(files.length){e.preventDefault();uploadFiles(files,{groupId:state.groupId,afterId:null}).catch(()=>{});}});
 }
 async function open(){mount();state.visible=true;await refresh();}
-function close(){state.visible=false;state.loadSeq++;disposeMedia();if(ui.viewer?.open)ui.viewer.close();}
+function close(){state.visible=false;state.loadSeq++;state.imageEditorSeq++;state.imageEditorOpening=false;disposeMedia();if(ui.viewer?.open)ui.viewer.close();window.CaptureEditor?.close?.();}
 async function refresh(){
  const seq=++state.loadSeq;status('자료를 불러오는 중…');
  try{
@@ -67,16 +67,17 @@ function renderItems(){
   const head=node('div','cn-item-head');const info=node('div','cn-item-info');info.append(node('span','cn-item-type',item.kind==='pdf'?'PDF':item.kind==='image'?'IMAGE':'MEMO'),node('h3','cn-item-title',item.title||(item.kind==='note'?'내 메모':item.fileName||'학습 자료')));
   const menu=node('details','cn-item-menu');const summary=node('summary','cn-menu-trigger','⋯');summary.setAttribute('aria-label',(item.title||'자료')+' 관리');const menuPanel=node('div','cn-menu-panel');
   for(const [label,name] of [['아래에 파일 삽입','insert-files'],['아래에 메모 삽입','insert-note'],['위로 이동','up'],['아래로 이동','down'],['다른 목록으로 이동','move']]){const b=action(label,name,'cn-menu-button',item.id);if(name==='up')b.disabled=state.items[0]?.id===item.id;if(name==='down')b.disabled=state.items[state.items.length-1]?.id===item.id;if(name==='move')b.disabled=state.groups.length<2;menuPanel.append(b);}
+  if(item.kind==='image')menuPanel.append(action('사진 편집','edit-image','cn-menu-button',item.id));
   if(item.kind!=='note')menuPanel.append(action('원본 저장','download','cn-menu-button',item.id));menuPanel.append(action('삭제','delete-item','cn-menu-button cn-danger',item.id));menu.append(summary,menuPanel);head.append(info,menu);card.append(head);
   if(item.kind==='note')card.append(node('div','cn-note-text',item.text||''));
   else{const media=node('div','cn-media-host');media.dataset.mediaId=item.id;media.setAttribute('role','button');media.tabIndex=0;media.setAttribute('aria-label',(item.title||'자료')+' 확대 보기');media.addEventListener('click',e=>{if(e.target.closest('a,button'))return;openViewer(item);});media.addEventListener('keydown',e=>{if(e.target===media&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openViewer(item);}});media.append(node('div','cn-media-loading',item.kind==='pdf'?'PDF를 준비하는 중…':'이미지를 준비하는 중…'));card.append(media);pending.push([media,item]);if(item.caption)card.append(node('p','cn-caption',item.caption));}
-  const foot=node('div','cn-item-foot');const detail=node('span','cn-item-detail',item.kind==='note'?'텍스트 메모':formatSize(item.size));const buttons=node('div','cn-item-actions');buttons.append(action(item.kind==='note'?'메모 편집':'제목·메모','edit-item','cn-button cn-small cn-quiet',item.id));if(item.kind!=='note')buttons.append(action('확대 ↗','zoom','cn-button cn-small cn-outline',item.id));foot.append(detail,buttons);card.append(foot);ui.items.append(card);
+  const foot=node('div','cn-item-foot');const detail=node('span','cn-item-detail',item.kind==='note'?'텍스트 메모':formatSize(item.size));const buttons=node('div','cn-item-actions');buttons.append(action(item.kind==='note'?'메모 편집':'제목·메모','edit-item','cn-button cn-small cn-quiet',item.id));if(item.kind==='image')buttons.append(action('사진 편집','edit-image','cn-button cn-small cn-outline',item.id));if(item.kind!=='note')buttons.append(action('확대 ↗','zoom','cn-button cn-small cn-outline',item.id));foot.append(detail,buttons);card.append(foot);ui.items.append(card);
  });
  if('IntersectionObserver' in window){state.observer=new IntersectionObserver(entries=>{for(const entry of entries){if(!entry.isIntersecting)continue;state.observer?.unobserve(entry.target);const item=state.items.find(i=>i.id===entry.target.dataset.mediaId);if(item)mountMedia(entry.target,item,seq);}}, {rootMargin:'700px 0px'});pending.forEach(([host])=>state.observer.observe(host));}
  else pending.forEach(([host,item])=>mountMedia(host,item,seq));
 }
 async function mountMedia(host,item,seq){
- try{const blob=await window.CaptureStore.getFile(item.fileId);if(seq!==state.renderSeq||!host.isConnected)return;host.replaceChildren();const handle=await window.CaptureMedia.mount(host,item,blob,{thumbnail:state.mode==='list',zoom:1});if(seq!==state.renderSeq||!host.isConnected){handle?.destroy();return;}if(handle)state.handles.add(handle);}
+ try{const blob=await window.CaptureStore.getFile(item.editedFileId||item.fileId);if(seq!==state.renderSeq||!host.isConnected)return;host.replaceChildren();const handle=await window.CaptureMedia.mount(host,item,blob,{thumbnail:state.mode==='list',zoom:1});if(seq!==state.renderSeq||!host.isConnected){handle?.destroy();return;}if(handle)state.handles.add(handle);}
  catch(err){if(seq!==state.renderSeq||!host.isConnected)return;host.replaceChildren(node('div','cn-media-error','미리보기를 열지 못했어요. 메뉴에서 원본을 저장할 수 있어요.'));}
 }
 function formatSize(size){if(!size)return '';return size>=1048576?(size/1048576).toFixed(1)+' MB':Math.max(1,Math.round(size/1024))+' KB';}
@@ -94,6 +95,7 @@ async function onClick(e){
   if(name==='new-group'){groupDialog();return;}if(name==='rename-group'){groupDialog(state.groups.find(g=>g.id===state.groupId));return;}if(name==='delete-group'){deleteGroupDialog();return;}
   if(name==='new-note'||name==='insert-note'){noteDialog(null,name==='insert-note'?id:null);return;}
   if(name==='edit-item'&&item){if(item.kind==='note')noteDialog(item);else fileDialog(item);return;}
+  if(name==='edit-image'&&item){await editImage(item);return;}
   if(name==='zoom'&&item){openViewer(item);return;}
   if((name==='up'||name==='down')&&item){await busy(async()=>{await window.CaptureStore.reorderItem(item.id,name==='up'?-1:1);await refresh();});return;}
   if(name==='move'&&item){moveDialog(item);return;}if(name==='delete-item'&&item){deleteItemDialog(item);return;}if(name==='download'&&item){await downloadItem(item);return;}
@@ -116,11 +118,24 @@ function moveDialog(item){showDialog({title:'다른 목록으로 이동',fields:
 function restoreArchive(file){const known=new Set(state.groups.map(g=>g.id));showDialog({title:'캡처 백업을 복원할까요?',description:'현재 자료는 그대로 유지하고 백업의 목록과 자료를 추가합니다.',submitLabel:'추가해서 복원',success:'백업의 자료를 추가했어요.',onSubmit:async()=>{const result=await window.CaptureStore.importArchive(file);const restored=result.groups.find(g=>!known.has(g.id));if(restored)state.groupId=restored.id;}});}
 function downloadBlob(blob,name){const url=URL.createObjectURL(blob),a=node('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
 async function downloadItem(item){try{downloadBlob(await window.CaptureStore.getFile(item.fileId),item.fileName||item.title||'학습자료');}catch(err){status(errorText(err),true);}}
+async function editImage(item){
+ if(item.kind!=='image'||hasOpenDialog())return;
+ state.imageEditorOpening=true;const seq=++state.imageEditorSeq,loadSeq=state.loadSeq;
+ try{
+  if(!window.CaptureEditor)throw Error('사진 편집기를 불러오지 못했어요. 새로고침 후 다시 열어 주세요.');
+  const fileId=item.editedFileId||item.fileId;
+  const [blob,originalBlob]=item.editedFileId?await Promise.all([window.CaptureStore.getFile(fileId),window.CaptureStore.getFile(item.fileId)]):await window.CaptureStore.getFile(fileId).then(blob=>[blob,blob]);
+  if(seq!==state.imageEditorSeq||loadSeq!==state.loadSeq||!state.visible)return;
+  const result=await window.CaptureEditor.open({item,blob,originalBlob,onSave:value=>window.CaptureStore.saveImage(item.id,value,{expectedFileId:fileId})});
+  if(result?.saved&&seq===state.imageEditorSeq&&state.visible){await refresh();status('사진 편집을 저장했어요. 원본은 그대로 보관돼요.');}
+ }catch(err){status(errorText(err),true);}
+ finally{if(seq===state.imageEditorSeq)state.imageEditorOpening=false;}
+}
 function disposeViewer(){state.viewerSeq++;try{state.viewerHandle?.destroy();}catch(e){}state.viewerHandle=null;state.viewerItem=null;}
 async function openViewer(item){
- if(ui.viewer.open)return;disposeViewer();state.viewerItem=item;state.zoom=1;const seq=state.viewerSeq;ui.viewer.replaceChildren();const bar=node('div','cn-viewer-bar');const title=node('strong','cn-viewer-title',item.title||item.fileName||'자료 보기');title.id='cnViewerTitle';const controls=node('div','cn-viewer-controls');const minus=node('button','cn-button cn-icon','−');minus.type='button';minus.setAttribute('aria-label','축소');const plus=node('button','cn-button cn-icon','＋');plus.type='button';plus.setAttribute('aria-label','확대');const fit=node('button','cn-button cn-quiet','화면에 맞춤');fit.type='button';const rotation=node('button','cn-button cn-icon','↻');rotation.type='button';rotation.setAttribute('aria-label','오른쪽으로 회전');const closeButton=node('button','cn-button cn-icon','✕');closeButton.type='button';closeButton.setAttribute('aria-label','확대 보기 닫기');const level=node('span','cn-zoom-level','100%');level.setAttribute('aria-live','polite');controls.append(minus,level,plus,fit,rotation,closeButton);bar.append(title,controls);const scroll=node('div','cn-viewer-scroll');const host=node('div','cn-viewer-host');scroll.append(host);ui.viewer.append(bar,scroll);host.append(node('div','cn-media-loading','자료를 여는 중…'));
+ if(ui.viewer.open)return;disposeViewer();state.viewerItem=item;state.zoom=1;const seq=state.viewerSeq;ui.viewer.replaceChildren();const bar=node('div','cn-viewer-bar');const title=node('strong','cn-viewer-title',item.title||item.fileName||'자료 보기');title.id='cnViewerTitle';const controls=node('div','cn-viewer-controls');const minus=node('button','cn-button cn-icon','−');minus.type='button';minus.setAttribute('aria-label','축소');const plus=node('button','cn-button cn-icon','＋');plus.type='button';plus.setAttribute('aria-label','확대');const fit=node('button','cn-button cn-quiet','화면에 맞춤');fit.type='button';const rotation=node('button','cn-button cn-icon','↻');rotation.type='button';rotation.setAttribute('aria-label','오른쪽으로 회전');const closeButton=node('button','cn-button cn-icon','✕');closeButton.type='button';closeButton.setAttribute('aria-label','확대 보기 닫기');const level=node('span','cn-zoom-level','100%');level.setAttribute('aria-live','polite');controls.append(minus,level,plus,fit,rotation);if(item.kind==='image'){const edit=action('✎','viewer-edit-image','cn-button cn-icon',item.id);edit.setAttribute('aria-label','사진 편집');edit.addEventListener('click',()=>{ui.viewer.close();editImage(item);});controls.append(edit);}controls.append(closeButton);bar.append(title,controls);const scroll=node('div','cn-viewer-scroll');const host=node('div','cn-viewer-host');scroll.append(host);ui.viewer.append(bar,scroll);host.append(node('div','cn-media-loading','자료를 여는 중…'));
  let angle=item.rotation||0;function setZoom(value){state.zoom=Math.max(.5,Math.min(3,value));level.textContent=Math.round(state.zoom*100)+'%';minus.disabled=state.zoom<=.5;plus.disabled=state.zoom>=3;state.viewerHandle?.setZoom(state.zoom);}minus.addEventListener('click',()=>setZoom(state.zoom-.25));plus.addEventListener('click',()=>setZoom(state.zoom+.25));fit.addEventListener('click',()=>{setZoom(1);scroll.scrollTo({top:0,left:0});});rotation.addEventListener('click',()=>{angle=(angle+90)%360;state.viewerHandle?.rotate(angle);});closeButton.addEventListener('click',()=>ui.viewer.close());ui.viewer.showModal();closeButton.focus();
- try{const blob=await window.CaptureStore.getFile(item.fileId);if(seq!==state.viewerSeq||!ui.viewer.open)return;host.replaceChildren();const handle=await window.CaptureMedia.mount(host,item,blob,{thumbnail:false,zoom:state.zoom});if(seq!==state.viewerSeq||!ui.viewer.open){handle?.destroy();return;}state.viewerHandle=handle;if(angle!==(item.rotation||0))handle?.rotate(angle);if(state.zoom!==1)handle?.setZoom(state.zoom);}
+ try{const blob=await window.CaptureStore.getFile(item.editedFileId||item.fileId);if(seq!==state.viewerSeq||!ui.viewer.open)return;host.replaceChildren();const handle=await window.CaptureMedia.mount(host,item,blob,{thumbnail:false,zoom:state.zoom});if(seq!==state.viewerSeq||!ui.viewer.open){handle?.destroy();return;}state.viewerHandle=handle;if(angle!==(item.rotation||0))handle?.rotate(angle);if(state.zoom!==1)handle?.setZoom(state.zoom);}
  catch(err){if(seq!==state.viewerSeq||!ui.viewer.open)return;host.replaceChildren(node('div','cn-media-error','자료를 열지 못했어요. 닫은 뒤 메뉴에서 원본을 저장해 주세요.'));}
 }
 window.CaptureNotebook={open,close,hasOpenDialog};
