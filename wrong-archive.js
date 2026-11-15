@@ -38,7 +38,7 @@ function render(){
  try{
   lastEntries=readEntries();const valid=new Set(lastEntries.map(e=>e.id));detailOpen=new Set([...detailOpen].filter(id=>valid.has(id)));
   ui.count.textContent='('+lastEntries.length+')';ui.restoreAll.textContent='전체 복구 ('+lastEntries.length+')';ui.deleteAll.textContent='전체 완전 삭제 ('+lastEntries.length+')';ui.restoreAll.disabled=busy||!lastEntries.length;ui.deleteAll.disabled=busy||!lastEntries.length;
-  renderEntries();
+  if(ui.content.classList.contains('open'))renderEntries();
  }catch(err){
   lastEntries=[];ui.count.textContent='(읽기 오류)';ui.restoreAll.disabled=true;ui.deleteAll.disabled=true;ui.summary.textContent='';ui.list.replaceChildren(make('p','war-empty','보관함을 불러오지 못했어요. 기존 자료는 변경하지 않았습니다.'));ui.list.append(button('다시 불러오기','retry',null,'war-button'));ui.more.hidden=true;message(err?.message||'자료를 읽지 못했어요. 다시 시도해 주세요.',true);
  }
