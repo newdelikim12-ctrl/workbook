@@ -60,9 +60,9 @@
 #captureView .cn-media-host img,#captureView .cn-media-host canvas{display:block;max-width:100%}
 #captureView .cn-media-loading,#captureView .cn-media-error{display:flex;align-items:center;justify-content:center;min-height:150px;text-align:center;padding:24px;color:var(--muted);font-size:13px;line-height:1.7}
 #captureView .cn-caption{margin:0;padding:14px 16px 0;color:var(--text-main);font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.8}
-#captureView .cn-item-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 16px 14px}
+#captureView .cn-item-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:12px 16px 14px}
 #captureView .cn-item-detail{color:var(--muted);font-size:11px;white-space:nowrap}
-#captureView .cn-item-actions{display:flex;gap:6px}
+#captureView .cn-item-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 #captureView .cn-note-card{border-left:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 3%,var(--container-bg))}
 #captureView .cn-note-text{padding:2px 16px 4px;color:var(--text-main);font-size:15px;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere;user-select:text}
 #captureView .cn-items[data-mode=list]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
@@ -95,7 +95,7 @@
 #captureView .cn-viewer[open]{display:flex;flex-direction:column}
 #captureView .cn-viewer-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;padding:12px max(14px,env(safe-area-inset-right)) 12px max(14px,env(safe-area-inset-left));background:var(--container-bg);border-bottom:1px solid var(--input-border);z-index:2}
 #captureView .cn-viewer-title{font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#captureView .cn-viewer-controls{display:flex;align-items:center;gap:5px;flex-shrink:0}
+#captureView .cn-viewer-controls{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap;max-width:100%}
 #captureView .cn-viewer-controls .cn-button{min-height:40px;padding:7px 10px;font-size:12px}
 #captureView .cn-viewer-controls .cn-icon{min-width:36px;width:36px;font-size:18px;padding:5px}
 #captureView .cn-zoom-level{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:38px;text-align:center}

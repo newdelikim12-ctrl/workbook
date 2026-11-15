@@ -36,7 +36,7 @@ def run(browser,base,width):
     page.reload(wait_until='domcontentloaded');page.evaluate('flushDecks();lsOpenInStudy(0)')
     original=page.evaluate('JSON.stringify(decks[0])');other=page.evaluate('JSON.stringify(decks[2])')
     assert page.locator('#front').inner_text()=='cat'
-    assert page.locator('#cardNextBtn').inner_text()=='외웠음·보관'
+    assert page.locator('#cardNextBtn').inner_text()=='외웠음 · 보관'
     assert page.locator('#cardNextBtn').evaluate('(e)=>e.scrollWidth<=e.clientWidth+1')
     if os.environ.get('WORD_STUDY_SCREENSHOTS'):
         directory=Path(os.environ['WORD_STUDY_SCREENSHOTS']);directory.mkdir(parents=True,exist_ok=True)
