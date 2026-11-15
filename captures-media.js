@@ -120,7 +120,12 @@
         if(destroyed||error&&error.name==='RenderingCancelledException'||version!==record.version) return;
         record.canvas.style.display='none';
         record.placeholder.textContent='이 페이지를 표시하지 못했어요. 원본 파일을 확인해 주세요.';
-      }finally{record.task=null;}
+      }finally{
+        record.task=null;
+        // release() cannot clean a page while its render is still running.
+        // Complete that cleanup once a scrolled-away render has settled.
+        if(!record.visible&&record.page){try{record.page.cleanup();}catch(e){}}
+      }
     }
     function pump(){
       if(destroyed) return;

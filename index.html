@@ -30,15 +30,15 @@ document.querySelector('meta[name="color-scheme"]').setAttribute('content',schem
 <link rel="stylesheet" href="captures.css?v=2026-11-15.102">
 <link rel="stylesheet" href="word-audit.css?v=2026-11-14.101">
 <script defer src="word-spelling.js?v=2026-11-14.101"></script>
-<script defer src="word-audit.js?v=2026-11-14.101"></script>
+<script defer src="word-audit.js?v=2026-11-15.103"></script>
 <link rel="stylesheet" href="wrong-archive.css?v=2026-11-15.102">
-<script defer src="wrong-archive.js?v=2026-11-15.102"></script>
-<script defer src="captures-store.js?v=2026-11-15.102"></script>
-<script defer src="captures-media.js?v=2026-11-15.102"></script>
+<script defer src="wrong-archive.js?v=2026-11-15.103"></script>
+<script defer src="captures-store.js?v=2026-11-15.103"></script>
+<script defer src="captures-media.js?v=2026-11-15.103"></script>
 <link rel="stylesheet" href="captures-editor.css?v=2026-11-15.102">
 <script defer src="captures-image.js?v=2026-11-15.102"></script>
-<script defer src="captures-editor.js?v=2026-11-15.102"></script>
-<script defer src="captures.js?v=2026-11-15.102"></script>
+<script defer src="captures-editor.js?v=2026-11-15.103"></script>
+<script defer src="captures.js?v=2026-11-15.103"></script>
 <title>오늘 하루도 화이팅!</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
@@ -1083,7 +1083,7 @@ body.capture-open #tabBar{position:fixed;left:50%;bottom:max(10px,env(safe-area-
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-11-15.102'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-11-15.103'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 // Storage access can throw even on reads (private mode / browser policy).
@@ -1287,6 +1287,66 @@ function renderRecentDecks(){
   });
 }
 function saveDeckData(){ let d=decks.find(x=>x.id===activeDeckId); if(d){d.words=words;d.stats=stats;d.dupes=dupes;}  return saveDecks(); }
+
+
+// Learning flags and the optional wrong-notebook copy share one durable write.
+function commitLearningChange(selected,change,{copyWrong=false}={}){
+  const active=decks.find(d=>d.id===activeDeckId),targets=[...new Set(selected)],live=new Set(words);
+  if(!active||!targets.length||targets.some(w=>!w||!live.has(w)))return false;
+  const before=targets.map(word=>({word,value:{...word}}));
+  const previous={decks,words:active.words,stats:active.stats,dupes:active.dupes};
+  let wrong=null,wrongWords=null,wrongId='';
+  try{
+    targets.forEach(word=>typeof change==='function'?change(word):Object.assign(word,change));
+    if(copyWrong){
+      wrong=decks.find(d=>d.id===duplicateWrongDeckId());
+      if(!wrong){
+        let id='deck_wrong_'+Date.now();while(decks.some(d=>d.id===id))id+='_';
+        wrong={id,name:'오답노트',kind:'wrong',words:[],stats:{},dupes:[]};decks=decks.concat(wrong);
+      }
+      wrongId=wrong.id;wrongWords=wrong.words;
+      if(wrong!==active){
+        const seen=new Set(wrong.words.map(w=>normalizeHeadword(w.eng))),copies=[];
+        targets.forEach(word=>{const key=normalizeHeadword(word.eng);if(!key||seen.has(key))return;seen.add(key);
+          copies.push({...word,example:normalizeExamples(word.example),note:normalizeNotes(word.note),wrong:false,mastered:false,lastResult:null,wrongResult:null});});
+        if(copies.length)wrong.words=wrong.words.concat(copies);
+      }
+    }
+    if(!saveOnly())throw Error('Learning change was not saved');
+    if(wrongId)safeStorage.setItem('wrongDeckId',wrongId);
+    return true;
+  }catch(_error){
+    before.forEach(({word,value})=>{for(const key of Object.keys(word))if(!Object.hasOwn(value,key))delete word[key];Object.assign(word,value);});
+    if(wrong&&wrongWords)wrong.words=wrongWords;
+    decks=previous.decks;active.words=previous.words;active.stats=previous.stats;active.dupes=previous.dupes;
+    if(typeof autoPlay!=='undefined'&&autoPlay){autoPlay=false;if(typeof autoPlayTimer!=='undefined')clearTimeout(autoPlayTimer);if(typeof updateAutoPlayBtn==='function')updateAutoPlayBtn();}
+    showToast('저장하지 못해 변경하지 않았습니다. 기존 학습 기록은 유지됩니다.');return false;
+  }
+}
+
+
+function ordinaryRemovalRequest(selected){
+  return {deckId:activeDeckId,entries:[...new Set(selected)].map(word=>({word,eng:word.eng,kor:word.kor}))};
+}
+function commitOrdinaryRemoval(request,reset=false){
+  const deck=decks.find(d=>d.id===activeDeckId),live=new Set(words);
+  if(!request||request.deckId!==activeDeckId||!deck||isWrongNotebookDeck(deck)||!request.entries.length
+    ||request.entries.some(e=>!live.has(e.word)||e.word.eng!==e.eng||e.word.kor!==e.kor)
+    ||(reset&&request.entries.length!==words.length)){
+    showToast('단어가 변경되어 삭제하지 않았습니다. 다시 선택해 주세요.');return false;
+  }
+  const previous={words,stats,dupes,deckWords:deck.words,deckStats:deck.stats,deckDupes:deck.dupes};
+  const selected=new Set(request.entries.map(e=>e.word)),viewed=words[currentIndex];
+  words=words.filter(w=>!selected.has(w));if(reset){stats={};dupes=[];}
+  let saved=false;try{saved=saveOnly();}catch(_error){}
+  if(!saved){
+    words=previous.words;stats=previous.stats;dupes=previous.dupes;
+    deck.words=previous.deckWords;deck.stats=previous.deckStats;deck.dupes=previous.deckDupes;
+    showToast('저장하지 못해 삭제하지 않았습니다. 기존 단어는 유지됩니다.');return false;
+  }
+  currentIndex=viewed?words.indexOf(viewed):-1;afterWordsRemoved();
+  if(currentIndex<0)resetCardView();render();playSound('delete');return true;
+}
 
 // ===== 앱 자체 확인창 (Enter=확인 / Esc=취소) =====
 let _cfCb=null,_cfArmed=false;
@@ -2015,9 +2075,14 @@ function clearDupes(){
   let hasSrc=words.some(w=>w.src);
   if(!dupes.length && !hasSrc) return showToast('초기화할 기록이 없어요');
   if(!needConfirm2(()=>clearDupes(),'중복 기록과 시트 출처 기록을 초기화할까요?\n\n삭제한 세부 시트 때문에 잘못 잡히는 중복을 없애고, 다음에 시트를 불러올 때 새로 판단하게 합니다. (단어·학습기록은 그대로 유지)')) return;
-  dupes=[];
-  words.forEach(w=>{ delete w.src; }); // 출처 기록 초기화 → 삭제된 시트와의 과거 중복 해소
-  saveDupes(); render(); showToast('중복·출처 기록을 초기화했어요 🔄');
+  const previous=dupes,active=decks.find(d=>d.id===activeDeckId),previousDeckDupes=active.dupes;
+  const sources=words.map(word=>({word,has:Object.prototype.hasOwnProperty.call(word,'src'),value:word.src}));
+  dupes=[];words.forEach(w=>{delete w.src;});
+  if(!saveOnly()){
+    dupes=previous;active.dupes=previousDeckDupes;sources.forEach(({word,has,value})=>{if(has)word.src=value;else delete word.src;});
+    showToast('저장하지 못해 기록을 초기화하지 않았습니다.');return false;
+  }
+  render();showToast('중복·출처 기록을 초기화했어요 🔄');return true;
 }
 function renderDupes(){
 let box=document.getElementById('dupesList'); if(!box) return;
@@ -2055,12 +2120,11 @@ let ctrl=new AbortController();
 let tid=setTimeout(()=>ctrl.abort(),timeoutMs||8000);
 try{
 let r=await fetch(u,{cache:'no-store',signal:ctrl.signal});
-clearTimeout(tid);
 if(!r.ok) throw new Error('status '+r.status);
 let text=await r.text();
 if(validate) validate(text);
 return text;
-}catch(e){clearTimeout(tid);throw e;}
+}finally{clearTimeout(tid);}
 }
 // 직접 먼저 경쟁, 600ms 후 프록시도 병렬 합류 → 가장 빠른 성공 반환
 async function fetchFirstOk(urlsOrObj,validate){
@@ -2086,12 +2150,14 @@ if(!done) proxied.forEach(u=>tryFetch(u,validate,12000).then(onOk).catch(onErr))
 }
 
 // 시트 안에 들어있는 탭(세부 시트) 목록 불러오기
-let detectedTabs=[];
+let detectedTabs=[],_sheetTabsSeq=0,detectedTabsSourceId='';
 async function loadSheetTabs(){
+const seq=++_sheetTabsSeq;
 let url=document.getElementById('sheetUrl').value.trim();
 if(!url) return alert('구글 시트 링크를 입력해주세요');
 let id=parseSheetId(url);
 if(!id) return alert('올바른 구글 시트 링크가 아닙니다');
+detectedTabs=[];detectedTabsSourceId='';
 let box=document.getElementById('sheetTabs');
 box.innerHTML='<div style="color:var(--muted);font-size:var(--fs-md);padding:8px 2px">📑 시트 목록을 불러오는 중... ⏳</div>';
 showToast('시트 목록을 불러오는 중... ⏳');
@@ -2107,6 +2173,8 @@ if(!/sheet-button-/.test(text)) throw new Error('no tabs');
 });
 tabs=parseSheetTabs(html);
 }catch(e){tabs=[];}
+if(seq!==_sheetTabsSeq||parseSheetId(document.getElementById('sheetUrl').value.trim())!==id)return;
+detectedTabsSourceId=id;
 renderSheetTabs(tabs);
 }
 
@@ -2161,7 +2229,13 @@ html+='</div>';
 box.innerHTML=html;
 }
 
-function importSheetTab(i){let t=detectedTabs[i];if(!t) return;importGoogleSheet({gid:t.gid,sheet:t.name});}
+function importSheetTab(i){
+let t=detectedTabs[i];if(!t)return false;
+if(parseSheetId(document.getElementById('sheetUrl').value.trim())!==detectedTabsSourceId){
+showToast('시트 링크가 변경되었어요. 시트 목록을 다시 불러와 주세요.');return false;
+}
+return importGoogleSheet({gid:t.gid,sheet:t.name});
+}
 function importManualSheet(){let name=(document.getElementById('manualSheetName')?.value||'').trim();if(!name) return alert('시트 탭 이름을 입력해 주세요');importGoogleSheet({sheet:name});}
 
 let _sheetImportSeq=0;
@@ -2789,10 +2863,9 @@ function updateCardUndoBtn(){
 function cardUndoMaster(){
   let t=_undoTarget();
   if(!t){ showToast('아직 학습완료된 단어가 아니에요'); return; }
-  if(t.mode==='wrong') t.w.wrongResult=null; else t.w.mastered=false;
-  t.w.lastResult=null;
+  if(!commitLearningChange([t.w],t.mode==='wrong'?{wrongResult:null,lastResult:null}:{mastered:false,lastResult:null}))return false;
   playSound('undo');
-  save();
+  render();
   showCardActions();
   showToast('"'+t.w.eng+'" 학습취소 ↩️ 다시 나와요');
 }
@@ -3055,16 +3128,14 @@ showWord(words[i],i,true);
 // 카드 좌하단 '다음 단어' 버튼만 nextCard(false)로 완료 없이 넘김
 function nextCard(markDone){
 // 넘김 효과음: 완료하며 넘기면 완료음, 그냥 넘기면 종이 넘기는 소리
-if(currentIndex>=0 && words[currentIndex]) playSound(markDone===false?'next':'done');
 if(markDone!==false && currentIndex>=0 && words[currentIndex]){
 if(lastMode==='wrong'){
-words[currentIndex].wrongResult='correct';
-save();
+if(!commitLearningChange([words[currentIndex]],{wrongResult:'correct'}))return false;render();
 }else if(!words[currentIndex].mastered){
-words[currentIndex].mastered=true;
-save();
+if(!commitLearningChange([words[currentIndex]],{mastered:true}))return false;render();
 }
 }
+if(currentIndex>=0 && words[currentIndex]) playSound(markDone===false?'next':'done');
 // 같은 모드에서 다음 카드 선택
 let arr=getDeck(lastMode);
 if(!arr.length){
@@ -3214,9 +3285,15 @@ function openNaverExample(){
 // ===== 예문 찾기 (Free Dictionary + Tatoeba) =====
 let _exCache=new Map(); // word -> [{en,ko}]
 // 시간제한 fetch (기본 3초) — 느린 소스는 포기하고 빠른 결과 우선
-function fetchT(url,ms){
+async function fetchT(url,ms){
   let c=new AbortController(); let t=setTimeout(()=>c.abort(),ms||3000);
-  return fetch(url,{signal:c.signal}).finally(()=>clearTimeout(t));
+  try{
+    const response=await fetch(url,{signal:c.signal});
+    // A fetch resolves at headers; keep the timeout until the full body arrives.
+    // Reading a clone leaves the original Response available to text()/json().
+    await response.clone().arrayBuffer();
+    return response;
+  }finally{clearTimeout(t);}
 }
 // CORS 프록시 경유 JSON 가져오기 (네이버 사전 등 직접 호출이 막힌 곳용)
 async function fetchViaProxy(url){
@@ -3338,18 +3415,7 @@ function getWrongDeck(){
   if(!d){ d={id:'deck_wrong_'+Date.now(),name:'오답노트',kind:'wrong',words:[],stats:{},dupes:[]}; decks.push(d); safeStorage.setItem('wrongDeckId',d.id); }
   return d;
 }
-function addToWrongDeck(w){
-  try{
-    if(!w||!w.eng) return;
-    let d=getWrongDeck();
-    if(d.id===activeDeckId) return; // 오답노트 단어장 안에서의 오답 표시는 복사 불필요
-    let eng=w.eng.toLowerCase();
-    if(d.words.some(x=>(x.eng||'').toLowerCase()===eng)) return; // 이미 있으면 중복 방지
-    d.words.push({eng:w.eng,kor:w.kor,example:normalizeExamples(w.example),note:normalizeNotes(w.note),src:w.src,wrong:false,mastered:false,lastResult:null,wrongResult:null});
-    saveDecks();
-    renderDeckPanel(); // 단어장 목록의 단어 수 갱신 (스크롤 부작용 없음)
-  }catch(e){}
-}
+function addToWrongDeck(w){if(commitLearningChange([w],{},{copyWrong:true})){renderDeckPanel();return true;}return false;}
 function deleteWrongStudyWord(index=currentIndex,request=null){
   const deck=decks.find(candidate=>candidate.id===activeDeckId);
   if(!isWrongNotebookDeck(deck)){
@@ -3418,37 +3484,23 @@ function cardCompleteOrDelete(){
   if(isWrongNotebookDeck(decks.find(deck=>deck.id===activeDeckId))) return deleteWrongStudyWord();
   return nextCard();
 }
-function markCorrect(i){
-words[i].lastResult='correct';
-words[i].mastered=true;
-save();
+function markCorrect(i){if(commitLearningChange([words[i]],{lastResult:'correct',mastered:true}))render();}
+function markWrong(i){if(commitLearningChange([words[i]],{wrong:true,mastered:false,wrongResult:null,lastResult:'wrong'},{copyWrong:true})){render();renderDeckPanel();}}
+function clearAll(request=null){
+if(!request){
+  if(!words.length)return alert('단어가 없습니다');
+  if(isWrongNotebookDeck(decks.find(deck=>deck.id===activeDeckId)))return archiveWrongStudySelection(words.slice());
+  request=ordinaryRemovalRequest(words);
 }
-function markWrong(i){
-words[i].wrong=true;
-words[i].mastered=false; // 오답이면 학습완료가 아님
-words[i].wrongResult=null;
-words[i].lastResult='wrong';
-addToWrongDeck(words[i]);
-save();
-}
-function clearAll(){
-if(!words.length) return alert('단어가 없습니다');
-if(isWrongNotebookDeck(decks.find(deck=>deck.id===activeDeckId)))return archiveWrongStudySelection(words.slice());
-if(!needConfirm2(()=>clearAll(),'현재 단어장의 모든 단어를 삭제하고 초기화할까요?')) return;
-playSound('delete');
-words=[];
-currentIndex=-1;
-stats={};
-dupes=[];
-afterWordsRemoved();
-save();
+if(!needConfirm2(()=>clearAll(request),'현재 단어장의 모든 단어를 삭제하고 초기화할까요?'))return false;
+return commitOrdinaryRemoval(request,true);
 }
 function clearMastered(){
 if(!words.some(w=>w.mastered)) return alert('학습 완료된 단어가 없습니다');
 if(!needConfirm2(()=>clearMastered(),'학습 완료된 단어를 모두 다시 학습하도록 되돌릴까요?')) return;
 playSound('delete');
-words.forEach(w=>{if(w.mastered) w.mastered=false;});
-save();
+if(!commitLearningChange(words.filter(w=>w.mastered),{mastered:false}))return false;
+render();
 }
 
 // 단어를 지우면 인덱스 기반 상태(선택·기록·퀴즈·범위)를 모두 정리한다
@@ -3469,17 +3521,14 @@ function clampRange(){
   }
   if(rangeTo&&rangeTo>n) rangeTo=n;
 }
-function bulkDelete(items){
-if(!items.length) return alert('삭제할 단어가 없습니다');
-if(isWrongNotebookDeck(decks.find(deck=>deck.id===activeDeckId)))return archiveWrongStudySelection(items.map(item=>item.w));
-if(!needConfirm2(()=>bulkDelete(items),items.length+'개의 단어를 삭제할까요?')) return;
-playSound('delete');
-let set=new Set(items.map(x=>x.w));
-let curWord=currentIndex>=0?words[currentIndex]:null;
-words=words.filter(w=>!set.has(w));
-currentIndex=curWord&&!set.has(curWord)?words.indexOf(curWord):-1;
-afterWordsRemoved();
-save();
+function bulkDelete(items,request=null){
+if(!request){
+  if(!items.length)return alert('삭제할 단어가 없습니다');
+  if(isWrongNotebookDeck(decks.find(deck=>deck.id===activeDeckId)))return archiveWrongStudySelection(items.map(item=>item.w));
+  request=ordinaryRemovalRequest(items.map(item=>item.w));
+}
+if(!needConfirm2(()=>bulkDelete(null,request),request.entries.length+'개의 단어를 삭제할까요?'))return false;
+return commitOrdinaryRemoval(request);
 }
 function clearAllWords(){
 let q=searchVal('searchBox');
@@ -3491,51 +3540,31 @@ let items=words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,q,x.i)).map(
 if(!items.length) return alert('오답노트에 단어가 없습니다');
 if(!needConfirm2(()=>clearWrongs(),items.length+'개의 단어를 오답노트에서 해제할까요? (전체 단어 목록에는 그대로 남아요)')) return;
 playSound('delete');
-items.forEach(w=>{w.wrong=false;w.wrongResult=null;});
-save();
+if(!commitLearningChange(items,{wrong:false,wrongResult:null}))return false;
+render();
 }
-function del(i){
-let w=words[i];
-if(!w) return;
-if(isWrongNotebookDeck(decks.find(deck=>deck.id===activeDeckId)))return deleteWrongStudyWord(i);
-if(!needConfirm2(()=>del(i),'"'+w.eng+' — '+w.kor+'" 단어를 정말 삭제할까요?')) return;
-playSound('delete');
-if(editIndex===i)editIndex=-1;
-let curWord=currentIndex>=0?words[currentIndex]:null;
-let removed=words[i];
-words.splice(i,1);
-// 학습 중이던 단어가 삭제됐으면 해제, 아니면 새 위치로 인덱스 보정
-currentIndex=(curWord && curWord!==removed)?words.indexOf(curWord):-1;
-afterWordsRemoved();
-save();
+function del(i,request=null){
+if(!request){
+  const word=words[i];if(!word)return false;
+  if(isWrongNotebookDeck(decks.find(deck=>deck.id===activeDeckId)))return deleteWrongStudyWord(i);
+  request=ordinaryRemovalRequest([word]);
+}
+const entry=request.entries[0];
+if(!needConfirm2(()=>del(i,request),'"'+entry.eng+' — '+entry.kor+'" 단어를 정말 삭제할까요?'))return false;
+return commitOrdinaryRemoval(request);
 }
 function toggleWrongFlag(i){
-words[i].wrong=!words[i].wrong;
-if(words[i].wrong){ words[i].wrongResult=null; words[i].mastered=false; addToWrongDeck(words[i]); playSound('wrong'); } // 새로 담으면 복습 대상으로(학습완료 해제) + 오답노트 단어장에 복사
-else playSound('toggle');
-save();
+const w=words[i];if(!w)return false;const wrong=!w.wrong;
+if(!commitLearningChange([w],wrong?{wrong:true,wrongResult:null,mastered:false}:{wrong:false},{copyWrong:wrong}))return false;
+playSound(wrong?'wrong':'toggle');render();if(wrong)renderDeckPanel();return true;
 }
-function removeWrongFlag(i){
-words[i].wrong=false;words[i].wrongResult=null;
-playSound('delete');save();render();
-}
-function removeMasteredFlag(i){
-words[i].mastered=false;
-playSound('delete');save();render();
-}
+function removeWrongFlag(i){if(commitLearningChange([words[i]],{wrong:false,wrongResult:null})){playSound('delete');render();}}
+function removeMasteredFlag(i){if(commitLearningChange([words[i]],{mastered:false})){playSound('delete');render();}}
 function wrongNoteCorrect(i){
-words[i].wrongResult='correct';
-words[i].mastered=true;
-save();
-playSound('add');
-showToast('잘했어요! 학습 완료로 이동했어요 🏆');
+if(!commitLearningChange([words[i]],{wrongResult:'correct',mastered:true}))return false;
+render();playSound('add');showToast('잘했어요! 학습 완료로 이동했어요 🏆');return true;
 }
-function wrongNoteAgain(i){
-// 다시 틀림 → 계속 복습 대상으로 유지(학습완료도 해제)
-words[i].wrongResult='wrong';
-words[i].mastered=false;
-save();
-}
+function wrongNoteAgain(i){if(commitLearningChange([words[i]],{wrongResult:'wrong',mastered:false}))render();}
 function resetCardView(){
   currentIndex=-1; cardHistory=[]; recentSeen=[];
   clearTimeout(autoPlayTimer);
@@ -3554,9 +3583,9 @@ let msg=items.length
   ? ('학습 완료된 단어 '+items.length+'개를 모두 다시 학습할 단어로 초기화할까요?'+(wrongDone.length?'\n(오답 학습률도 함께 초기화됩니다)':''))
   : '오답 학습률을 초기화할까요?';
 if(!needConfirm2(()=>resetProgress(),msg)) return;
-items.forEach(w=>{w.mastered=false;w.lastResult=null;});
-wrongDone.forEach(w=>{w.wrongResult=null;});   // 오답 학습률도 함께 초기화
-save();
+const masteredSet=new Set(items),wrongSet=new Set(wrongDone);
+if(!commitLearningChange(items.concat(wrongDone),w=>{if(masteredSet.has(w)){w.mastered=false;w.lastResult=null;}if(wrongSet.has(w))w.wrongResult=null;}))return false;
+render();
 resetCardView();
 playSound('toggle');
 showToast(wrongDone.length?'학습 진도율과 오답 학습률을 초기화했어요 ↺':'학습 진도율을 초기화했어요 ↺');
@@ -3565,8 +3594,8 @@ function resetWrongProgress(){
 let items=words.filter(w=>w.wrong);
 if(!items.length) return showToast('오답노트가 비어있어요');
 if(!needConfirm2(()=>resetWrongProgress(),'오답노트 단어 '+items.length+'개를 모두 다시 복습할 단어로 초기화할까요?')) return;
-items.forEach(w=>{w.wrongResult=null;});
-save();
+if(!commitLearningChange(items,{wrongResult:null}))return false;
+render();
 resetCardView();
 playSound('toggle');
 showToast('오답노트를 다시 복습할 단어로 초기화했어요 ↺');
@@ -3577,12 +3606,12 @@ let items=words.map((w,i)=>({w,i})).filter(x=>x.w.wrong&&matchQ(x.w,q,x.i)).map(
 if(!items.length) return alert('오답노트에 단어가 없습니다');
 let label=result==='correct'?'외웠어요':'재도전';
 if(!needConfirm2(()=>bulkWrong(result),items.length+"개를 모두 '"+label+"'(으)로 표시할까요?")) return;
-items.forEach(w=>{ w.wrongResult=result; });
-save();
+if(!commitLearningChange(items,{wrongResult:result}))return false;
+render();
 if(result==='correct') playSound('add');
 showToast(result==='correct'?'오답노트를 모두 외운 것으로 표시했어요 👏':'모두 다시 복습할 단어로 표시했어요 ✏️');
 }
-function toggleMaster(i){words[i].mastered=!words[i].mastered;save();}
+function toggleMaster(i){const w=words[i];if(w&&commitLearningChange([w],{mastered:!w.mastered}))render();}
 // ===== 전체 단어: 번호 범위로 일괄 학습완료·학습취소 =====
 // 번호 범위 칸을 탭하면 10·20… 단위 블록 목록에서 고르기
 function wlPickerOpen(){ let m=document.getElementById('wlBulkPicker'); return !!m&&m.classList.contains('show'); }
@@ -3682,8 +3711,8 @@ function wlBulkRange(state){
   if(!r.items.length) return showToast('그 범위에 단어가 없어요');
   let label=state?'학습 완료':'학습 취소';
   if(!needConfirm2(()=>wlBulkRange(state),r.from+'~'+r.to+'번 단어 '+r.items.length+"개를 '"+label+"' 처리할까요?")) return;
-  r.items.forEach(function(w){ w.mastered=state; if(!state) w.lastResult=null; });
-  save();
+  if(!commitLearningChange(r.items,state?{mastered:true}:{mastered:false,lastResult:null}))return false;
+  render();
   playSound(state?'done':'undo');
   showToast(r.from+'~'+r.to+'번 '+r.items.length+'개를 '+label+'했어요 '+(state?'🏆':'↩️'));
 }
@@ -3693,8 +3722,8 @@ let items=words.filter(w=>matchQ(w,q));
 if(!items.length) return alert('단어가 없습니다');
 let label=state?'학습 완료':'학습 안 함';
 if(!needConfirm2(()=>bulkMaster(state),items.length+"개를 모두 '"+label+"'(으)로 표시할까요?")) return;
-items.forEach(w=>{ w.mastered=state; });
-save();
+if(!commitLearningChange(items,{mastered:state}))return false;
+render();
 if(state) playSound('add');
 showToast(state?'전체 단어를 학습 완료로 표시했어요 🏆':'전체 단어를 학습 안 함으로 되돌렸어요');
 }
@@ -4207,12 +4236,9 @@ function lsBulk(action){
   if(!items.length) return alert('적용할 단어가 없어요');
   let labels={master:'학습 완료',unmaster:'학습 취소',clearWrong:'오답 해제'};
   if(!needConfirm2(()=>lsBulk(action),'현재 목록의 '+items.length+'개 단어를 모두 \''+labels[action]+'\' 처리할까요?')) return;
-  items.forEach(({w})=>{
-    if(action==='master') w.mastered=true;
-    else if(action==='unmaster') w.mastered=false;
-    else if(action==='clearWrong'){ w.wrong=false; w.wrongResult=null; }
-  });
-  save();
+  const patch=action==='master'?{mastered:true}:action==='unmaster'?{mastered:false}:action==='clearWrong'?{wrong:false,wrongResult:null}:null;
+  if(!patch||!commitLearningChange(items.map(({w})=>w),patch))return false;
+  render();
   playSound(action==='clearWrong'?'delete':action==='master'?'add':'toggle');
   let done={master:'학습 완료로 표시했어요 🏆',unmaster:'학습 취소했어요 ↩️',clearWrong:'오답노트에서 해제했어요 🧹'};
   showToast(items.length+'개를 '+done[action]);
@@ -4310,10 +4336,8 @@ function lsJumpTo(n){
   window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
 }
 function lsWrongCorrect(i){
-  words[i].wrongResult='correct'; // 학습완료로는 보내지 않고 오답 복습 완료만 표시
-  save();
-  playSound('add');
-  showToast('오답 복습 완료로 표시했어요 ⭕');
+if(!commitLearningChange([words[i]],{wrongResult:'correct'}))return false;
+render();playSound('add');showToast('오답 복습 완료로 표시했어요 ⭕');return true;
 }
 function lsStartEdit(i){ lsEditIndex=i; renderListStudy(); }
 function lsCancelEdit(){ lsEditIndex=-1; renderListStudy(); }
@@ -4380,7 +4404,7 @@ function lsTogglePeek(el,i){
       if(h>0) window.scrollBy({top:h+10,behavior:'smooth'}); // +10: 행 간격
     },350);
     // '전체' 필터에서만 뜻 확인 시 자동 학습완료 (안외움 등에서는 완료로 가지 않음)
-    if(lsFilter==='all' && words[i] && !words[i].mastered){ words[i].mastered=true; save(); }
+    if(lsFilter==='all' && words[i] && !words[i].mastered&&commitLearningChange([words[i]],{mastered:true}))render();
   } else {
     lsPeeked.delete(i);
   }
@@ -4418,7 +4442,7 @@ function lsRowHtml(w,i){
 function switchDeck(id,targetTab){
   let d = decks.find(x=>x.id===id);
   if(!d){showToast('존재하지 않는 단어장입니다.');return false;}
-  saveDeckData();
+  if(!saveDeckData()){showToast('현재 변경 내용을 저장하지 못해 단어장을 전환하지 않았습니다.');return false;}
   activeDeckId = id;
   words = d.words||[]; stats = d.stats||{}; dupes = d.dupes||[];
   currentIndex=-1; editIndex=-1; cardHistory=[]; recentSeen=[];
@@ -4437,15 +4461,16 @@ function switchDeck(id,targetTab){
   showCardActions();
   // 단어장 바에서 고르면 현재 탭 유지, 단어장 관리에서 고르면 학습으로 이동
   showTab(targetTab || safeStorage.getItem('activeTab') || 'study');
-  showToast('📚 '+d.name);
+  showToast('📚 '+d.name);return true;
 }
 
 function createDeck(){
-  let name=prompt('새 단어장 이름을 입력하세요');
-  if(!name||!name.trim()) return;
-  let d={id:'deck_'+Date.now(),name:name.trim(),words:[],stats:{},dupes:[]};
-  decks.push(d);
-  switchDeck(d.id,'study');
+  let name=prompt('새 단어장 이름을 입력하세요');if(!name||!name.trim())return false;
+  if(!saveDeckData())return false;
+  let id='deck_'+Date.now();while(decks.some(d=>d.id===id))id+='_';
+  const previous=decks,d={id,name:name.trim(),words:[],stats:{},dupes:[]};decks=decks.concat(d);
+  if(!saveDecks()){decks=previous;showToast('저장하지 못해 단어장을 만들지 않았습니다.');return false;}
+  return switchDeck(d.id,'study');
 }
 
 function renameDeck(id){
@@ -4464,17 +4489,23 @@ function renameDeck(id){
   showToast('이름을 변경했어요');
 }
 
-function deleteDeck(id){
-  if(decks.length<=1) return showToast('단어장이 하나뿐이라 삭제할 수 없어요');
-  let d=decks.find(x=>x.id===id);
-  if(isWrongNotebookDeck(d)&&(d.words.length||(d.wrongArchive||[]).length)){
-    return showToast('오답노트에 단어 또는 보관 항목이 남아 있어요. 먼저 보관함에서 정리해 주세요.');
+function deleteDeck(id,request=null){
+  if(decks.length<=1)return showToast('단어장이 하나뿐이라 삭제할 수 없어요');
+  const d=decks.find(x=>x.id===id);if(!d)return false;
+  if(isWrongNotebookDeck(d)&&(d.words.length||(d.wrongArchive||[]).length))return showToast('오답노트에 단어 또는 보관 항목이 남아 있어요. 먼저 보관함에서 정리해 주세요.');
+  if(!request)request={deck:d,snapshot:JSON.stringify(d)};
+  if(request.deck!==d||request.snapshot!==JSON.stringify(d)){showToast('단어장이 변경되어 삭제하지 않았습니다. 다시 확인해 주세요.');return false;}
+  if(!needConfirm2(()=>deleteDeck(id,request),d.name+'을(를) 삭제할까요? 안에 있는 단어도 모두 사라져요'))return false;
+  const previous={decks,activeDeckId,words,stats,dupes,recentDeckIds};
+  decks=decks.filter(x=>x!==d);recentDeckIds=recentDeckIds.filter(x=>x!==id);
+  const switched=activeDeckId===id;
+  if(switched){const next=decks[0];activeDeckId=next.id;words=next.words;stats=next.stats;dupes=next.dupes;}
+  if(!saveDecks()){
+    decks=previous.decks;activeDeckId=previous.activeDeckId;words=previous.words;stats=previous.stats;dupes=previous.dupes;recentDeckIds=previous.recentDeckIds;
+    showToast('저장하지 못해 단어장을 삭제하지 않았습니다.');return false;
   }
-  if(!needConfirm2(()=>deleteDeck(id),(d?d.name:'단어장')+'을(를) 삭제할까요? 안에 있는 단어도 모두 사라져요')) return;
-  decks=decks.filter(x=>x.id!==id);
-  if(activeDeckId===id) switchDeck(decks[0].id);
-  else { saveDecks(); renderDeckPanel(); renderRecentDecks(); }
-  showToast('단어장을 삭제했어요');
+  if(switched)switchDeck(activeDeckId);else{renderDeckPanel();renderRecentDecks();}
+  showToast('단어장을 삭제했어요');return true;
 }
 
 function showTab(tab){
@@ -4540,8 +4571,10 @@ function deckEndDrag(commit){
       let ids=[...document.querySelectorAll('#deckList .deck-card')].map(c=>c.dataset.id);
       // DOM과 decks가 어긋났으면(동시 재렌더 등) 커밋 생략해 순서가 깨지지 않게
       if(ids.length===decks.length && decks.every(d=>ids.indexOf(d.id)>=0)){
-        decks.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id));
-        saveDecks(); renderDeckPanel(); renderRecentDecks();
+        const previous=decks,positions=new Map(ids.map((id,i)=>[id,i]));
+        decks=decks.slice().sort((a,b)=>positions.get(a.id)-positions.get(b.id));
+        if(!saveDecks()){decks=previous;renderDeckPanel();renderRecentDecks();showToast('순서를 저장하지 못했습니다. 기존 순서를 유지합니다.');deckDrag.el=null;deckDrag.dragging=false;deckDrag.moved=false;deckDrag.pid=null;return false;}
+        renderDeckPanel(); renderRecentDecks();
         deckDrag.suppress=true; setTimeout(()=>{deckDrag.suppress=false;},350);
         showToast('단어장 순서를 바꿨어요 ↕️');
       }

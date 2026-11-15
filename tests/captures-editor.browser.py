@@ -378,6 +378,31 @@ def delayed_open_races(browser, base, image_path):
     return {'case': 'delayed file reads', 'closeReopenCannotOpenStaleEditor': True, 'groupChangeCannotOpenStaleEditor': True}
 
 
+def batched_pointer_preview(browser, base, image_path):
+    with fresh(browser, base, 390, image_path) as (page, image_id):
+        before_store=stored_image(page,image_id)
+        open_editor(page, image_id);tool(page, 'draw');choose_color(page)
+        original=draft(page)
+        start=point(page,40/400,50/300);page.mouse.move(start[0],start[1]);page.mouse.down()
+        counts=page.evaluate("""async()=>{
+          const canvas=document.querySelector('#cneOverlay'),context=canvas.getContext('2d'),clear=context.clearRect;
+          let clears=0;context.clearRect=function(...args){clears++;return clear.apply(this,args)};
+          const box=canvas.getBoundingClientRect(),width=canvas.width,height=canvas.height;
+          for(let i=1;i<=120;i++)canvas.dispatchEvent(new PointerEvent('pointermove',{pointerId:1,pointerType:'mouse',isPrimary:true,button:0,buttons:1,bubbles:true,clientX:box.x+(40+i*2)/width*box.width,clientY:box.y+(50+i*.7)/height*box.height}));
+          const beforeFrame=clears;await new Promise(requestAnimationFrame);const afterFrame=clears;
+          context.clearRect=clear;return {beforeFrame,afterFrame};
+        }""")
+        assert counts=={'beforeFrame':0,'afterFrame':1},counts
+        assert draft(page)==original
+        end=point(page,280/400,134/300);page.mouse.move(end[0],end[1]);page.mouse.up()
+        annotated=draft(page);assert annotated['red']>original['red']
+        action(page,'undo').click();assert draft(page)==original
+        action(page,'redo').click();assert draft(page)==annotated
+        action(page,'cancel').click()
+        assert stored_image(page,image_id)==before_store,'cancel must preserve exact stored photo bytes and pixels'
+    return {'case':'pointer preview batching','rawMoves':120,'previewDrawsPerFrame':1,'singleStrokeUndoRedo':True}
+
+
 def main():
     server = ThreadingHTTPServer(('127.0.0.1', 0), partial(Quiet, directory=str(ROOT)))
     Thread(target=server.serve_forever, daemon=True).start()
@@ -398,6 +423,9 @@ def main():
                 report = delayed_open_races(browser, base, image_path)
                 reports.append(report)
                 print(json.dumps({'completed': report}, ensure_ascii=False), flush=True)
+            report=batched_pointer_preview(browser,base,image_path)
+            reports.append(report)
+            print(json.dumps({'completed':report},ensure_ascii=False),flush=True)
             browser.close()
         print(json.dumps({'passed': True, 'cases': reports}, ensure_ascii=False, indent=2))
     finally:

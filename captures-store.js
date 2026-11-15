@@ -93,10 +93,11 @@
   async function groupItems(stores,groupId){
     return sortItems(await request(stores.items.index('groupId').getAll(groupId)));
   }
-  function writeOrder(stores,items,now){
+  function writeOrder(stores,items,now,newIds=null){
     return items.map((item,index)=>{
       const updated=item.order===index?item:{...item,order:index,updatedAt:now};
-      stores.items.put(updated);
+      if(newIds&&newIds.has(item.id)) stores.items.add(updated);
+      else if(updated!==item) stores.items.put(updated);
       return updated;
     });
   }
@@ -163,7 +164,7 @@
     let mime=(blob.type||value.type||'').toLowerCase().split(';')[0].trim();
     const extension=fileName.toLowerCase().split('.').pop();
     const imageTypes={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',bmp:'image/bmp',avif:'image/avif',heic:'image/heic',heif:'image/heif',svg:'image/svg+xml'};
-    if(!mime) mime=extension==='pdf'?'application/pdf':imageTypes[extension]||'';
+    if(!mime||mime==='application/octet-stream') mime=extension==='pdf'?'application/pdf':imageTypes[extension]||'';
     const kind=mime==='application/pdf'?'pdf':mime.startsWith('image/')?'image':null;
     if(!kind) throw error('이미지 또는 PDF 파일을 선택해 주세요.');
     if(!fileName) fileName=(kind==='pdf'?'PDF 자료':'캡처 이미지')+' '+(index+1)+(kind==='pdf'?'.pdf':'');
@@ -181,9 +182,8 @@
       }));
       added.forEach((item,i)=>{ stores.files.add({id:item.fileId,blob:inputs[i].blob}); });
       items.splice(index,0,...added);
-      const ordered=writeOrder(stores,items,now);
+      const ids=new Set(added.map(item=>item.id)),ordered=writeOrder(stores,items,now,ids);
       touchGroup(stores,group,now);
-      const ids=new Set(added.map(item=>item.id));
       return ordered.filter(item=>ids.has(item.id));
     });
   }
@@ -197,12 +197,12 @@
         fileId:null,mime:'',fileName:'',size:0,rotation:0,createdAt:now,updatedAt:now
       };
       items.splice(index,0,item);
-      const ordered=writeOrder(stores,items,now);
+      const ordered=writeOrder(stores,items,now,new Set([item.id]));
       touchGroup(stores,group,now);
       return ordered.find(entry=>entry.id===item.id);
     });
   }
-  async function updateItem(itemId,patch){
+  async function updateItem(itemId,patch,options){
     if(!patch||typeof patch!=='object'||Array.isArray(patch)) throw error('수정 내용이 올바르지 않아요.');
     const allowed=new Set(['title','caption','text','rotation']);
     if(Object.keys(patch).some(key=>!allowed.has(key))) throw error('수정할 수 없는 항목이 있어요.');
@@ -213,8 +213,18 @@
         values.rotation=patch.rotation;
       }else values[key]=key==='title'?name(patch[key]):text(patch[key],key==='caption'?'메모':'내용');
     }
+    const expected={};
+    if(options!==undefined){
+      if(!options||!options.expected||typeof options.expected!=='object'||Array.isArray(options.expected)) throw error('수정 전 내용이 올바르지 않아요.');
+      for(const key of Object.keys(options.expected)){
+        const value=options.expected[key];
+        if(!Object.prototype.hasOwnProperty.call(values,key)||(key==='rotation'?!ROTATIONS.has(value):typeof value!=='string')) throw error('수정 전 내용이 올바르지 않아요.');
+        expected[key]=value;
+      }
+    }
     return transaction(['groups','items'],'readwrite',async stores=>{
       const item=await requireItem(stores,itemId),group=await requireGroup(stores,item.groupId),now=Date.now();
+      if(Object.keys(expected).some(key=>item[key]!==expected[key])) throw error('다른 창에서 내용이 변경되었어요. 입력을 복사한 뒤 다시 확인해 주세요.');
       const updated={...item,...values,updatedAt:now};
       if(updated.kind==='note'&&!updated.text.trim()) throw error('메모 내용을 입력해 주세요.');
       stores.items.put(updated);touchGroup(stores,group,now);

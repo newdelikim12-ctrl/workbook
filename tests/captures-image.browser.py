@@ -16,6 +16,63 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def pdf_fixture(path, count=20):
+    font_id = 3 + count * 2
+    kids = " ".join(f"{3 + index * 2} 0 R" for index in range(count))
+    objects = [b"<< /Type /Catalog /Pages 2 0 R >>", f"<< /Type /Pages /Kids [{kids}] /Count {count} >>".encode()]
+    for index in range(count):
+        content = f"BT /F1 24 Tf 30 350 Td (LOCAL PDF PAGE {index + 1}) Tj ET".encode()
+        objects.append(f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 400] /Resources << /Font << /F1 {font_id} 0 R >> >> /Contents {4 + index * 2} 0 R >>".encode())
+        objects.append(b"<< /Length " + str(len(content)).encode() + b" >>\nstream\n" + content + b"\nendstream")
+    objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+    raw = bytearray(b"%PDF-1.4\n")
+    offsets = [0]
+    for number, value in enumerate(objects, 1):
+        offsets.append(len(raw))
+        raw.extend(f"{number} 0 obj\n".encode() + value + b"\nendobj\n")
+    start = len(raw)
+    raw.extend(f"xref\n0 {len(offsets)}\n0000000000 65535 f \n".encode())
+    for offset in offsets[1:]:
+        raw.extend(f"{offset:010d} 00000 n \n".encode())
+    raw.extend(f"trailer\n<< /Size {len(offsets)} /Root 1 0 R >>\nstartxref\n{start}\n%%EOF".encode())
+    path.write_bytes(raw)
+
+
+# Delay only completion notification: rendering, cancellation and cleanup still
+# use the actual bundled PDF.js. This makes the scroll-away race reproducible.
+PDF_LIFECYCLE_MODULE = r"""
+import * as pdf from './pdf.min.mjs?lifecycle-actual';
+export const GlobalWorkerOptions=pdf.GlobalWorkerOptions;
+const seen=new WeakSet();
+window.__pdfLifecycle={started:[],cancelled:[],cleaned:[],destroyed:0};
+export function getDocument(options){
+  const task=pdf.getDocument(options),destroy=task.destroy.bind(task);
+  task.destroy=()=>{window.__pdfLifecycle.destroyed++;return destroy();};
+  task.promise.then(document=>{
+    const getPage=document.getPage.bind(document);
+    document.getPage=async number=>{
+      const page=await getPage(number);
+      if(!seen.has(page)){
+        seen.add(page);
+        const cleanup=page.cleanup.bind(page),render=page.render.bind(page);
+        page.cleanup=(...args)=>{window.__pdfLifecycle.cleaned.push(number);return cleanup(...args);};
+        page.render=options=>{
+          window.__pdfLifecycle.started.push(number);
+          const running=render(options);
+          return {
+            promise:running.promise.then(()=>new Promise(resolve=>setTimeout(resolve,window.__renderDelay||0))),
+            cancel(){window.__pdfLifecycle.cancelled.push(number);running.cancel();}
+          };
+        };
+      }
+      return page;
+    };
+  }).catch(()=>{});
+  return task;
+}
+"""
+
+
 def main():
     with TemporaryDirectory(prefix="capture-image-test-") as directory:
         fixtures = Path(directory)
@@ -27,17 +84,33 @@ def main():
         Image.new("RGBA", (3, 2), (0, 0, 255, 255)).save(fixtures / "edited.png")
         Image.new("RGBA", (128, 100), (0, 0, 0, 0)).save(fixtures / "blank.png")
         Image.new("RGBA", (5000, 4000), (30, 60, 90, 128)).save(fixtures / "large.png")
+        pdf_fixture(fixtures / "pages.pdf")
 
         class Handler(SimpleHTTPRequestHandler):
             def log_message(self, *args):
                 pass
 
             def do_GET(self):
-                route = urlparse(self.path).path
+                parsed = urlparse(self.path)
+                route = parsed.path
                 if route == "/__image_test/harness":
                     raw = b'<!doctype html><html lang="ko"><meta charset="utf-8"><script src="/captures-image.js"></script>'
                     self.send_response(200)
                     self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.send_header("Content-Length", str(len(raw)))
+                    self.end_headers()
+                    self.wfile.write(raw)
+                elif route == "/__image_test/media-harness":
+                    raw = b'<!doctype html><html lang="ko"><meta charset="utf-8"><style>body{margin:0}#scroll{width:360px;height:600px;overflow:auto}#host{width:100%}</style><div id="scroll"><div id="host"></div></div><script src="/captures-media.js"></script>'
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.send_header("Content-Length", str(len(raw)))
+                    self.end_headers()
+                    self.wfile.write(raw)
+                elif route == "/vendor/pdfjs/pdf.min.mjs" and not parsed.query:
+                    raw = PDF_LIFECYCLE_MODULE.encode()
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/javascript")
                     self.send_header("Content-Length", str(len(raw)))
                     self.end_headers()
                     self.wfile.write(raw)
@@ -49,7 +122,7 @@ def main():
                         return
                     raw = target.read_bytes()
                     self.send_response(200)
-                    self.send_header("Content-Type", "image/png")
+                    self.send_header("Content-Type", "application/pdf" if target.suffix == ".pdf" else "image/png")
                     self.send_header("Content-Length", str(len(raw)))
                     self.end_headers()
                     self.wfile.write(raw)
@@ -68,7 +141,9 @@ def main():
                 )
                 page = browser.new_page(viewport={"width": 390, "height": 844}, has_touch=True)
                 errors = []
+                requests = []
                 page.on("pageerror", lambda error: errors.append(str(error)))
+                page.on("request", lambda request: requests.append(request.url))
                 page.goto(f"http://127.0.0.1:{server.server_port}/__image_test/harness", wait_until="load")
                 result = page.evaluate(r"""async()=>{
                   const assert=(value,message)=>{if(!value)throw Error(message);};
@@ -174,6 +249,55 @@ def main():
                   return {initialRotation:true,cropBeforeAndAfterAnnotations:true,undoRedoAndBranching:true,trueOriginalReset:true,
                     multilineText:true,previewExportTextIdentical:true,transparentPNG:true,fallbackURLCleanup:true,source16MPBound:true};
                 }""")
+                page.goto(f"http://127.0.0.1:{server.server_port}/__image_test/media-harness", wait_until="load")
+                page.evaluate("""async()=>{
+                  window.__renderDelay=250;
+                  const blob=await(await fetch('/__image_test/pages.pdf')).blob();
+                  window.handle=await CaptureMedia.mount(document.getElementById('host'),{kind:'pdf',title:'Local PDF'},blob);
+                }""")
+                page.wait_for_function("window.__pdfLifecycle.started.includes(1)")
+                page.locator(".cn-pdf-page").last.scroll_into_view_if_needed()
+                page.wait_for_function("window.__pdfLifecycle.cancelled.includes(1)")
+                page.wait_for_function("window.__pdfLifecycle.cleaned.includes(1)", timeout=3000)
+                page.wait_for_function("document.querySelectorAll('.cn-pdf-canvas')[19].dataset.rendered==='true'")
+                assert page.locator(".cn-pdf-canvas").first.evaluate("canvas=>canvas.width===1")
+                page.evaluate("handle.setZoom(2);handle.rotate(90);handle.setZoom(.75);handle.rotate(270);handle.setZoom(1)")
+                page.locator(".cn-pdf-page").first.scroll_into_view_if_needed()
+                page.wait_for_function("document.querySelector('.cn-pdf-canvas').dataset.rendered==='true'")
+                page.evaluate("handle.destroy();handle.destroy()")
+                assert page.locator(".cn-media-surface").count() == 0
+                assert page.evaluate("window.__pdfLifecycle.destroyed") == 1
+                result["pdfCancelledRenderCleanup"] = True
+                result["pdfZoomRotateDestroy"] = True
+                page.evaluate("""async()=>{
+                  const assert=(value,message)=>{if(!value)throw Error(message);};
+                  const host=document.getElementById('host');
+                  const nativeCreate=URL.createObjectURL,nativeRevoke=URL.revokeObjectURL;
+                  let created=0,revoked=0;
+                  URL.createObjectURL=function(...args){created++;return nativeCreate.apply(this,args);};
+                  URL.revokeObjectURL=function(...args){revoked++;return nativeRevoke.apply(this,args);};
+                  try{
+                    const image=await(await fetch('/__image_test/original.png')).blob();
+                    for(let index=0;index<10;index++){
+                      const handle=await CaptureMedia.mount(host,{kind:'image',title:'Repeat image'},image);
+                      handle.setZoom(2);handle.rotate(90);handle.destroy();handle.destroy();
+                    }
+                    const broken=await CaptureMedia.mount(host,{kind:'image',title:'Broken'},new Blob(['invalid image']));
+                    assert(broken.error&&host.querySelector('a[download]'),'invalid image keeps download fallback');
+                    broken.destroy();
+                    assert(created===revoked&&created===12,'every image and fallback URL revoked exactly once');
+                    const pdf=await(await fetch('/__image_test/pages.pdf')).blob();
+                    for(let index=0;index<3;index++){
+                      const handle=await CaptureMedia.mount(host,{kind:'pdf',title:'Repeat PDF'},pdf);
+                      handle.destroy();
+                    }
+                    assert(window.__pdfLifecycle.destroyed===4&&!host.children.length,'repeat PDF mounts destroy all loading tasks');
+                  }finally{URL.createObjectURL=nativeCreate;URL.revokeObjectURL=nativeRevoke;}
+                }""")
+                result["mediaRepeatedOpenDestroy"] = True
+                result["mediaURLCleanup"] = True
+                assert all(url.startswith((f"http://127.0.0.1:{server.server_port}/", "blob:")) for url in requests), requests
+                result["pdfLocalAssetsOnly"] = True
                 assert not errors, errors
                 print(json.dumps({"passed": True, **result, "pageErrors": errors}))
                 browser.close()
