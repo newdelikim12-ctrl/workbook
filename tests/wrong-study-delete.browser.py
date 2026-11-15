@@ -23,8 +23,8 @@ class Quiet(SimpleHTTPRequestHandler):
     def log_message(self,*_args):pass
 
 
-def confirm(page):
-    page.locator('#confirmBack.show .cf-ok').click()
+def assert_no_confirmation(page):
+    assert not page.locator('#confirmBack').evaluate('(node)=>node.classList.contains("show")')
 
 
 def run(browser,base,width):
@@ -41,13 +41,10 @@ def run(browser,base,width):
     if os.environ.get('WORD_STUDY_SCREENSHOTS'):
         directory=Path(os.environ['WORD_STUDY_SCREENSHOTS']);directory.mkdir(parents=True,exist_ok=True)
         page.screenshot(path=str(directory/f'wrong-study-delete-{width}.png'))
-    # Cancel does not touch either the copy or the original.
+    # The single-word action archives immediately; recovery stays in the archive.
     before=page.evaluate("localStorage.getItem('decks')")
-    page.locator('#cardNextBtn').click()
-    assert '다시 볼 단어의 학습 목록에서 빼고 보관함' in page.locator('#confirmMsg').inner_text()
-    page.locator('#confirmBack .cf-cancel').click()
-    assert page.evaluate("localStorage.getItem('decks')")==before and page.locator('#front').inner_text()=='cat'
-    page.locator('#cardNextBtn').click();confirm(page)
+    page.locator('#cardNextBtn').click();assert_no_confirmation(page)
+    assert page.evaluate("localStorage.getItem('decks')")!=before
     assert page.locator('#front').inner_text()=='dog'
     assert page.evaluate('words.map(w=>w.eng)')==['dog','bird']
     assert page.evaluate('getWrongArchiveEntries().length')==1
@@ -57,24 +54,24 @@ def run(browser,base,width):
     before=page.evaluate("localStorage.getItem('decks')")
     page.evaluate("""()=>{window.studyWords=words;window.studyWrite=Storage.prototype.setItem;
       Storage.prototype.setItem=function(key,value){if(key==='decks')throw Error('quota');return studyWrite.call(this,key,value);};}""")
-    page.locator('#cardNextBtn').click();confirm(page)
+    page.locator('#cardNextBtn').click();assert_no_confirmation(page)
     assert page.locator('#front').inner_text()=='dog' and page.evaluate('words===studyWords')
     assert page.evaluate("localStorage.getItem('decks')")==before
     page.evaluate('()=>{Storage.prototype.setItem=studyWrite;}')
-    page.locator('#cardNextBtn').click();confirm(page)
+    page.locator('#cardNextBtn').click();assert_no_confirmation(page)
     assert page.evaluate('words.map(w=>w.eng)')==['bird']
     assert page.evaluate('currentIndex')==-1 and not page.locator('#cardActions').is_visible()
     # The mastered row is removable without navigating to another notebook.
     page.locator('#tabList').click()
     row=page.locator('#lsList .ls-row');assert row.count()==1
-    row.locator('[data-action=delete-wrong-word]').click();confirm(page)
+    row.locator('[data-action=delete-wrong-word]').click();assert_no_confirmation(page)
     assert page.evaluate('words.length')==0 and page.evaluate('activeDeckId')=='deck_wrong_review'
     assert page.evaluate('JSON.stringify(decks[0])')==original and page.evaluate('JSON.stringify(decks[2])')==other
     # Additional kind-marked wrong notebooks get the same immediate action.
     page.evaluate("switchDeck('otherwrong','study')")
     if not page.locator('#allWords').evaluate('(e)=>e.classList.contains("open")'):
         page.locator('h3').filter(has_text='전체 단어').click()
-    page.locator('#allWordsList .wl-row [data-action=delete-wrong-word]').click();confirm(page)
+    page.locator('#allWordsList .wl-row [data-action=delete-wrong-word]').click();assert_no_confirmation(page)
     assert page.evaluate('words.length')==0 and page.evaluate('JSON.stringify(decks[0])')==original
     page.reload(wait_until='domcontentloaded')
     assert page.evaluate('decks.find(d=>d.id==="deck_wrong_review").words.length')==0
@@ -89,7 +86,7 @@ def run(browser,base,width):
     assert not page.locator('#confirmBack').evaluate('(e)=>e.classList.contains("show")')
     assert page.evaluate("localStorage.getItem('decks')")==before and page.evaluate('JSON.stringify(decks[0])')==original
     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth') and not errors,errors
-    context.close();return {'width':width,'cardAndListDelete':True,'nextEligibleCard':True,'quotaRollback':True,
+    context.close();return {'width':width,'cardAndListDelete':True,'immediateWithoutConfirmation':True,'nextEligibleCard':True,'quotaRollback':True,
       'onlySelectedWrongNotebook':True,'originalNotesAndExamplesPreserved':True,'reload':True,'errors':errors}
 
 
