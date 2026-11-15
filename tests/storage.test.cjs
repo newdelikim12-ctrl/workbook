@@ -2004,3 +2004,83 @@ test('new archive IDs remain globally unique even when timestamps and randomness
   assert.equal(s.run('getWrongArchiveEntries().length'),3);assert.equal(s.run('new Set(getWrongArchiveEntries().map(entry=>entry.id)).size'),3);
   assert.equal(s.run('restoreWrongArchive().ok'),true);assert.equal(s.run('words.length'),3);
 });
+
+function learningMutationSetup(){
+  const s=setup({decks:JSON.stringify([
+    {id:'a',name:'A',words:[{eng:'cat',kor:'고양이',example:['Keep.'],note:[{eng:'kitten',kor:'메모'}],custom:7},{eng:'dog',kor:'개'},{eng:'bird',kor:'새'}],stats:{correct:9},dupes:[]},
+    {id:'b',name:'B',words:[{eng:'fish',kor:'물고기'}],stats:{},dupes:[]}
+  ]),activeDeckId:'a'}),toasts=[],calls={render:0,reset:0,cleanup:0,autoplay:0};let pending=null,armed=false;
+  Object.assign(s.context,{currentIndex:0,autoPlay:false,autoPlayTimer:null,cardHistory:[],recentSeen:[],
+    render(){calls.render++;},renderDeckPanel(){},renderRecentDecks(){},playSound(){},showToast:m=>toasts.push(m),
+    afterWordsRemoved(){calls.cleanup++;},resetCardView(){calls.reset++;s.context.currentIndex=-1;},updateAutoPlayBtn(){calls.autoplay++;},
+    prompt:()=> 'New',restoreRangeMemo(){},pushRecentDeck(){},showCardActions(){},showTab(){},
+    needConfirm2(callback){if(armed){armed=false;return true;}pending=callback;return false;}
+  });
+  vm.runInContext('function saveOnly(){return saveDeckData();}',s.context);
+  for(const name of ['markCorrect','markWrong','toggleWrongFlag','removeWrongFlag','removeMasteredFlag','wrongNoteCorrect','wrongNoteAgain','toggleMaster','lsWrongCorrect','clearAll','bulkDelete','del','createDeck','deleteDeck']){
+    const start=app.indexOf('function '+name+'('),end=app.indexOf('\nfunction ',start+10);assert.ok(start>=0&&end>start,name);vm.runInContext(app.slice(start,end),s.context);
+  }
+  return {...s,toasts,calls,confirm(){assert.ok(pending);const cb=pending;pending=null;armed=true;try{return cb();}finally{armed=false;}}};
+}
+test('learning actions roll back exact fields and references on quota and conflicting-window failures',()=>{
+  for(const action of ['markCorrect(0)','markWrong(0)','toggleWrongFlag(0)','removeWrongFlag(0)','removeMasteredFlag(0)','wrongNoteCorrect(0)','wrongNoteAgain(0)','toggleMaster(0)','lsWrongCorrect(0)'])for(const failure of ['quota','conflict']){
+    const s=learningMutationSetup();s.run('var originalWords=words,originalWord=words[0],originalDecks=decks;var originalModel=JSON.stringify(decks)');
+    const before=s.run('JSON.stringify(decks)');let disk=s.data.get('decks');
+    if(failure==='quota')s.context.localStorage.setItem=()=>{throw Error('full');};
+    else{const newer=JSON.parse(disk);newer[1].name='Newer external';disk=JSON.stringify(newer);s.data.set('decks',disk);}
+    s.run(action);
+    assert.equal(s.run('JSON.stringify(decks)'),before,action+' '+failure);
+    assert.equal(s.run('words===originalWords&&words[0]===originalWord&&decks===originalDecks'),true);
+    assert.equal(s.data.get('decks'),disk);assert.equal(s.calls.render,0);assert.equal(s.data.get('wrongDeckId'),undefined);
+  }
+});
+test('wrong marking commits original flags and a complete review copy with exactly one data write',()=>{
+  const s=learningMutationSetup(),before=s.writes.filter(k=>k==='decks').length;
+  s.run('markWrong(0)');assert.equal(s.writes.filter(k=>k==='decks').length-before,1);
+  const saved=JSON.parse(s.data.get('decks')),copy=saved.find(d=>d.kind==='wrong');assert.ok(copy);assert.equal(saved[0].words[0].wrong,true);
+  assert.deepEqual(copy.words[0].example,['Keep.']);assert.equal(copy.words[0].note[0].kor,'메모');assert.equal(copy.words[0].custom,7);
+  assert.equal(copy.words[0].mastered,false);assert.equal(copy.words[0].wrong,false);assert.equal(s.data.get('wrongDeckId'),copy.id);
+  s.run('words[0].eng="  ＣＡＴ  ";markWrong(0)');assert.equal(s.run('decks.find(d=>d.kind==="wrong").words.length'),1);
+});
+test('learning write failure stops autoplay without advancing the card',()=>{
+  const s=learningMutationSetup();s.run('autoPlay=true');s.context.localStorage.setItem=()=>{throw Error('full');};s.run('markCorrect(0)');
+  assert.equal(s.run('autoPlay'),false);assert.equal(s.run('currentIndex'),0);assert.equal(s.calls.autoplay,1);
+});
+test('ordinary single, bulk and full deletion preserve disk, references and UI selection on failed writes',()=>{
+  for(const action of ['del(0)','bulkDelete([{w:words[0]},{w:words[1]}])','clearAll()']){
+    const s=learningMutationSetup();s.run('var oldWords=words,oldStats=stats,oldDupes=dupes;');const before=s.run('JSON.stringify(decks)');
+    s.run(action);s.context.localStorage.setItem=()=>{throw Error('full');};assert.equal(s.confirm(),false);
+    assert.equal(s.run('JSON.stringify(decks)'),before);assert.equal(s.run('words===oldWords&&stats===oldStats&&dupes===oldDupes'),true);
+    assert.equal(s.run('currentIndex'),0);assert.equal(s.calls.cleanup,0);assert.equal(s.calls.render,0);
+  }
+});
+test('ordinary delete confirmation stays bound to the chosen record after reordering and rejects deck or text changes',()=>{
+  const s=learningMutationSetup();s.run('del(0);words.reverse()');assert.equal(s.confirm(),true);
+  assert.equal(s.run('words.map(w=>w.eng).join(",")'),'bird,dog');assert.equal(s.run('words[currentIndex].eng'),'bird');
+  for(const mutation of ['words[0].eng="edited"','activeDeckId="b";words=decks[1].words']){
+    const t=learningMutationSetup();t.run('del(0)');t.run(mutation);const before=t.run('JSON.stringify(decks)');assert.equal(t.confirm(),false);assert.equal(t.run('JSON.stringify(decks)'),before);
+  }
+});
+test('clear-all confirmation rejects late additions and full deletion persists empty stats and words',()=>{
+  const s=learningMutationSetup();s.run('clearAll();words.push({eng:"late",kor:"늦게 추가"})');assert.equal(s.confirm(),false);assert.equal(s.run('words.length'),4);
+  const t=learningMutationSetup();t.run('clearAll()');assert.equal(t.confirm(),true);const saved=JSON.parse(t.data.get('decks'));assert.deepEqual(saved[0].words,[]);assert.deepEqual(saved[0].stats,{});assert.equal(saved[1].words.length,1);
+});
+test('deck creation and deletion do not leave phantom changes after a failed write',()=>{
+  const s=learningMutationSetup();s.run('var originalDecks=decks');const before=s.run('JSON.stringify(decks)');
+  s.context.localStorage.setItem=()=>{throw Error('full');};assert.equal(s.run('createDeck()'),false);assert.equal(s.run('decks===originalDecks'),true);
+  for(const id of ['a','b']){
+    const t=learningMutationSetup();t.run('var originalDecks=decks,originalWords=words;deleteDeck("'+id+'")');t.context.localStorage.setItem=()=>{throw Error('full');};assert.equal(t.confirm(),false);
+    assert.equal(t.run('JSON.stringify(decks)'),before);assert.equal(t.run('decks===originalDecks&&words===originalWords&&activeDeckId==="a"'),true);
+  }
+});
+test('deck deletion confirmation rejects records changed after it opened',()=>{
+  const s=learningMutationSetup();s.run('deleteDeck("b");decks[1].words.push({eng:"late",kor:"보존"})');assert.equal(s.confirm(),false);assert.equal(s.run('decks.length'),2);assert.equal(s.run('decks[1].words.length'),2);
+});
+
+
+test('clearing legacy import history preserves source properties and history references when persistence fails',()=>{
+  const s=learningMutationSetup();s.run('words[0].src="Original sheet";dupes.push({eng:"cat",sheets:["Original sheet"],n:2});saveOnly();var previousHistory=dupes;');
+  const start=app.indexOf('function clearDupes('),end=app.indexOf('function renderDupes(',start);vm.runInContext(app.slice(start,end),s.context);
+  const before=s.run('JSON.stringify(decks)');s.run('clearDupes()');s.context.localStorage.setItem=()=>{throw Error('full');};assert.equal(s.confirm(),false);
+  assert.equal(s.run('JSON.stringify(decks)'),before);assert.equal(s.run('dupes===previousHistory'),true);assert.equal(s.run('Object.hasOwn(words[1],"src")'),false);
+});
