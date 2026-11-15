@@ -6,6 +6,7 @@
   let scanState='idle',progress=0,scanError='',editing=null,deleting=null,deleteError='';
   let busy=false,showReview=false,editPosition=null,accepted=new Set(),checked=new Map();
   const rowWords=new WeakMap();
+  let resultHTML=null,acceptedHTML=null;
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const normalize=value=>String(value||'').normalize('NFKC').replace(/[‘’ʻʼ＇]/g,"'").replace(/[‐‑﹣－]/g,'-').toLocaleLowerCase('en-US');
   const review=issue=>issue.confidence==='review'||(!issue.confidence&&issue.kind==='name');
@@ -138,7 +139,8 @@
   }
   function renderAccepted(){
     ui.acceptedSummary.textContent='유지한 영어 표기 ('+accepted.size+')';
-    ui.acceptedList.innerHTML=[...accepted].sort().map(term=>`<div class="wa-accepted-term"><span>${esc(term)}</span><button type="button" data-action="unaccept" data-term="${esc(term)}"${busy||scanState==='running'?' disabled':''}>유지 해제</button></div>`).join('')||'<p>고유명사나 전문용어는 후보의 ‘이 표기 유지’를 누르면 다음 검사에서도 제외됩니다.</p>';
+    const html=[...accepted].sort().map(term=>`<div class="wa-accepted-term"><span>${esc(term)}</span><button type="button" data-action="unaccept" data-term="${esc(term)}"${busy||scanState==='running'?' disabled':''}>유지 해제</button></div>`).join('')||'<p>고유명사나 전문용어는 후보의 ‘이 표기 유지’를 누르면 다음 검사에서도 제외됩니다.</p>';
+    if(html!==acceptedHTML){ui.acceptedList.innerHTML=html;acceptedHTML=html;}
   }
   function entryHtml(entry,details=''){
     const disabled=busy||scanState==='running'?' disabled':'';
@@ -151,18 +153,27 @@
   function visibleFindings(){return findings.map(item=>({entry:item.entry,issues:item.issues.map((issue,index)=>({...issue,issueIndex:index})).filter(issue=>showReview||!review(issue))})).filter(item=>item.issues.length);}
   function renderResults(){
     const expanded=new Set([...ui.results.querySelectorAll('.wa-saved-details[open]')].map(element=>rowWords.get(element.closest('.wa-entry'))));
-    let count;
+    let count,html;
     if(mode==='duplicates'){
-      count=groups.length;
-      ui.results.innerHTML=groups.slice(0,limit).map(group=>`<section class="wa-group"><h3>${esc(group[0].eng)} <span>${group.length}곳</span></h3>${group.map(entry=>entryHtml(entry)).join('')}</section>`).join('')||'<div class="wa-empty">겹치는 단어가 없습니다.</div>';
+      count=groups.reduce((total,group)=>total+group.length,0);
+      let remaining=limit;const sections=[];
+      for(const group of groups){
+        if(remaining<=0)break;
+        const shown=group.slice(0,remaining);remaining-=shown.length;
+        sections.push(`<section class="wa-group"><h3>${esc(group[0].eng)} <span>${group.length}곳${shown.length<group.length?' · '+shown.length+'개 표시':''}</span></h3>${shown.map(entry=>entryHtml(entry)).join('')}</section>`);
+      }
+      html=sections.join('')||'<div class="wa-empty">겹치는 단어가 없습니다.</div>';
     }else{
       const visible=visibleFindings();count=visible.length;
-      ui.results.innerHTML=visible.slice(0,limit).map(item=>entryHtml(item.entry,'<ul class="wa-findings">'+item.issues.map(issue=>`<li><b>${issue.field==='eng'?'영어':'한글 뜻'} · ${esc(issue.token)}</b><span>${esc(issue.message)}</span>${issue.suggestions.length?'<span class="wa-suggestion">확인할 표기: '+issue.suggestions.map(esc).join(' · ')+'</span>':''}${issue.field==='eng'?'<button type="button" class="wa-accept" data-action="accept" data-entry="'+item.entry.auditIndex+'" data-issue="'+issue.issueIndex+'"'+(busy||scanState==='running'?' disabled':'')+'>이 표기 유지</button>':''}</li>`).join('')+'</ul>')).join('');
-      if(!visible.length&&scanState==='done')ui.results.innerHTML='<div class="wa-empty">철자 수정 후보가 없습니다.'+(findings.length?' 추가 검토도 보려면 위 항목을 켜 주세요.':'')+'</div>';
+      html=visible.slice(0,limit).map(item=>entryHtml(item.entry,'<ul class="wa-findings">'+item.issues.map(issue=>`<li><b>${issue.field==='eng'?'영어':'한글 뜻'} · ${esc(issue.token)}</b><span>${esc(issue.message)}</span>${issue.suggestions.length?'<span class="wa-suggestion">확인할 표기: '+issue.suggestions.map(esc).join(' · ')+'</span>':''}${issue.field==='eng'?'<button type="button" class="wa-accept" data-action="accept" data-entry="'+item.entry.auditIndex+'" data-issue="'+issue.issueIndex+'"'+(busy||scanState==='running'?' disabled':'')+'>이 표기 유지</button>':''}</li>`).join('')+'</ul>')).join('');
+      if(!visible.length&&scanState==='done')html='<div class="wa-empty">철자 수정 후보가 없습니다.'+(findings.length?' 추가 검토도 보려면 위 항목을 켜 주세요.':'')+'</div>';
     }
+    // Progress can change while every visible result stays the same. Keep those
+    // controls and expanded details in place instead of rebuilding the page.
+    if(html!==resultHTML){ui.results.innerHTML=html;resultHTML=html;}
     ui.results.querySelectorAll('.wa-entry').forEach(element=>{
       const word=entries[Number(element.dataset.entry)]?.word;rowWords.set(element,word);
-      const details=element.querySelector('.wa-saved-details');if(details&&expanded.has(word))details.open=true;
+      const details=element.querySelector('.wa-saved-details');if(details)details.open=expanded.has(word);
     });
     ui.more.hidden=limit>=count;ui.more.textContent='더 보기 ('+Math.min(limit,count)+' / '+count+')';
   }
