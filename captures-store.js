@@ -147,7 +147,11 @@
       if(!groups.some(group=>group.id===groupId)) return false;
       if(groups.length<=1) throw error('마지막 분류는 삭제할 수 없어요. 새 분류를 만든 뒤 옮겨 주세요.');
       const items=await groupItems(stores,groupId);
-      items.forEach(item=>{ stores.items.delete(item.id); if(item.fileId) stores.files.delete(item.fileId); });
+      items.forEach(item=>{
+        stores.items.delete(item.id);
+        if(item.fileId) stores.files.delete(item.fileId);
+        if(item.editedFileId) stores.files.delete(item.editedFileId);
+      });
       stores.groups.delete(groupId);
       return true;
     });
@@ -217,12 +221,38 @@
       return updated;
     });
   }
+  async function saveImage(itemId,pngBlobOrNull,options){
+    if(!options||typeof options.expectedFileId!=='string'||!options.expectedFileId){
+      throw error('편집할 이미지가 변경되었어요. 다시 열어 주세요.');
+    }
+    const expectedFileId=options.expectedFileId;
+    if(pngBlobOrNull!==null&&(!(pngBlobOrNull instanceof Blob)||!pngBlobOrNull.size||pngBlobOrNull.type!=='image/png')){
+      throw error('편집한 이미지를 PNG 파일로 저장하지 못했어요. 다시 시도해 주세요.');
+    }
+    return transaction(STORE_NAMES,'readwrite',async stores=>{
+      const item=await requireItem(stores,itemId);
+      if(item.kind!=='image') throw error('이미지 자료만 편집할 수 있어요.');
+      if((item.editedFileId||item.fileId)!==expectedFileId){
+        throw error('다른 창에서 이미지가 변경되었어요. 입력을 보관한 뒤 이미지를 다시 열어 주세요.');
+      }
+      const group=await requireGroup(stores,item.groupId),now=Date.now();
+      const updated={...item,rotation:0,updatedAt:now};
+      if(pngBlobOrNull!==null){
+        updated.editedFileId=id('file');
+        stores.files.add({id:updated.editedFileId,blob:pngBlobOrNull});
+      }else delete updated.editedFileId;
+      if(item.editedFileId) stores.files.delete(item.editedFileId);
+      stores.items.put(updated);touchGroup(stores,group,now);
+      return updated;
+    });
+  }
   async function removeItem(itemId){
     return transaction(STORE_NAMES,'readwrite',async stores=>{
       const item=await request(stores.items.get(itemId));
       if(!item) return false;
       const group=await requireGroup(stores,item.groupId),items=await groupItems(stores,item.groupId),now=Date.now();
       stores.items.delete(item.id);if(item.fileId) stores.files.delete(item.fileId);
+      if(item.editedFileId) stores.files.delete(item.editedFileId);
       writeOrder(stores,items.filter(entry=>entry.id!==item.id),now);
       touchGroup(stores,group,now);
       return true;
@@ -304,6 +334,8 @@
     for(const item of raw.items){
       if(!item||!validId(item.id)||items.has(item.id)||!groups.has(item.groupId)||!KINDS.has(item.kind)||!Number.isSafeInteger(item.order)||item.order<0||!ROTATIONS.has(item.rotation)||!validTime(item.createdAt)||!validTime(item.updatedAt)) bad();
       if(['title','caption','text','mime','fileName'].some(key=>typeof item[key]!=='string')) bad();
+      const hasEdited=item.editedFileId!==undefined;
+      if(hasEdited&&item.kind!=='image') bad();
       if(item.kind==='note'){
         if(!item.text.trim()||item.fileId!==null||item.size!==0) bad();
       }else{
@@ -312,7 +344,13 @@
         if(item.kind==='pdf'&&item.mime!=='application/pdf'||item.kind==='image'&&!item.mime.startsWith('image/')) bad();
         usedFiles.add(item.fileId);
       }
-      items.set(item.id,{id:item.id,groupId:item.groupId,kind:item.kind,order:item.order,title:item.title,caption:item.caption,text:item.text,fileId:item.fileId,mime:item.mime,fileName:item.fileName,size:item.size,rotation:item.rotation,createdAt:item.createdAt,updatedAt:item.updatedAt});
+      if(hasEdited){
+        if(!validId(item.editedFileId)||!files.has(item.editedFileId)||usedFiles.has(item.editedFileId)
+          ||files.get(item.editedFileId).blob.type!=='image/png') bad();
+        usedFiles.add(item.editedFileId);
+      }
+      items.set(item.id,{id:item.id,groupId:item.groupId,kind:item.kind,order:item.order,title:item.title,caption:item.caption,text:item.text,fileId:item.fileId,mime:item.mime,fileName:item.fileName,size:item.size,rotation:item.rotation,createdAt:item.createdAt,updatedAt:item.updatedAt,
+        ...(hasEdited?{editedFileId:item.editedFileId}:{})});
     }
     if(usedFiles.size!==files.size) bad();
     return {groups:[...groups.values()],items:[...items.values()],files:[...files.values()]};
@@ -332,11 +370,12 @@
       ordered.forEach(item=>{
         const groupId=groupIds.get(item.groupId),order=positions.get(groupId)||0;
         positions.set(groupId,order+1);
-        stores.items.add({...item,id:id('item'),groupId,order,fileId:item.fileId?fileIds.get(item.fileId):null});
+        stores.items.add({...item,id:id('item'),groupId,order,fileId:item.fileId?fileIds.get(item.fileId):null,
+          ...(item.editedFileId?{editedFileId:fileIds.get(item.editedFileId)}:{})});
       });
     });
     return ready();
   }
 
-  global.CaptureStore=Object.freeze({ready,listGroups,listItems,getFile,createGroup,renameGroup,deleteGroup,addFiles,addNote,updateItem,moveItem,reorderItem,reorderItems,removeItem,exportArchive,importArchive});
+  global.CaptureStore=Object.freeze({ready,listGroups,listItems,getFile,createGroup,renameGroup,deleteGroup,addFiles,addNote,updateItem,saveImage,moveItem,reorderItem,reorderItems,removeItem,exportArchive,importArchive});
 })(window);
