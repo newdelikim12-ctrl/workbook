@@ -156,12 +156,61 @@ def long_list(browser,base):
     context.close();return {'longListResultsAndPositionKept':True,'errors':errors}
 
 
+def bounded_rendering(browser,base):
+    context=browser.new_context(viewport={'width':390,'height':844},service_workers='block')
+    page=context.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
+    repeated=[{'eng':'shared','kor':f'서로 다른 뜻 {i}','example':[f'Saved example {i}.'],
+               'note':[{'eng':f'saved {i}','kor':f'보존할 메모 {i}'}]} for i in range(205)]
+    fixture=[{'id':'a','name':'반복 기록','words':repeated,'stats':{},'dupes':[]},
+             {'id':'wrong','name':'오답노트','kind':'wrong','words':[{'eng':'shared','kor':'제외할 복사본'}],'stats':{},'dupes':[]}]
+    seed(page,base,fixture);before=page.evaluate("localStorage.getItem('decks')")
+    assert page.locator('.wa-group').count()==1
+    assert page.locator('#waResults .wa-entry').count()==80,'one duplicate group must not bypass the result-row limit'
+    assert '80 / 205' in page.locator('#waMore').inner_text()
+    assert '제외할 복사본' not in page.locator('#waResults').inner_text()
+    first_details=page.locator('#waResults .wa-entry').first.locator('.wa-saved-details')
+    first_details.locator('summary').click()
+    page.locator('#waMore').click();assert page.locator('#waResults .wa-entry').count()==160
+    assert first_details.evaluate('(element)=>element.open'),'expanded saved notes must survive pagination'
+    page.locator('#waMore').click();assert page.locator('#waResults .wa-entry').count()==205
+    assert first_details.evaluate('(element)=>element.open')
+    assert page.locator('#waMore').is_hidden()
+    last=page.locator('#waResults .wa-entry').last
+    last.locator('.wa-saved-details summary').click()
+    assert 'Saved example 204.' in last.inner_text() and '보존할 메모 204' in last.inner_text()
+    assert page.evaluate("localStorage.getItem('decks')")==before
+    context.close()
+    # Once the visible first page is full, later scan batches update counts,
+    # without repeatedly discarding and recreating the same result controls.
+    context=browser.new_context(viewport={'width':1280,'height':900},service_workers='block')
+    page=context.new_page();page.on('pageerror',lambda error:errors.append(str(error)))
+    seed(page,base,[{'id':'a','name':'많은 검사 결과','words':[{'eng':f'recieve {i}','kor':f'뜻 {i}'} for i in range(240)],'stats':{},'dupes':[]}])
+    before=page.evaluate("localStorage.getItem('decks')")
+    page.locator('#waSpellingTab').click()
+    page.evaluate("""()=>{
+      window.auditResultRebuilds=0;const results=document.getElementById('waResults');
+      window.auditResultObserver=new MutationObserver(records=>{auditResultRebuilds+=records.filter(record=>record.target===results&&record.type==='childList').length;});
+      auditResultObserver.observe(results,{childList:true});
+    }""")
+    page.locator('#waScan').click()
+    page.wait_for_function("document.getElementById('waStatus').textContent.includes('검사 완료')",timeout=90000)
+    assert page.locator('#waResults .wa-entry').count()==80
+    assert '80 / 240' in page.locator('#waMore').inner_text()
+    rebuilds=page.evaluate('auditResultObserver.disconnect();auditResultRebuilds')
+    assert rebuilds<=12,('unchanged first page was unnecessarily replaced',rebuilds)
+    assert page.evaluate("localStorage.getItem('decks')")==before
+    assert not errors,errors
+    context.close()
+    return {'duplicateRowsBoundedAndAllReachable':True,'wrongCopiesAndNotesPreserved':True,
+            'scanResultDOMRebuilds':rebuilds,'unchangedFirstPageRetained':True,'errors':errors}
+
+
 def main():
     server=ThreadingHTTPServer(('127.0.0.1',0),partial(baseline.Quiet,directory=str(ROOT)));Thread(target=server.serve_forever,daemon=True).start()
     try:
         with sync_playwright() as p:
             browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--disable-dev-shm-usage'])
-            base=f'http://127.0.0.1:{server.server_address[1]}/';reports=[continuous(browser,base),long_list(browser,base)];browser.close()
+            base=f'http://127.0.0.1:{server.server_address[1]}/';reports=[continuous(browser,base),long_list(browser,base),bounded_rendering(browser,base)];browser.close()
         print(json.dumps(reports,ensure_ascii=False))
     finally:server.shutdown();server.server_close()
 
