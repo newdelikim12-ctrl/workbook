@@ -98,10 +98,8 @@ def card_and_restore(browser, base, width):
         assert page.locator('#cardNextBtn').evaluate('(e)=>e.scrollWidth<=e.clientWidth+1')
         disk=page.evaluate("localStorage.getItem('decks')")
         page.locator('#cardNextBtn').click()
-        assert '보관함' in page.locator('#confirmMsg').inner_text()
-        confirm(page,False)
-        assert page.evaluate("localStorage.getItem('decks')")==disk
-        page.locator('#cardNextBtn').click();confirm(page)
+        assert not page.locator('#confirmBack').evaluate('(node)=>node.classList.contains("show")')
+        assert page.evaluate("localStorage.getItem('decks')")!=disk
         assert page.locator('#front').inner_text()=='dog'
         assert page.evaluate('words.map(w=>w.eng)')==['dog','bird']
         archived=entries(page);assert len(archived)==1 and archived[0]['word']==target
@@ -249,7 +247,11 @@ def delete_routes_and_guard(browser,base):
             ('clear-all','clearAll()',[0,1,2]),
         ]
         for name,script,indexes in routes:
-            page.evaluate(script);confirm(page)
+            page.evaluate(script)
+            if name=='generic-single':
+                assert not page.locator('#confirmBack').evaluate('(node)=>node.classList.contains("show")')
+            else:
+                confirm(page)
             assert [entry['word'] for entry in entries(page)]==[baseline[i] for i in indexes],name
             assert page.evaluate('words')==[word for i,word in enumerate(baseline) if i not in indexes],name
             assert_protected(page,original,other)
