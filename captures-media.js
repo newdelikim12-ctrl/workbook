@@ -68,8 +68,8 @@
       const message=node('div','cn-media-error',errorText);
       Object.assign(message.style,{padding:'20px 12px',fontSize:'14px',lineHeight:'1.6',textAlign:'center',color:'var(--text-main,#23262b)'});
       if(blob instanceof Blob){
-        const link=node('a','cn-media-download','원본 내려받기');
-        link.href=objectURL();link.download=item&&item.fileName||item&&item.title||'자료';
+        const link=node('a','cn-media-download',item&&item.editedFileId?'편집본 내려받기':'원본 내려받기');
+        link.href=objectURL();link.download=item&&item.editedFileId?(item.fileName||item.title||'자료').replace(/\.[^.]+$/,'')+'-편집.png':item&&item.fileName||item&&item.title||'자료';
         link.style.display='block';link.style.marginTop='10px';link.style.color='var(--link,#41638c)';
         link.addEventListener('click',event=>event.stopPropagation());
         message.appendChild(link);
