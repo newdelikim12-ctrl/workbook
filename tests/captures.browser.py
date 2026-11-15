@@ -59,9 +59,9 @@ STORE_CHECKS=r'''async()=>{
    await s.reorderItems(inbox,items.map(i=>i.id).reverse());assert((await s.listItems(inbox))[0].id===added[0].id,'full reorder');
    checks.push('files, groups, interleaved notes, editing, movement and ordering');
    const before=await s.ready(),fileCountBefore=JSON.parse(await(await s.exportArchive()).text()).files.length;
-   const put=IDBObjectStore.prototype.put;let writes=0,failed=false;
-   IDBObjectStore.prototype.put=function(...args){if(this.name==='items'&&++writes===2)throw new DOMException('full','QuotaExceededError');return put.apply(this,args);};
-   try{await s.addFiles(inbox,[new File(['new-one'],'new.png',{type:'image/png'}),new File(['new-two'],'new2.png',{type:'image/png'})]);}catch(e){failed=e.name==='QuotaExceededError';}finally{IDBObjectStore.prototype.put=put;}
+   const add=IDBObjectStore.prototype.add;let writes=0,failed=false;
+   IDBObjectStore.prototype.add=function(...args){if(this.name==='items'&&++writes===2)throw new DOMException('full','QuotaExceededError');return add.apply(this,args);};
+   try{await s.addFiles(inbox,[new File(['new-one'],'new.png',{type:'image/png'}),new File(['new-two'],'new2.png',{type:'image/png'})]);}catch(e){failed=e.name==='QuotaExceededError';}finally{IDBObjectStore.prototype.add=add;}
    assert(failed,'quota error surfaced');assert(equal(await s.ready(),before),'quota abort metadata rollback');
    assert(JSON.parse(await(await s.exportArchive()).text()).files.length===fileCountBefore,'quota abort blob rollback');
    let rejected=false;try{await s.reorderItems(inbox,['missing']);}catch(e){rejected=true;}assert(rejected&&equal(await s.ready(),before),'stale reorder rejected');
@@ -90,6 +90,55 @@ STORE_CHECKS=r'''async()=>{
    checks.push('atomic group/item deletion and vocabulary storage isolation');
    return {passed:true,checks,groups:(await s.listGroups()).length,items:(await s.listItems()).length};
   }'''
+
+
+def dialog_regressions(browser,base,image_path):
+    context=browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,service_workers='block')
+    context.route('https://cdn.jsdelivr.net/**',lambda route:route.abort())
+    page=context.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
+    try:
+        page.goto(base+'/',wait_until='domcontentloaded');page.evaluate("showTab('captures')");page.wait_for_selector('#cnGroupChips button')
+        note=page.evaluate("async()=>{const [group]=await CaptureStore.listGroups();const note=await CaptureStore.addNote(group.id,'Original note');await CaptureNotebook.open();return note;}")
+        page.locator(f'.cn-item[data-item-id="{note["id"]}"] [data-action=edit-item]').click()
+        page.locator('#cnField-text').fill('Local note draft\nKeep this line')
+        page.evaluate("id=>CaptureStore.updateItem(id,{text:'Other window note'})",note['id'])
+        page.locator('#cnEditor button[type=submit]').click();page.wait_for_selector('#cnEditor .cn-dialog-error:not(:empty)')
+        assert page.locator('#cnField-text').is_enabled() and page.locator('#cnField-text').input_value()=='Local note draft\nKeep this line'
+        assert page.evaluate('id=>CaptureStore.listItems().then(items=>items.find(i=>i.id===id).text)',note['id'])=='Other window note'
+        page.locator('#cnEditor button[type=button]').click();page.evaluate('()=>CaptureNotebook.open()')
+        page.locator('#cnFileInput').set_input_files(str(image_path));page.wait_for_selector('#cnItems .cn-item[data-item-id] .cn-capture-image')
+        image=page.evaluate("()=>CaptureStore.listItems().then(items=>items.find(i=>i.kind==='image'))")
+        page.locator(f'.cn-item[data-item-id="{image["id"]}"] [data-action=edit-item]').click()
+        page.locator('#cnField-title').fill('Local image title');page.locator('#cnField-caption').fill('Local image memo\nKeep this line')
+        page.evaluate("id=>CaptureStore.updateItem(id,{caption:'Other window memo'})",image['id'])
+        page.locator('#cnEditor button[type=submit]').click();page.wait_for_selector('#cnEditor .cn-dialog-error:not(:empty)')
+        assert page.locator('#cnField-title').input_value()=='Local image title'
+        assert page.locator('#cnField-caption').is_enabled() and page.locator('#cnField-caption').input_value()=='Local image memo\nKeep this line'
+        actual=page.evaluate('id=>CaptureStore.listItems().then(items=>items.find(i=>i.id===id))',image['id'])
+        assert actual['title']==image['title'] and actual['caption']=='Other window memo'
+        page.locator('#cnEditor button[type=button]').click()
+        page.evaluate("()=>{window.dialogRealStore=CaptureStore;window.CaptureStore={...CaptureStore,addNote:(...args)=>new Promise((resolve,reject)=>{window.rejectDialogSave=reject})};}")
+        page.locator('[data-action=new-note]').click();page.locator('#cnField-text').fill('Pending save draft\nKeep every line')
+        page.locator('#cnEditor button[type=submit]').click();page.wait_for_function('typeof rejectDialogSave==="function"')
+        assert page.locator('#cnField-text').is_disabled() and page.locator('#cnEditor form').get_attribute('aria-busy')=='true'
+        assert page.locator('#cnEditor button[type=button]').is_disabled()
+        page.keyboard.press('Escape');assert page.locator('#cnEditor').evaluate('(dialog)=>dialog.open')
+        page.evaluate("()=>rejectDialogSave(new DOMException('full','QuotaExceededError'))")
+        page.wait_for_selector('#cnEditor .cn-dialog-error:not(:empty)')
+        assert page.locator('#cnField-text').is_enabled() and page.locator('#cnField-text').input_value()=='Pending save draft\nKeep every line'
+        page.evaluate('()=>{window.CaptureStore=dialogRealStore}')
+        page.locator('#cnEditor button[type=submit]').click();page.wait_for_function("()=>CaptureStore.listItems().then(items=>items.some(i=>i.text==='Pending save draft\\nKeep every line'))")
+        page.wait_for_function('!document.querySelector("#cnEditor").open')
+        before=page.evaluate('()=>CaptureStore.ready()')
+        page.locator('[data-action=new-note]').click();page.locator('#cnField-text').fill('Canceled by leaving captures')
+        page.evaluate("showTab('study')");assert not page.locator('#cnEditor').evaluate('(dialog)=>dialog.open')
+        assert page.locator('#studyView').is_visible() and page.evaluate('()=>CaptureStore.ready()')==before
+        page.evaluate("showTab('captures')");page.wait_for_selector('#cnItems .cn-item')
+        page.locator('[data-action=new-note]').click();assert page.locator('#cnField-text').input_value()==''
+        page.locator('#cnEditor button[type=button]').click()
+        assert not errors,errors
+        return {'case':'capture edit dialogs','staleNoteAndCaptionDraftsPreserved':True,'pendingSaveFieldsLocked':True,'failedSaveRetry':True,'leavingClosesUnsavedDialog':True,'errors':errors}
+    finally:context.close()
 
 
 def run():
@@ -148,10 +197,10 @@ def run():
                 page.locator('#cnSearch').fill('');page.locator('[data-action=mode-feed]').click()
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),('horizontal overflow',width)
                 page.locator('[data-action=new-note]').click();page.locator('#cnField-text').fill('저장 실패에도 유지할 초안\n둘째 줄')
-                page.evaluate("()=>{window.originalCapturePut=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){if(this.name==='items')throw new DOMException('quota','QuotaExceededError');return window.originalCapturePut.apply(this,args);};}")
+                page.evaluate("()=>{window.originalCaptureAdd=IDBObjectStore.prototype.add;IDBObjectStore.prototype.add=function(...args){if(this.name==='items')throw new DOMException('quota','QuotaExceededError');return window.originalCaptureAdd.apply(this,args);};}")
                 page.locator('#cnEditor button[type=submit]').click();page.wait_for_selector('#cnEditor .cn-dialog-error:not(:empty)')
                 assert page.locator('#cnField-text').input_value()=='저장 실패에도 유지할 초안\n둘째 줄'
-                page.evaluate('()=>{IDBObjectStore.prototype.put=window.originalCapturePut;}');page.locator('#cnEditor button[type=button]').click()
+                page.evaluate('()=>{IDBObjectStore.prototype.add=window.originalCaptureAdd;}');page.locator('#cnEditor button[type=button]').click()
                 if width==390:
                     before=page.evaluate('CaptureStore.ready()')
                     with page.expect_download() as downloaded:page.locator('[data-action=export]').click()
@@ -185,6 +234,7 @@ def run():
                 assert not errors,errors
                 reports.append({'width':width,'multiFilePDFNotesZoom':True,'reload':True,'wordDataUnchanged':True,'offlineBackup':width==390,'errors':errors})
                 context.close()
+            reports.append(dialog_regressions(browser,base,one))
             browser.close()
         print(json.dumps(reports,ensure_ascii=False))
     finally:server.shutdown();server.server_close()
