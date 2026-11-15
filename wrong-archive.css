@@ -1,12 +1,12 @@
 #wrongArchivePanel{color:var(--text-main)}
-#wrongArchivePanel .war-heading{padding:0;margin:12px 0 0;background:transparent;display:block;border:1px solid var(--input-border);border-radius:16px;cursor:default}
+#wrongArchivePanel .war-heading{padding:0;display:block}
 #wrongArchivePanel .war-heading::after{display:none}
-#wrongArchivePanel .war-heading:hover{transform:none;background:var(--h3-bg-hover)}
-#wrongArchivePanel .war-toggle{display:flex;align-items:center;gap:7px;width:100%;min-height:50px;padding:13px 16px;text-align:left;background:transparent;border:0;border-radius:16px;box-shadow:none;color:var(--text-title);font-size:var(--fs-lg);font-weight:700;cursor:pointer}
+#wrongArchivePanel .war-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;margin:0;padding:13px 16px;text-align:left;background:transparent;border:0;border-radius:inherit;box-shadow:none;color:inherit;font:inherit;letter-spacing:inherit;cursor:pointer}
 #wrongArchivePanel .war-toggle:hover{transform:none;box-shadow:none;filter:none;background:transparent}
-#wrongArchivePanel .war-heading-title{min-width:0;overflow-wrap:anywhere}
-#wrongArchivePanel .war-count{font-size:var(--fs-sm);color:var(--muted);font-weight:500;white-space:nowrap}
-#wrongArchivePanel .war-chevron{margin-left:auto;font-size:var(--fs-md);color:var(--accent-soft);transition:transform .2s}
+#wrongArchivePanel .war-toggle:active{transform:none;box-shadow:none}
+#wrongArchivePanel .war-heading-label{min-width:0}
+#wrongArchivePanel .war-count{white-space:nowrap}
+#wrongArchivePanel .war-chevron{font-size:var(--fs-md);color:var(--accent-soft);transition:transform .25s}
 #wrongArchivePanel .war-toggle[aria-expanded=true] .war-chevron{transform:rotate(180deg)}
 #wrongArchivePanel .war-content{padding:1px 0 2px}
 #wrongArchivePanel .war-description{margin:12px 2px 10px;color:var(--muted);font-size:var(--fs-sm);line-height:1.8;word-break:keep-all;overflow-wrap:anywhere}
@@ -47,7 +47,6 @@
 #wrongArchivePanel .war-fold{display:block;width:100%;min-height:38px;padding:7px 0;margin-top:8px;border:1px solid var(--input-border);border-radius:11px;background:transparent;color:var(--muted);box-shadow:none;font:inherit;font-size:var(--fs-sm);cursor:pointer}
 #wrongArchivePanel .war-fold:hover{background:var(--h3-bg);filter:none;transform:none;box-shadow:none}
 @media(max-width:480px){
- #wrongArchivePanel .war-toggle{padding:12px 14px;font-size:14px}
  #wrongArchivePanel .war-bulk{gap:6px}
  #wrongArchivePanel .war-bulk .war-button{font-size:12px;padding:8px 6px;min-height:44px}
  #wrongArchivePanel .war-search{font-size:16px}
