@@ -94,7 +94,7 @@ def card_and_restore(browser, base, width):
         target=deepcopy(deck(page,WRONG)['words'][0])
         page.evaluate('lsOpenInStudy(0)')
         assert page.locator('#front').inner_text()=='cat'
-        assert page.locator('#cardNextBtn').inner_text()=='외웠음·보관'
+        assert page.locator('#cardNextBtn').inner_text()=='외웠음 · 보관'
         assert page.locator('#cardNextBtn').evaluate('(e)=>e.scrollWidth<=e.clientWidth+1')
         disk=page.evaluate("localStorage.getItem('decks')")
         page.locator('#cardNextBtn').click()
