@@ -130,6 +130,66 @@ CHECKS = r'''async seed=>{
 }'''
 
 
+AUDIT_CHECKS = r'''async()=>{
+  const s=CaptureStore,assert=(v,m)=>{if(!v)throw Error(m);},equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  const snapshot=async()=>{const data=JSON.parse(await(await s.exportArchive()).text());delete data.exportedAt;return data;};
+  const rejects=async(fn,label)=>{let rejected=false;try{await fn();}catch(_error){rejected=true;}assert(rejected,label);};
+  const group=await s.createGroup('Append optimization regression');
+  const db=await new Promise((resolve,reject)=>{const req=indexedDB.open('workbook-captures',1);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
+  await new Promise((resolve,reject)=>{const tx=db.transaction('items','readwrite'),store=tx.objectStore('items');
+    for(let n=0;n<500;n++)store.add({id:'audit-fixture-'+n,groupId:group.id,kind:'note',order:n,title:'메모',caption:'',text:'Original note '+n,fileId:null,mime:'',fileName:'',size:0,rotation:0,createdAt:100,updatedAt:100});
+    tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});db.close();
+  const before=await s.listItems(group.id),methods={add:IDBObjectStore.prototype.add,put:IDBObjectStore.prototype.put};
+  const count=async fn=>{const writes={add:0,put:0};for(const method of Object.keys(methods))IDBObjectStore.prototype[method]=function(...args){if(this.name==='items')writes[method]++;return methods[method].apply(this,args);};try{await fn();return writes;}finally{Object.assign(IDBObjectStore.prototype,methods);}};
+  const appendWrites=await count(()=>s.addNote(group.id,'Appended note'));
+  assert(appendWrites.add===1&&appendWrites.put===0,'appending to500 notes writes only1 new item');
+  let items=await s.listItems(group.id);assert(equal(items.slice(0,500),before),'append preserves every unchanged order, timestamp and field');
+  const insertWrites=await count(()=>s.addNote(group.id,'Inserted note',before[249].id));items=await s.listItems(group.id);
+  assert(insertWrites.add===1&&insertWrites.put===251,'insertion writes only shifted rows');
+  assert(equal(items.slice(0,250),before.slice(0,250)),'insertion preserves unchanged prefix');
+  assert(items.every((item,index)=>item.order===index),'inserted list remains contiguous');
+  const sameOrderWrites=await count(()=>s.reorderItems(group.id,items.map(item=>item.id)));
+  assert(sameOrderWrites.add===0&&sameOrderWrites.put===0,'unchanged reorder writes no items');
+  const adjacentWrites=await count(()=>s.reorderItem(items[250].id,1));
+  assert(adjacentWrites.add===0&&adjacentWrites.put===2,'adjacent move changes exactly2 items');
+  for(const mode of ['note','file-batch']){
+    const stable=await snapshot(),add=IDBObjectStore.prototype.add;let calls=0;
+    IDBObjectStore.prototype.add=function(...args){if(this.name==='items'&&++calls===(mode==='note'?1:2))throw new DOMException('quota','QuotaExceededError');return add.apply(this,args);};
+    try{await rejects(()=>mode==='note'?s.addNote(group.id,'Never persisted'):s.addFiles(group.id,[new File(['a'],'a.png',{type:'image/png'}),new File(['b'],'b.pdf',{type:'application/pdf'})]),'optimized append quota rejected');}
+    finally{IDBObjectStore.prototype.add=add;}
+    assert(equal(await snapshot(),stable),'optimized append quota rolls back all items, files and group metadata');
+  }
+  const mimeGroup=await s.createGroup('Generic MIME files');
+  const generic=await s.addFiles(mimeGroup.id,[new File(['%PDF-1.7'],'generic.PDF',{type:'application/octet-stream'}),new File(['png bytes'],'generic.PNG',{type:'application/octet-stream'}),new File(['jpeg bytes'],'empty.jpg',{type:''})]);
+  assert(equal(generic.map(item=>[item.kind,item.mime]),[['pdf','application/pdf'],['image','image/png'],['image','image/jpeg']]),'generic and empty MIME use recognized extensions');
+  assert((await s.getFile(generic[0].fileId)).type==='application/octet-stream','original blob metadata retained');
+  const stableMime=await snapshot();
+  for(const file of [new File(['not png'],'wrong.png',{type:'text/plain'}),new File(['zip'],'wrong.pdf',{type:'application/zip'}),new File(['binary'],'unknown.bin',{type:'application/octet-stream'})]){
+    await rejects(()=>s.addFiles(mimeGroup.id,[file]),'explicit unsupported type or unknown generic extension rejected');
+    assert(equal(await snapshot(),stableMime),'invalid MIME changes nothing');
+  }
+  let note=(await s.listItems(group.id))[0];
+  await s.updateItem(note.id,{text:'Later same-field text'});
+  const latest=await snapshot();
+  await rejects(()=>s.updateItem(note.id,{text:'Stale replacement'},{expected:{text:note.text}}),'stale note snapshot rejected');
+  assert(equal(await snapshot(),latest),'stale snapshot rejection writes nothing');
+  const image=generic[1];await s.updateItem(image.id,{caption:'Later unrelated caption'});await s.reorderItem(image.id,-1);
+  const guarded=await s.updateItem(image.id,{title:'Guarded title'},{expected:{title:image.title}});
+  assert(guarded.title==='Guarded title'&&guarded.caption==='Later unrelated caption'&&guarded.order===0,'field guard preserves unrelated latest caption and position');
+  const beforeInvalid=await snapshot();
+  for(const options of [null,{expected:{missing:'x'}},{expected:{title:5}},{expected:{caption:''}},{expected:[]}])await rejects(()=>s.updateItem(image.id,{title:'Invalid guard'},options),'invalid expected guard rejected');
+  assert(equal(await snapshot(),beforeInvalid),'invalid guards write nothing');
+  const freshNote=(await s.listItems(group.id))[0],racing=await Promise.allSettled([s.updateItem(freshNote.id,{text:'First racer'},{expected:{text:freshNote.text}}),s.updateItem(freshNote.id,{text:'Second racer'},{expected:{text:freshNote.text}})]);
+  assert(racing.filter(value=>value.status==='fulfilled').length===1&&racing.filter(value=>value.status==='rejected').length===1,'guarded concurrent note update has exactly1 winner');
+  const beforeUpdateQuota=await snapshot(),put=IDBObjectStore.prototype.put;
+  IDBObjectStore.prototype.put=function(...args){if(this.name==='groups')throw new DOMException('quota','QuotaExceededError');return put.apply(this,args);};
+  try{await rejects(()=>s.updateItem(guarded.id,{title:'Quota title'},{expected:{title:guarded.title}}),'guarded update quota rejected');}finally{IDBObjectStore.prototype.put=put;}
+  assert(equal(await snapshot(),beforeUpdateQuota),'guarded update quota restores exact prior item and group');
+  await s.deleteGroup(group.id);await s.deleteGroup(mimeGroup.id);
+  return {append500:appendWrites,insertion:insertWrites,unchangedReorder:sameOrderWrites,adjacentMove:adjacentWrites,genericMIME:true,atomicAppendQuota:true,fieldSnapshotGuard:true,concurrentGuard:true};
+}'''
+
+
 def run():
     server = ThreadingHTTPServer(('127.0.0.1', 0), partial(Quiet, directory=str(ROOT)))
     Thread(target=server.serve_forever, daemon=True).start()
@@ -160,6 +220,14 @@ def run():
             assert page.evaluate("async id=>(await CaptureStore.listItems()).find(item=>item.id===id)", fresh['id']) == fresh
             assert not errors, errors
             report['checks'].append('cross-tab stale edit/reset protection')
+            report['audit'] = page.evaluate(AUDIT_CHECKS)
+            report['checks'].append('500-item append write budget, generic MIME, guarded fields and atomic quota rollback')
+            stale_title = fresh['title']
+            fresh_title = other.evaluate("async item=>CaptureStore.updateItem(item.id,{title:'Other-tab title'},{expected:{title:item.title}})", fresh)
+            assert page.evaluate("""async ({item,title})=>{try{await CaptureStore.updateItem(item.id,{title:'Stale title'},{expected:{title}});return false;}catch(_error){return true;}}""", {'item': fresh, 'title': stale_title})
+            assert page.evaluate("async id=>(await CaptureStore.listItems()).find(item=>item.id===id)", fresh['id']) == fresh_title
+            report['checks'].append('cross-tab stale title edit rejects without overwriting the latest record')
+            assert not errors, errors
             print(json.dumps(report, ensure_ascii=False, indent=2))
             context.close()
             browser.close()
