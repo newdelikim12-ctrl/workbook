@@ -152,6 +152,7 @@
         stores.items.delete(item.id);
         if(item.fileId) stores.files.delete(item.fileId);
         if(item.editedFileId) stores.files.delete(item.editedFileId);
+        if(item.cleanFileId) stores.files.delete(item.cleanFileId);
       });
       stores.groups.delete(groupId);
       return true;
@@ -235,9 +236,12 @@
     if(!options||typeof options.expectedFileId!=='string'||!options.expectedFileId){
       throw error('편집할 이미지가 변경되었어요. 다시 열어 주세요.');
     }
-    const expectedFileId=options.expectedFileId;
+    const expectedFileId=options.expectedFileId,cleanBlob=options.cleanBlob;
     if(pngBlobOrNull!==null&&(!(pngBlobOrNull instanceof Blob)||!pngBlobOrNull.size||pngBlobOrNull.type!=='image/png')){
       throw error('편집한 이미지를 PNG 파일로 저장하지 못했어요. 다시 시도해 주세요.');
+    }
+    if(cleanBlob!==undefined&&(!(cleanBlob instanceof Blob)||!cleanBlob.size||cleanBlob.type!=='image/png')){
+      throw error('가림 없는 이미지를 PNG 파일로 저장하지 못했어요. 다시 시도해 주세요.');
     }
     return transaction(STORE_NAMES,'readwrite',async stores=>{
       const item=await requireItem(stores,itemId);
@@ -250,8 +254,13 @@
       if(pngBlobOrNull!==null){
         updated.editedFileId=id('file');
         stores.files.add({id:updated.editedFileId,blob:pngBlobOrNull});
-      }else delete updated.editedFileId;
+        if(cleanBlob!==undefined){
+          updated.cleanFileId=id('file');
+          stores.files.add({id:updated.cleanFileId,blob:cleanBlob});
+        }else delete updated.cleanFileId;
+      }else{delete updated.editedFileId;delete updated.cleanFileId;}
       if(item.editedFileId) stores.files.delete(item.editedFileId);
+      if(item.cleanFileId) stores.files.delete(item.cleanFileId);
       stores.items.put(updated);touchGroup(stores,group,now);
       return updated;
     });
@@ -263,6 +272,7 @@
       const group=await requireGroup(stores,item.groupId),items=await groupItems(stores,item.groupId),now=Date.now();
       stores.items.delete(item.id);if(item.fileId) stores.files.delete(item.fileId);
       if(item.editedFileId) stores.files.delete(item.editedFileId);
+      if(item.cleanFileId) stores.files.delete(item.cleanFileId);
       writeOrder(stores,items.filter(entry=>entry.id!==item.id),now);
       touchGroup(stores,group,now);
       return true;
@@ -344,8 +354,9 @@
     for(const item of raw.items){
       if(!item||!validId(item.id)||items.has(item.id)||!groups.has(item.groupId)||!KINDS.has(item.kind)||!Number.isSafeInteger(item.order)||item.order<0||!ROTATIONS.has(item.rotation)||!validTime(item.createdAt)||!validTime(item.updatedAt)) bad();
       if(['title','caption','text','mime','fileName'].some(key=>typeof item[key]!=='string')) bad();
-      const hasEdited=item.editedFileId!==undefined;
+      const hasEdited=item.editedFileId!==undefined,hasClean=item.cleanFileId!==undefined;
       if(hasEdited&&item.kind!=='image') bad();
+      if(hasClean&&(!hasEdited||item.kind!=='image')) bad();
       if(item.kind==='note'){
         if(!item.text.trim()||item.fileId!==null||item.size!==0) bad();
       }else{
@@ -359,8 +370,13 @@
           ||files.get(item.editedFileId).blob.type!=='image/png') bad();
         usedFiles.add(item.editedFileId);
       }
+      if(hasClean){
+        if(!validId(item.cleanFileId)||!files.has(item.cleanFileId)||usedFiles.has(item.cleanFileId)
+          ||files.get(item.cleanFileId).blob.type!=='image/png') bad();
+        usedFiles.add(item.cleanFileId);
+      }
       items.set(item.id,{id:item.id,groupId:item.groupId,kind:item.kind,order:item.order,title:item.title,caption:item.caption,text:item.text,fileId:item.fileId,mime:item.mime,fileName:item.fileName,size:item.size,rotation:item.rotation,createdAt:item.createdAt,updatedAt:item.updatedAt,
-        ...(hasEdited?{editedFileId:item.editedFileId}:{})});
+        ...(hasEdited?{editedFileId:item.editedFileId}:{}),...(hasClean?{cleanFileId:item.cleanFileId}:{})});
     }
     if(usedFiles.size!==files.size) bad();
     return {groups:[...groups.values()],items:[...items.values()],files:[...files.values()]};
@@ -381,7 +397,8 @@
         const groupId=groupIds.get(item.groupId),order=positions.get(groupId)||0;
         positions.set(groupId,order+1);
         stores.items.add({...item,id:id('item'),groupId,order,fileId:item.fileId?fileIds.get(item.fileId):null,
-          ...(item.editedFileId?{editedFileId:fileIds.get(item.editedFileId)}:{})});
+          ...(item.editedFileId?{editedFileId:fileIds.get(item.editedFileId)}:{}),
+          ...(item.cleanFileId?{cleanFileId:fileIds.get(item.cleanFileId)}:{})});
       });
     });
     return ready();
