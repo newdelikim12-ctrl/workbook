@@ -54,18 +54,26 @@
     const candidate=typeof value==='string'?value.trim():'';
     return candidate&&candidate.length<=128&&!/\b(?:var|url)\s*\(/iu.test(candidate)&&typeof CSS!=='undefined'&&CSS.supports('color',candidate)?candidate:'#e5484d';
   }
+  function opaqueColor(value){
+    const candidate=typeof value==='string'?value.trim():'';
+    return /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(candidate)?candidate:'#000000';
+  }
   async function create(blob,options={}){
     // Generic canvas fonts depend on the element language. Keep attached previews
     // and detached PNG exports on the same locale for identical text rasterization.
     const language=document.documentElement.lang||navigator.language||'ko';
     const originalBlob=options.originalBlob instanceof Blob?options.originalBlob:blob;
-    const hasSeparateOriginal=originalBlob!==blob;
-    const budget=hasSeparateOriginal?MAX_PIXELS/2:MAX_PIXELS;
-    let currentSource=null,originalSource=null,destroyed=false;
+    const cleanBlob=options.cleanBlob instanceof Blob?options.cleanBlob:blob;
+    const sourceBlobs=[...new Set([blob,originalBlob,cleanBlob])],sources=new Map();
+    const budget=MAX_PIXELS/sourceBlobs.length;
+    let currentSource=null,originalSource=null,cleanSource=null,destroyed=false;
     try{
-      currentSource=await decode(blob,budget);
-      originalSource=hasSeparateOriginal?await decode(originalBlob,budget):currentSource;
-    }catch(error){if(currentSource) release(currentSource.image);throw error;}
+      for(const sourceBlob of sourceBlobs) sources.set(sourceBlob,await decode(sourceBlob,budget));
+      currentSource=sources.get(blob);originalSource=sources.get(originalBlob);cleanSource=sources.get(cleanBlob);
+      if(currentSource.sourceWidth!==cleanSource.sourceWidth||currentSource.sourceHeight!==cleanSource.sourceHeight){
+        throw Error('필기를 숨길 이미지의 크기가 편집본과 달라요. 저장한 사진을 다시 확인해 주세요.');
+      }
+    }catch(error){for(const source of sources.values()) release(source.image);throw error;}
     const initialRotation=rotation(options.rotation);
     const initial=oriented(currentSource.width,currentSource.height,initialRotation);
     let width=initial.width,height=initial.height,cursor=0;
@@ -92,8 +100,19 @@
       return {x:Math.max(-limit,Math.min(limit,Number(x))),y:Math.max(-limit,Math.min(limit,Number(y)))};
     }
     function pen(value){return Math.max(.5,Math.min(Math.max(width,height)/2,Number(value)||4));}
+    function rectangle(rect){
+      if(![rect.x,rect.y,rect.width,rect.height].every(finite)) return null;
+      if(Number(rect.width)===0||Number(rect.height)===0) return null;
+      const x1=Number(rect.x),x2=x1+Number(rect.width),y1=Number(rect.y),y2=y1+Number(rect.height);
+      const left=Math.max(0,Math.floor(Math.min(x1,x2))),top=Math.max(0,Math.floor(Math.min(y1,y2)));
+      const right=Math.min(width,Math.ceil(Math.max(x1,x2))),bottom=Math.min(height,Math.ceil(Math.max(y1,y2)));
+      return right>left&&bottom>top?{x:left,y:top,width:right-left,height:bottom-top}:null;
+    }
     function draw(ctx,command){
       ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+      if(command.kind==='mask'){
+        ctx.fillStyle=command.color;ctx.fillRect(command.x,command.y,command.width,command.height);return;
+      }
       if(command.kind==='text'){
         ctx.fillStyle=command.color;ctx.font=command.size+'px sans-serif';ctx.textAlign='left';ctx.textBaseline='top';
         const lines=command.text.split('\n');
@@ -107,7 +126,7 @@
       for(let i=2;i<points.length;i+=2) ctx.lineTo(points[i],points[i+1]);
       ctx.stroke();
     }
-    function render(target){
+    function render(target,options={}){
       alive();
       if(!target||typeof target.getContext!=='function') throw Error('이미지를 표시할 캔버스가 없습니다.');
       target.lang=language;target.width=width;target.height=height;
@@ -122,9 +141,9 @@
         const command=history[i];
         if(command.kind==='crop') transform=multiply(transform,[1,0,0,1,-command.x,-command.y]);
         else if(command.kind==='rotate') transform=multiply(transform,[0,1,-1,0,command.beforeHeight,0]);
-        else drawing.push({command,transform:transform.slice()});
+        else if(!options||options.annotations!==false) drawing.push({command,transform:transform.slice()});
       }
-      const source=reset>=0?originalSource:currentSource;
+      const source=reset>=0?originalSource:options&&options.annotations===false?cleanSource:currentSource;
       const sourceTransform=reset>=0?identity():initial.matrix;
       ctx.setTransform(...multiply(transform,sourceTransform));
       ctx.drawImage(source.image,0,0,source.width,source.height);
@@ -139,20 +158,20 @@
       get language(){return language;},
       get canUndo(){return !destroyed&&cursor>0;},get canRedo(){return !destroyed&&cursor<history.length;},
       get isOriginal(){return !destroyed&&(cursor>0?history[cursor-1].kind==='reset':currentSource===originalSource&&initialRotation===0);},
-      get scaled(){return currentSource.scaled||originalSource.scaled;},
+      get scaled(){return currentSource.scaled||originalSource.scaled||cleanSource.scaled;},
       get sourceWidth(){return currentSource.sourceWidth;},get sourceHeight(){return currentSource.sourceHeight;},
       get originalWidth(){return originalSource.sourceWidth;},get originalHeight(){return originalSource.sourceHeight;},
       get historyLimit(){return MAX_HISTORY;},get maxTextLength(){return MAX_TEXT;},
       render,
       rotate(){alive();return commit({kind:'rotate'});},
       crop(rect={}){
-        alive();if(![rect.x,rect.y,rect.width,rect.height].every(finite)) return false;
-        if(Number(rect.width)===0||Number(rect.height)===0) return false;
-        const x1=Number(rect.x),x2=x1+Number(rect.width),y1=Number(rect.y),y2=y1+Number(rect.height);
-        const left=Math.max(0,Math.floor(Math.min(x1,x2))),top=Math.max(0,Math.floor(Math.min(y1,y2)));
-        const right=Math.min(width,Math.ceil(Math.max(x1,x2))),bottom=Math.min(height,Math.ceil(Math.max(y1,y2)));
-        if(right<=left||bottom<=top||left===0&&top===0&&right===width&&bottom===height) return false;
-        return commit({kind:'crop',x:left,y:top,width:right-left,height:bottom-top});
+        alive();const bounds=rectangle(rect);
+        if(!bounds||bounds.x===0&&bounds.y===0&&bounds.width===width&&bounds.height===height) return false;
+        return commit({kind:'crop',...bounds});
+      },
+      mask(rect={}){
+        alive();const bounds=rectangle(rect);if(!bounds) return false;
+        return commit({kind:'mask',...bounds,color:opaqueColor(rect.color)});
       },
       line(args={}){
         alive();const from=point(args.x1,args.y1),to=point(args.x2,args.y2);if(!from||!to) return false;
@@ -179,10 +198,10 @@
         alive();if(cursor&&history[cursor-1].kind==='reset'||!cursor&&currentSource===originalSource&&initialRotation===0) return false;
         return commit({kind:'reset'});
       },
-      async toBlob(){
+      async toBlob(options={}){
         alive();const output=canvas(width,height);
         try{
-          render(output);
+          render(output,options);
           return await new Promise((resolve,reject)=>{
             try{output.toBlob(blob=>blob?resolve(blob):reject(Error('편집한 이미지를 저장 파일로 만들지 못했습니다.')),'image/png');}
             catch(error){reject(error);}
@@ -191,7 +210,7 @@
       },
       destroy(){
         if(destroyed) return;destroyed=true;history.length=0;cursor=0;
-        release(currentSource.image);if(originalSource!==currentSource) release(originalSource.image);
+        for(const source of sources.values()) release(source.image);
       }
     };
     return Object.freeze(engine);
