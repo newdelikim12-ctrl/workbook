@@ -152,6 +152,8 @@ def main():
                   const original=await blob('original.png'),edited=await blob('edited.png'),blank=await blob('blank.png');
                   const output=document.createElement('canvas');
                   const pixel=(engine,x,y)=>{engine.render(output);return [...output.getContext('2d').getImageData(x,y,1,1).data];};
+                  const cleanPixel=(engine,x,y)=>{engine.render(output,{annotations:false});return [...output.getContext('2d').getImageData(x,y,1,1).data];};
+                  const pixels=(engine,options)=>{engine.render(output,options);return [...output.getContext('2d').getImageData(0,0,engine.width,engine.height).data];};
                   const size=engine=>[engine.width,engine.height];
                   let engine=await CaptureImage.create(original,{rotation:90});
                   same(size(engine),[6,8],'initial rotation dimensions');
@@ -207,6 +209,66 @@ def main():
                   same(pixel(engine,0,0),[60,90,50,255],'reverse crop pixels');
                   engine.undo();engine.crop({x:-2,y:-2,width:5,height:5});same(size(engine),[3,3],'crop clamped to image');engine.destroy();
 
+                  engine=await CaptureImage.create(original);
+                  assert(engine.mask({x:1,y:1,width:0,height:2})===false,'zero mask no-op');
+                  assert(engine.mask({x:20,y:20,width:2,height:2})===false,'outside mask no-op');
+                  engine.mask({x:7.8,y:5.8,width:-4.6,height:-2.6,color:'#00f'});
+                  engine.render(output);
+                  for(let y=3;y<6;y++)for(let x=3;x<8;x++){
+                    same([...output.getContext('2d').getImageData(x,y,1,1).data],[0,0,255,255],'reversed fractional mask fully covers transparent source');
+                  }
+                  same(pixel(engine,2,3),[40,90,50,255],'mask leaves outside unchanged');
+                  assert(cleanPixel(engine,5,4)[3]===0,'clean view removes mask and restores source transparency');
+                  engine.undo();assert(pixel(engine,5,4)[3]===0,'undo mask restores transparency');
+                  engine.redo();same(pixel(engine,5,4),[0,0,255,255],'redo mask restores opaque coverage');
+                  for(const invalidColor of ['#ffffff00','rgba(255,255,255,0)','transparent','invalid']){
+                    engine.mask({x:0,y:0,width:1,height:1,color:invalidColor});
+                    same(pixel(engine,0,0),[0,0,0,255],'alpha or invalid mask color falls back to opaque black');engine.undo();
+                  }
+                  engine.destroy();
+
+                  engine=await CaptureImage.create(original);
+                  let reference=await CaptureImage.create(original);
+                  engine.mask({x:0,y:0,width:8,height:6,color:'#abcdef'});
+                  engine.line({x1:0,y1:2,x2:8,y2:2,width:2,color:'#00ff00'});
+                  engine.text({x:1,y:1,text:'A',size:3,color:'#ff0000'});
+                  for(const operation of [value=>value.crop({x:2,y:1,width:5,height:4}),value=>value.rotate(),value=>value.crop({x:1,y:1,width:2,height:3})]){
+                    operation(engine);operation(reference);
+                  }
+                  same(size(engine),size(reference),'clean view keeps crop rotation dimensions');
+                  same(pixels(engine,{annotations:false}),pixels(reference),'clean view removes all annotation kinds but keeps geometry');
+                  const firstAnnotated=await engine.toBlob(),firstClean=await engine.toBlob({annotations:false});
+                  const firstShown=pixels(engine),firstRevealed=pixels(reference);
+                  engine.destroy();reference.destroy();
+                  engine=await CaptureImage.create(firstAnnotated,{originalBlob:original,cleanBlob:firstClean});
+                  same(pixels(engine),firstShown,'reopen retains saved annotations');
+                  same(pixels(engine,{annotations:false}),firstRevealed,'reopen reveals saved same-geometry clean image');
+                  reference=await CaptureImage.create(firstClean);
+                  engine.mask({x:0,y:0,width:2,height:2,color:'#112233'});
+                  engine.rotate();reference.rotate();
+                  engine.crop({x:0,y:1,width:2,height:1});reference.crop({x:0,y:1,width:2,height:1});
+                  same(pixels(engine,{annotations:false}),pixels(reference),'second edit hides old and new annotations after geometry');
+                  const secondAnnotated=await engine.toBlob(),secondClean=await engine.toBlob({annotations:false});
+                  const secondShown=pixels(engine),secondRevealed=pixels(reference);
+                  engine.destroy();reference.destroy();
+                  engine=await CaptureImage.create(secondAnnotated,{originalBlob:original,cleanBlob:secondClean});
+                  same(pixels(engine),secondShown,'second reopen retains all annotations');
+                  same(pixels(engine,{annotations:false}),secondRevealed,'second reopen reveals clean geometry');
+                  engine.reset();reference=await CaptureImage.create(original);
+                  assert(engine.isOriginal,'reset remains original with separate clean source');
+                  same(pixels(engine),pixels(reference),'reset restores true original pixels');
+                  same(pixels(engine,{annotations:false}),pixels(reference),'reset clean view uses true original too');
+                  engine.undo();same(pixels(engine),secondShown,'undo reset restores saved annotated image');
+                  same(pixels(engine,{annotations:false}),secondRevealed,'undo reset restores saved clean image');
+                  engine.redo();engine.mask({x:4,y:3,width:4,height:3,color:'#ffffff'});
+                  assert(!engine.isOriginal,'new mask after reset changes original state');
+                  same(pixels(engine,{annotations:false}),pixels(reference),'mask after reset reveals true original');
+                  engine.undo();assert(engine.isOriginal,'undo mask returns to original');engine.redo();
+                  same(pixel(engine,5,4),[255,255,255,255],'redo mask after reset');engine.destroy();reference.destroy();
+                  let mismatchRejected=false;
+                  try{await CaptureImage.create(original,{cleanBlob:edited});}catch(error){mismatchRejected=/크기/.test(error.message);}
+                  assert(mismatchRejected,'mismatched clean geometry rejected safely');
+
                   engine=await CaptureImage.create(blank);
                   engine.text({x:10,y:12,text:'A\nB',color:'#ff0000',size:20});engine.render(output);
                   const data=output.getContext('2d').getImageData(0,0,128,100).data;
@@ -237,6 +299,10 @@ def main():
                     engine=await CaptureImage.create(original);
                     same(pixel(engine,1,1),[20,30,50,255],'Image fallback pixels');engine.destroy();
                     assert(created===1&&revoked===1,'fallback object URL released');
+                    engine=await CaptureImage.create(original,{originalBlob:original.slice(0,original.size,original.type),cleanBlob:original.slice(0,original.size,original.type)});
+                    engine.mask({x:4,y:3,width:4,height:3,color:'#ffffff'});
+                    assert(cleanPixel(engine,5,4)[3]===0,'fallback clean source keeps transparency');engine.destroy();
+                    assert(created===4&&revoked===4,'all distinct source fallback URLs released');
                   }finally{window.createImageBitmap=nativeBitmap;URL.createObjectURL=nativeCreate;URL.revokeObjectURL=nativeRevoke;}
 
                   engine=await CaptureImage.create(await blob('large.png'));
@@ -245,9 +311,21 @@ def main():
                   same([engine.sourceWidth,engine.sourceHeight],[5000,4000],'original source dimensions exposed');
                   const largeSize=size(engine);const exported=await engine.toBlob(),largeBitmap=await createImageBitmap(exported);
                   same([largeBitmap.width,largeBitmap.height],largeSize,'bounded source exports exact edited dimensions');
-                  largeBitmap.close();engine.destroy();output.width=0;output.height=0;
+                  largeBitmap.close();engine.destroy();
+                  const large=await blob('large.png');
+                  engine=await CaptureImage.create(large,{originalBlob:large.slice(0,large.size,large.type),cleanBlob:large.slice(0,large.size,large.type)});
+                  assert(engine.scaled&&engine.width*engine.height*3<=16000000,'three decoded sources share16MP budget');
+                  const scaledPixel=pixel(engine,100,100),scaledSize=size(engine);
+                  engine.mask({x:99,y:99,width:3,height:3,color:'#00ff00'});
+                  same(pixel(engine,100,100),[0,255,0,255],'scaled mask remains fully opaque');
+                  same(cleanPixel(engine,100,100),scaledPixel,'scaled clean source aligns with annotated source');
+                  engine.rotate();engine.crop({x:10,y:20,width:100,height:80});
+                  same(size(engine),[100,80],'scaled clean geometry updates');
+                  same(pixel(engine,50,40),cleanPixel(engine,50,40),'scaled clean transform aligns after rotate crop');
+                  engine.undo();engine.undo();same(size(engine),scaledSize,'scaled geometry undo');engine.destroy();output.width=0;output.height=0;
                   return {initialRotation:true,cropBeforeAndAfterAnnotations:true,undoRedoAndBranching:true,trueOriginalReset:true,
-                    multilineText:true,previewExportTextIdentical:true,transparentPNG:true,fallbackURLCleanup:true,source16MPBound:true};
+                    multilineText:true,previewExportTextIdentical:true,transparentPNG:true,fallbackURLCleanup:true,source16MPBound:true,
+                    opaqueMasks:true,cleanViewGeometry:true,multipleSavedEditsCleanView:true,cleanSourceResetHistory:true,scaledCleanAlignment:true};
                 }""")
                 page.goto(f"http://127.0.0.1:{server.server_port}/__image_test/media-harness", wait_until="load")
                 page.evaluate("""async()=>{

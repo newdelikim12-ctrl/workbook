@@ -26,13 +26,14 @@ PREPARE = r'''async()=>{
   const original=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg'));
   const [item]=await s.addFiles(group.id,[new File([original],'original.jpg',{type:original.type})]);
   await s.updateItem(item.id,{title:'제목 유지',caption:'설명 첫 줄\n둘째 줄',text:'추가 내용',rotation:90});
+  const clean=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
   canvas.getContext('2d').fillStyle='#3070b0';canvas.getContext('2d').fillRect(1,1,3,2);
   const edited=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
-  const updated=await s.saveImage(item.id,edited,{expectedFileId:item.fileId});
+  const updated=await s.saveImage(item.id,edited,{expectedFileId:item.fileId,cleanBlob:clean});
   const bytes=async blob=>Array.from(new Uint8Array(await blob.arrayBuffer()));
   if(updated.fileId!==item.fileId||updated.mime!==item.mime||updated.fileName!==item.fileName||updated.size!==item.size)throw Error('Original metadata changed');
   if(updated.rotation!==0||updated.title!=='제목 유지'||updated.caption!=='설명 첫 줄\n둘째 줄'||updated.text!=='추가 내용'||updated.groupId!==item.groupId||updated.order!==item.order)throw Error('Item metadata changed');
-  return {item:updated,original:await bytes(original),edited:await bytes(edited)};
+  return {item:updated,original:await bytes(original),edited:await bytes(edited),clean:await bytes(clean)};
 }'''
 
 
@@ -47,15 +48,22 @@ CHECKS = r'''async seed=>{
   assert(equal(item,seed.item),'edited item survives reload');
   assert(equal(await bytes(item.fileId),seed.original),'original bytes survive reload');
   assert(equal(await bytes(item.editedFileId),seed.edited),'edited bytes survive reload');
-  checks.push('original and edited bytes/metadata persist independently across reload');
+  assert(equal(await bytes(item.cleanFileId),seed.clean),'clean bytes survive reload');
+  checks.push('original, edited and clean bytes/metadata persist independently across reload');
 
-  const replacement=await png('#20c080'),oldEdited=item.editedFileId;
+  const replacement=await png('#20c080'),replacementClean=await png('#dddddd'),oldEdited=item.editedFileId,oldClean=item.cleanFileId;
   await s.updateItem(item.id,{caption:'다른 창의 최신 설명',rotation:270});
   const preceding=await s.addNote(item.groupId,'앞으로 옮긴 메모');await s.reorderItem(preceding.id,-1);
-  item=await s.saveImage(item.id,replacement,{expectedFileId:oldEdited});
+  item=await s.saveImage(item.id,replacement,{expectedFileId:oldEdited,cleanBlob:replacementClean});
   assert(item.caption==='다른 창의 최신 설명'&&item.rotation===0&&item.order===1,'fresh metadata and order preserved');
   assert(item.fileId===seed.item.fileId&&equal(await bytes(item.fileId),seed.original),'replacement preserves original');
   await rejects(()=>s.getFile(oldEdited),'superseded edited file removed');
+  await rejects(()=>s.getFile(oldClean),'superseded clean file removed');
+  const droppedClean=item.cleanFileId;
+  item=await s.saveImage(item.id,replacement,{expectedFileId:item.editedFileId});
+  assert(!Object.hasOwn(item,'cleanFileId'),'old saveImage call does not invent a clean file');
+  await rejects(()=>s.getFile(droppedClean),'omitting clean removes old clean bytes');
+  item=await s.saveImage(item.id,replacement,{expectedFileId:item.editedFileId,cleanBlob:replacementClean});
   const stable=await state();
   await rejects(()=>s.saveImage(item.id,replacement,{expectedFileId:oldEdited}),'stale edit rejected');
   await rejects(()=>s.saveImage(item.id,null,{expectedFileId:oldEdited}),'stale reset rejected');
@@ -63,23 +71,27 @@ CHECKS = r'''async seed=>{
     [new Blob(['bad'],{type:'image/jpeg'}),{expectedFileId:item.editedFileId}],[{}, {expectedFileId:item.editedFileId}]]){
     await rejects(()=>s.saveImage(item.id,blob,options),'invalid edit rejected');
   }
+  for(const cleanBlob of [null,{},new Blob([],{type:'image/png'}),new Blob(['bad'],{type:'image/jpeg'})]){
+    await rejects(()=>s.saveImage(item.id,replacement,{expectedFileId:item.editedFileId,cleanBlob}),'invalid clean image rejected');
+  }
   assert(equal(await state(),stable),'rejected edits write nothing');
   checks.push('replacement cleanup, fresh metadata and stale/invalid-operation guards');
 
-  for(const mode of ['edited-item-put','edited-group-put','edited-file-delete','reset-item-put']){
-    const before=await state(),method=mode==='edited-file-delete'?'delete':'put',original=IDBObjectStore.prototype[method];
-    const target=mode==='edited-group-put'?'groups':mode==='edited-file-delete'?'files':'items';
-    IDBObjectStore.prototype[method]=function(...args){if(this.name===target)throw new DOMException('quota','QuotaExceededError');return original.apply(this,args);};
+  for(const mode of ['clean-file-add','edited-item-put','edited-group-put','edited-file-delete','reset-item-put']){
+    const before=await state(),method=mode==='edited-file-delete'?'delete':mode==='clean-file-add'?'add':'put',original=IDBObjectStore.prototype[method];
+    const target=mode==='edited-group-put'?'groups':mode==='edited-file-delete'||mode==='clean-file-add'?'files':'items';let addedFiles=0;
+    IDBObjectStore.prototype[method]=function(...args){if(this.name===target&&(mode!=='clean-file-add'||++addedFiles===2))throw new DOMException('quota','QuotaExceededError');return original.apply(this,args);};
     let failed=false;
-    try{await s.saveImage(item.id,mode==='reset-item-put'?null:replacement,{expectedFileId:item.editedFileId});}catch(error){failed=error.name==='QuotaExceededError';}finally{IDBObjectStore.prototype[method]=original;}
+    try{await s.saveImage(item.id,mode==='reset-item-put'?null:replacement,{expectedFileId:item.editedFileId,...(mode==='reset-item-put'?{}:{cleanBlob:replacementClean})});}catch(error){failed=error.name==='QuotaExceededError';}finally{IDBObjectStore.prototype[method]=original;}
     assert(failed&&equal(await state(),before),'quota rollback across item, files and group: '+mode);
   }
-  const beforeReset=item.editedFileId;
+  const beforeReset=item.editedFileId,beforeResetClean=item.cleanFileId;
   item=await s.saveImage(item.id,null,{expectedFileId:beforeReset});
-  assert(!Object.hasOwn(item,'editedFileId')&&item.rotation===0,'reset removes optional field');
+  assert(!Object.hasOwn(item,'editedFileId')&&!Object.hasOwn(item,'cleanFileId')&&item.rotation===0,'reset removes optional fields');
   await rejects(()=>s.getFile(beforeReset),'reset removes edited bytes');
+  await rejects(()=>s.getFile(beforeResetClean),'reset removes clean bytes');
   assert(equal(await bytes(item.fileId),seed.original),'reset keeps original bytes');
-  const concurrent=await Promise.allSettled([s.saveImage(item.id,replacement,{expectedFileId:item.fileId}),s.saveImage(item.id,await png('#eeee22'),{expectedFileId:item.fileId})]);
+  const concurrent=await Promise.allSettled([s.saveImage(item.id,replacement,{expectedFileId:item.fileId,cleanBlob:replacementClean}),s.saveImage(item.id,await png('#eeee22'),{expectedFileId:item.fileId,cleanBlob:replacementClean})]);
   assert(concurrent.filter(value=>value.status==='fulfilled').length===1&&concurrent.filter(value=>value.status==='rejected').length===1,'one concurrent edit wins');
   item=(await s.listItems()).find(value=>value.id===item.id);
   checks.push('quota rollback, original reset and concurrent edits');
@@ -88,18 +100,24 @@ CHECKS = r'''async seed=>{
   const note=await s.addNote(item.groupId,'메모');
   for(const other of [pdf,note])await rejects(()=>s.saveImage(other.id,replacement,{expectedFileId:other.fileId||'not-image'}),'non-image cannot be edited');
   const raw=await state(),beforeImport=await s.ready();
-  assert(raw.files.length===3,'original image, edited image and PDF all accounted');
+  assert(raw.files.length===4,'original image, edited image, clean image and PDF all accounted');
   const imported=await s.importArchive(JSON.stringify(raw));
   assert(imported.items.length===beforeImport.items.length*2,'new backup appends items');
   const restored=imported.items.find(value=>!beforeImport.items.some(old=>old.id===value.id)&&value.kind==='image');
   assert(restored.fileId!==item.fileId&&restored.editedFileId!==item.editedFileId,'both file IDs remapped');
+  assert(restored.cleanFileId!==item.cleanFileId&&restored.cleanFileId!==restored.editedFileId&&restored.cleanFileId!==restored.fileId,'clean ID remapped distinctly');
   assert(restored.fileName==='original.jpg'&&restored.mime==='image/jpeg'&&restored.size===item.size,'restored original metadata');
   assert(equal(await bytes(restored.fileId),seed.original)&&equal(await bytes(restored.editedFileId),await bytes(item.editedFileId)),'both restored blobs match');
-  const legacy=structuredClone(raw),editedIds=new Set(legacy.items.map(value=>value.editedFileId).filter(Boolean));
-  legacy.items.forEach(value=>delete value.editedFileId);legacy.files=legacy.files.filter(file=>!editedIds.has(file.id));
+  assert(equal(await bytes(restored.cleanFileId),await bytes(item.cleanFileId)),'restored clean bytes match');
+  const editedOnly=structuredClone(raw),cleanIds=new Set(editedOnly.items.map(value=>value.cleanFileId).filter(Boolean));
+  editedOnly.items.forEach(value=>delete value.cleanFileId);editedOnly.files=editedOnly.files.filter(file=>!cleanIds.has(file.id));
+  const editedOnlyBefore=await s.ready(),editedOnlyResult=await s.importArchive(JSON.stringify(editedOnly));
+  assert(editedOnlyResult.items.filter(value=>!editedOnlyBefore.items.some(old=>old.id===value.id)&&value.kind==='image').every(value=>value.editedFileId&&!Object.hasOwn(value,'cleanFileId')),'edited-only old backups stay compatible');
+  const legacy=structuredClone(raw),editedIds=new Set(legacy.items.flatMap(value=>[value.editedFileId,value.cleanFileId]).filter(Boolean));
+  legacy.items.forEach(value=>{delete value.editedFileId;delete value.cleanFileId;});legacy.files=legacy.files.filter(file=>!editedIds.has(file.id));
   const legacyBefore=await s.ready(),legacyResult=await s.importArchive(JSON.stringify(legacy));
   assert(legacyResult.items.filter(value=>!legacyBefore.items.some(old=>old.id===value.id)&&value.kind==='image').every(value=>!Object.hasOwn(value,'editedFileId')),'old backup remains compatible');
-  checks.push('edited and original backup roundtrip with ID remapping and legacy compatibility');
+  checks.push('original, edited and clean backup roundtrip with ID remapping and both legacy formats');
 
   const beforeBad=await state();
   const variants=[bad=>{bad.items.find(value=>value.kind==='image').editedFileId='missing';},
@@ -109,6 +127,15 @@ CHECKS = r'''async seed=>{
     bad=>{bad.items.find(value=>value.kind==='note').editedFileId=item.editedFileId;},
     bad=>{const original=bad.items.find(value=>value.kind==='image');bad.files.push({...bad.files.find(file=>file.id===original.fileId),id:'second-original'});bad.items.push({...original,id:'second-image',fileId:'second-original'});},
     bad=>{bad.items.find(value=>value.kind==='image').editedFileId=null;},
+    bad=>{bad.items.find(value=>value.kind==='image').cleanFileId='missing-clean';},
+    bad=>{const image=bad.items.find(value=>value.kind==='image');image.cleanFileId=image.editedFileId;},
+    bad=>{const image=bad.items.find(value=>value.kind==='image');image.cleanFileId=image.fileId;},
+    bad=>{const image=bad.items.find(value=>value.kind==='image');bad.files.push({...bad.files.find(file=>file.id===image.fileId),id:'clean-share-original'},{...bad.files.find(file=>file.id===image.editedFileId),id:'clean-share-edited'});bad.items.push({...image,id:'clean-share-image',fileId:'clean-share-original',editedFileId:'clean-share-edited'});},
+    bad=>{bad.files.find(file=>file.id===item.cleanFileId).type='image/jpeg';},
+    bad=>{bad.items.find(value=>value.kind==='pdf').cleanFileId=item.cleanFileId;},
+    bad=>{bad.items.find(value=>value.kind==='note').cleanFileId=item.cleanFileId;},
+    bad=>{delete bad.items.find(value=>value.kind==='image').editedFileId;},
+    bad=>{bad.items.find(value=>value.kind==='image').cleanFileId=null;},
     bad=>{bad.files.push({...bad.files[0],id:'orphan'});},
     bad=>{bad.files.find(file=>file.id===item.editedFileId).size++;}];
   for(const alter of variants){const bad=structuredClone(raw);alter(bad);await rejects(()=>s.importArchive(JSON.stringify(bad)),'malformed edited backup rejected');assert(equal(await state(),beforeBad),'bad archive changes nothing');}
@@ -119,13 +146,13 @@ CHECKS = r'''async seed=>{
   checks.push('strict edited-reference validation and atomic backup-import quota rollback');
 
   const temp=await s.createGroup('삭제할 분류'),[temporary]=await s.addFiles(temp.id,[new File(['original'],'temp.png',{type:'image/png'})]);
-  const temporaryEdit=await s.saveImage(temporary.id,replacement,{expectedFileId:temporary.fileId});
+  const temporaryEdit=await s.saveImage(temporary.id,replacement,{expectedFileId:temporary.fileId,cleanBlob:replacementClean});
   await s.deleteGroup(temp.id);
-  for(const fileId of [temporary.fileId,temporaryEdit.editedFileId])await rejects(()=>s.getFile(fileId),'group deletion removes both files');
+  for(const fileId of [temporary.fileId,temporaryEdit.editedFileId,temporaryEdit.cleanFileId])await rejects(()=>s.getFile(fileId),'group deletion removes all three files');
   await s.removeItem(restored.id);
-  for(const fileId of [restored.fileId,restored.editedFileId])await rejects(()=>s.getFile(fileId),'item deletion removes both files');
+  for(const fileId of [restored.fileId,restored.editedFileId,restored.cleanFileId])await rejects(()=>s.getFile(fileId),'item deletion removes all three files');
   assert(localStorage.getItem('decks')==='image-editor-must-not-touch-vocabulary','vocabulary storage unchanged');
-  checks.push('dual-file item/group cleanup and vocabulary isolation');
+  checks.push('original/edited/clean item and group cleanup with vocabulary isolation');
   return {passed:true,checks,item,files:(await state()).files.length};
 }'''
 
