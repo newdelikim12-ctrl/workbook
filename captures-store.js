@@ -1,7 +1,7 @@
 (function(global){
   'use strict';
 
-  const DB_NAME='workbook-captures', DB_VERSION=1;
+  const DB_NAME='workbook-captures', DB_VERSION=2;
   const STORE_NAMES=['groups','items','files'];
   const KINDS=new Set(['image','pdf','note']);
   const ROTATIONS=new Set([0,90,180,270]);
@@ -19,6 +19,67 @@
   function text(value,label){
     if(typeof value!=='string') throw error((label||'내용')+' 형식이 올바르지 않아요.');
     return value;
+  }
+  function projectDocument(value,assetIds){
+    const bad=()=>{throw error('사진 편집 프로젝트가 올바르지 않아요. 기존 자료는 유지됩니다.');};
+    const record=v=>v&&typeof v==='object'&&!Array.isArray(v);
+    const keys=(v,allowed)=>record(v)&&Object.keys(v).every(key=>allowed.includes(key));
+    const dense=(v,check)=>Array.from({length:v.length},(_value,index)=>index).every(index=>Object.prototype.hasOwnProperty.call(v,index)&&check(v[index]));
+    const finite=(v,limit=10000000)=>typeof v==='number'&&Number.isFinite(v)&&Math.abs(v)<=limit;
+    const positive=(v,limit=10000000)=>finite(v,limit)&&v>0;
+    const identifier=v=>typeof v==='string'&&/^[A-Za-z0-9_-]{1,80}$/.test(v);
+    const dimensions=(width,height,limit)=>Number.isInteger(width)&&Number.isInteger(height)&&width>=1&&height>=1&&width<=8192&&height<=8192&&width*height<=limit;
+    const color=v=>typeof v==='string'&&v.length>0&&v.length<=128&&!/\b(?:var|url)\s*\(/iu.test(v)&&global.CSS&&global.CSS.supports('color',v);
+    const rect=v=>keys(v,['x','y','width','height'])&&finite(v.x)&&finite(v.y)&&positive(v.width)&&positive(v.height);
+    if(!keys(value,['version','width','height','objects'])||value.version!==1||!dimensions(value.width,value.height,16000000)||!Array.isArray(value.objects)||value.objects.length>500||!dense(value.objects,record))bad();
+    const used=new Set(),objectIds=new Set(),assetDimensions=new Map();let images=0,pixels=0;
+    const objects=value.objects.map((object,index)=>{
+      if(!keys(object,['id','kind','matrix','clip','data','label'])||!identifier(object.id)||objectIds.has(object.id)
+        ||!['image','mask','line','stroke','text'].includes(object.kind)||!Array.isArray(object.matrix)||object.matrix.length!==6
+        ||!dense(object.matrix,v=>finite(v))||Math.abs(object.matrix[0]*object.matrix[3]-object.matrix[1]*object.matrix[2])<1e-12
+        ||!rect(object.clip)||(object.label!==undefined&&(typeof object.label!=='string'||object.label.length>80)))bad();
+      objectIds.add(object.id);const data=object.data;let normalized;
+      if(object.kind==='image'){
+        const legacy=data&&data.legacy===true;
+        if(!keys(data,['assetId','width','height','eraseAssetId','legacy'])||!identifier(data.assetId)
+          ||(data.legacy!==undefined&&data.legacy!==true)||!dimensions(data.width,data.height,legacy?16000000:2000000)
+          ||(++images)>20||(legacy&&(index!==0||object.label!=='이전 주석'))
+          ||(data.eraseAssetId!==undefined&&(!legacy||!identifier(data.eraseAssetId)||data.eraseAssetId===data.assetId)))bad();
+        if(!legacy){pixels+=data.width*data.height;if(pixels>8000000)bad();}
+        for(const assetId of [data.assetId,data.eraseAssetId].filter(v=>v!==undefined)){
+          if(!assetIds.has(assetId))bad();
+          const previous=assetDimensions.get(assetId);
+          if(previous&&(previous[0]!==data.width||previous[1]!==data.height))bad();
+          assetDimensions.set(assetId,[data.width,data.height]);used.add(assetId);
+        }
+        normalized={assetId:data.assetId,width:data.width,height:data.height,...(data.eraseAssetId!==undefined?{eraseAssetId:data.eraseAssetId}:{}),...(legacy?{legacy:true}:{})};
+      }else if(object.kind==='mask'){
+        if(!keys(data,['x','y','width','height','color'])||!rect({x:data.x,y:data.y,width:data.width,height:data.height})||typeof data.color!=='string'||!/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(data.color))bad();
+        normalized={x:data.x,y:data.y,width:data.width,height:data.height,color:data.color};
+      }else if(object.kind==='text'){
+        if(!keys(data,['x','y','text','color','size'])||!finite(data.x)||!finite(data.y)||typeof data.text!=='string'||data.text.length<1||data.text.length>2000||!color(data.color)||!positive(data.size,16384)||data.size<1)bad();
+        normalized={x:data.x,y:data.y,text:data.text,color:data.color,size:data.size};
+      }else{
+        if(!keys(data,['points','color','width'])||!Array.isArray(data.points)||data.points.length<2||data.points.length>8192||data.points.length%2||!dense(data.points,v=>finite(v))||!color(data.color)||!positive(data.width,8192)||data.width<.5)bad();
+        normalized={points:data.points.slice(),color:data.color,width:data.width};
+      }
+      return {id:object.id,kind:object.kind,matrix:object.matrix.slice(),clip:{x:object.clip.x,y:object.clip.y,width:object.clip.width,height:object.clip.height},data:normalized,...(object.label!==undefined?{label:object.label}:{})};
+    });
+    if(used.size!==assetIds.size)bad();
+    return {version:1,width:value.width,height:value.height,objects};
+  }
+  function projectAssets(value,fileKey){
+    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(key=>!['document',fileKey==='blob'?'baseBlob':'baseFileId','assets'].includes(key))||!Array.isArray(value.assets)||value.assets.length>21)throw error('사진 편집 프로젝트가 올바르지 않아요.');
+    const ids=new Set();
+    const assets=Array.from(value.assets).map(asset=>{
+      if(!asset||typeof asset!=='object'||Array.isArray(asset)||Object.keys(asset).some(key=>!['id',fileKey].includes(key))||typeof asset.id!=='string'||!/^[A-Za-z0-9_-]{1,80}$/.test(asset.id)||ids.has(asset.id))throw error('사진 편집 이미지 목록이 올바르지 않아요.');
+      ids.add(asset.id);return {id:asset.id,[fileKey]:asset[fileKey]};
+    });
+    return {document:projectDocument(value.document,ids),assets};
+  }
+  function editFileIds(item){
+    return new Set([item.editedFileId,item.cleanFileId,item.editProject&&item.editProject.baseFileId,
+      ...(item.editProject&&Array.isArray(item.editProject.assets)?item.editProject.assets.map(asset=>asset.fileId):[])].filter(fileId=>fileId&&fileId!==item.fileId));
   }
   function request(req){
     return new Promise((resolve,reject)=>{
@@ -52,7 +113,11 @@
         db.onclose=()=>{ opening=null; };
         resolve(db);
       };
-      req.onerror=()=>reject(req.error||error('캡처 저장소를 열지 못했어요.'));
+      req.onerror=()=>{
+        if(req.error&&req.error.name==='VersionError'){
+          const failure=error('저장소가 새 버전으로 업데이트되었어요. 앱을 새로고침한 뒤 다시 시도해 주세요.');failure.name='VersionError';reject(failure);
+        }else reject(req.error||error('캡처 저장소를 열지 못했어요.'));
+      };
       req.onblocked=()=>reject(error('다른 창의 캡처 페이지를 닫은 뒤 다시 시도해 주세요.'));
     }).catch(reason=>{ opening=null; throw reason; });
     return opening;
@@ -130,6 +195,28 @@
       return record.blob;
     });
   }
+  async function getImageProject(itemId,options){
+    const expectedFileId=options&&options.expectedFileId;
+    if(options!==undefined&&(typeof expectedFileId!=='string'||!expectedFileId))throw error('편집할 이미지가 변경되었어요. 다시 열어 주세요.');
+    return transaction(['items','files'],'readonly',async stores=>{
+      const item=await requireItem(stores,itemId);
+      if(item.kind!=='image')throw error('이미지 자료만 편집할 수 있어요.');
+      if(expectedFileId&&(item.editedFileId||item.fileId)!==expectedFileId)throw error('다른 창에서 이미지가 변경되었어요. 다시 열어 주세요.');
+      if(item.editProject===undefined)return null;
+      if(!item.editedFileId)throw error('저장된 사진 편집 프로젝트가 올바르지 않아요.');
+      const project=projectAssets(item.editProject,'fileId'),cache=new Map();
+      const read=fileId=>{
+        if(typeof fileId!=='string'||!fileId)throw error('사진 편집 이미지가 올바르지 않아요.');
+        if(!cache.has(fileId))cache.set(fileId,request(stores.files.get(fileId)).then(file=>{
+          if(!file||!(file.blob instanceof Blob)||!file.blob.size||file.blob.type!=='image/png')throw error('사진 편집 이미지를 읽지 못했어요.');
+          return file.blob;
+        }));
+        return cache.get(fileId);
+      };
+      const [baseBlob,assets]=await Promise.all([read(item.editProject.baseFileId),Promise.all(project.assets.map(async asset=>({id:asset.id,blob:await read(asset.fileId)})))]);
+      return {document:project.document,baseBlob,assets};
+    });
+  }
   async function createGroup(value){
     const label=name(value),now=Date.now();
     const group={id:id('group'),name:label,createdAt:now,updatedAt:now};
@@ -151,8 +238,7 @@
       items.forEach(item=>{
         stores.items.delete(item.id);
         if(item.fileId) stores.files.delete(item.fileId);
-        if(item.editedFileId) stores.files.delete(item.editedFileId);
-        if(item.cleanFileId) stores.files.delete(item.cleanFileId);
+        editFileIds(item).forEach(fileId=>stores.files.delete(fileId));
       });
       stores.groups.delete(groupId);
       return true;
@@ -243,6 +329,13 @@
     if(cleanBlob!==undefined&&(!(cleanBlob instanceof Blob)||!cleanBlob.size||cleanBlob.type!=='image/png')){
       throw error('가림 없는 이미지를 PNG 파일로 저장하지 못했어요. 다시 시도해 주세요.');
     }
+    let project;
+    if(options.project!==undefined){
+      const value=options.project,validated=projectAssets(value,'blob');
+      if(!(value.baseBlob instanceof Blob)||!value.baseBlob.size||value.baseBlob.type!=='image/png'
+        ||validated.assets.some(asset=>!(asset.blob instanceof Blob)||!asset.blob.size||asset.blob.type!=='image/png'))throw error('사진 편집 프로젝트의 PNG 이미지가 올바르지 않아요.');
+      project={...validated,baseBlob:value.baseBlob};
+    }
     return transaction(STORE_NAMES,'readwrite',async stores=>{
       const item=await requireItem(stores,itemId);
       if(item.kind!=='image') throw error('이미지 자료만 편집할 수 있어요.');
@@ -258,9 +351,16 @@
           updated.cleanFileId=id('file');
           stores.files.add({id:updated.cleanFileId,blob:cleanBlob});
         }else delete updated.cleanFileId;
-      }else{delete updated.editedFileId;delete updated.cleanFileId;}
-      if(item.editedFileId) stores.files.delete(item.editedFileId);
-      if(item.cleanFileId) stores.files.delete(item.cleanFileId);
+        if(project){
+          const baseFileId=project.baseBlob===cleanBlob?updated.cleanFileId:id('file');
+          if(baseFileId!==updated.cleanFileId)stores.files.add({id:baseFileId,blob:project.baseBlob});
+          const assets=project.assets.map(asset=>{
+            const fileId=id('file');stores.files.add({id:fileId,blob:asset.blob});return {id:asset.id,fileId};
+          });
+          updated.editProject={document:project.document,baseFileId,assets};
+        }else delete updated.editProject;
+      }else{delete updated.editedFileId;delete updated.cleanFileId;delete updated.editProject;}
+      editFileIds(item).forEach(fileId=>stores.files.delete(fileId));
       stores.items.put(updated);touchGroup(stores,group,now);
       return updated;
     });
@@ -271,8 +371,7 @@
       if(!item) return false;
       const group=await requireGroup(stores,item.groupId),items=await groupItems(stores,item.groupId),now=Date.now();
       stores.items.delete(item.id);if(item.fileId) stores.files.delete(item.fileId);
-      if(item.editedFileId) stores.files.delete(item.editedFileId);
-      if(item.cleanFileId) stores.files.delete(item.cleanFileId);
+      editFileIds(item).forEach(fileId=>stores.files.delete(fileId));
       writeOrder(stores,items.filter(entry=>entry.id!==item.id),now);
       touchGroup(stores,group,now);
       return true;
@@ -354,9 +453,10 @@
     for(const item of raw.items){
       if(!item||!validId(item.id)||items.has(item.id)||!groups.has(item.groupId)||!KINDS.has(item.kind)||!Number.isSafeInteger(item.order)||item.order<0||!ROTATIONS.has(item.rotation)||!validTime(item.createdAt)||!validTime(item.updatedAt)) bad();
       if(['title','caption','text','mime','fileName'].some(key=>typeof item[key]!=='string')) bad();
-      const hasEdited=item.editedFileId!==undefined,hasClean=item.cleanFileId!==undefined;
+      const hasEdited=item.editedFileId!==undefined,hasClean=item.cleanFileId!==undefined,hasProject=item.editProject!==undefined;
       if(hasEdited&&item.kind!=='image') bad();
       if(hasClean&&(!hasEdited||item.kind!=='image')) bad();
+      if(hasProject&&(!hasEdited||item.kind!=='image'))bad();
       if(item.kind==='note'){
         if(!item.text.trim()||item.fileId!==null||item.size!==0) bad();
       }else{
@@ -375,8 +475,19 @@
           ||files.get(item.cleanFileId).blob.type!=='image/png') bad();
         usedFiles.add(item.cleanFileId);
       }
+      let editProject;
+      if(hasProject){
+        const project=projectAssets(item.editProject,'fileId'),baseFileId=item.editProject.baseFileId;
+        const claim=fileId=>{
+          if(!validId(fileId)||!files.has(fileId)||usedFiles.has(fileId)||files.get(fileId).blob.type!=='image/png')bad();
+          usedFiles.add(fileId);
+        };
+        if(!hasClean||baseFileId!==item.cleanFileId)claim(baseFileId);
+        const assets=project.assets.map(asset=>{claim(asset.fileId);return asset;});
+        editProject={document:project.document,baseFileId,assets};
+      }
       items.set(item.id,{id:item.id,groupId:item.groupId,kind:item.kind,order:item.order,title:item.title,caption:item.caption,text:item.text,fileId:item.fileId,mime:item.mime,fileName:item.fileName,size:item.size,rotation:item.rotation,createdAt:item.createdAt,updatedAt:item.updatedAt,
-        ...(hasEdited?{editedFileId:item.editedFileId}:{}),...(hasClean?{cleanFileId:item.cleanFileId}:{})});
+        ...(hasEdited?{editedFileId:item.editedFileId}:{}),...(hasClean?{cleanFileId:item.cleanFileId}:{}),...(hasProject?{editProject}:{})});
     }
     if(usedFiles.size!==files.size) bad();
     return {groups:[...groups.values()],items:[...items.values()],files:[...files.values()]};
@@ -398,11 +509,12 @@
         positions.set(groupId,order+1);
         stores.items.add({...item,id:id('item'),groupId,order,fileId:item.fileId?fileIds.get(item.fileId):null,
           ...(item.editedFileId?{editedFileId:fileIds.get(item.editedFileId)}:{}),
-          ...(item.cleanFileId?{cleanFileId:fileIds.get(item.cleanFileId)}:{})});
+          ...(item.cleanFileId?{cleanFileId:fileIds.get(item.cleanFileId)}:{}),
+          ...(item.editProject?{editProject:{document:item.editProject.document,baseFileId:fileIds.get(item.editProject.baseFileId),assets:item.editProject.assets.map(asset=>({id:asset.id,fileId:fileIds.get(asset.fileId)}))}}:{})});
       });
     });
     return ready();
   }
 
-  global.CaptureStore=Object.freeze({ready,listGroups,listItems,getFile,createGroup,renameGroup,deleteGroup,addFiles,addNote,updateItem,saveImage,moveItem,reorderItem,reorderItems,removeItem,exportArchive,importArchive});
+  global.CaptureStore=Object.freeze({ready,listGroups,listItems,getFile,getImageProject,createGroup,renameGroup,deleteGroup,addFiles,addNote,updateItem,saveImage,moveItem,reorderItem,reorderItems,removeItem,exportArchive,importArchive});
 })(window);
