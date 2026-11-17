@@ -162,7 +162,7 @@ AUDIT_CHECKS = r'''async()=>{
   const snapshot=async()=>{const data=JSON.parse(await(await s.exportArchive()).text());delete data.exportedAt;return data;};
   const rejects=async(fn,label)=>{let rejected=false;try{await fn();}catch(_error){rejected=true;}assert(rejected,label);};
   const group=await s.createGroup('Append optimization regression');
-  const db=await new Promise((resolve,reject)=>{const req=indexedDB.open('workbook-captures',1);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
+  const db=await new Promise((resolve,reject)=>{const req=indexedDB.open('workbook-captures');req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
   await new Promise((resolve,reject)=>{const tx=db.transaction('items','readwrite'),store=tx.objectStore('items');
     for(let n=0;n<500;n++)store.add({id:'audit-fixture-'+n,groupId:group.id,kind:'note',order:n,title:'메모',caption:'',text:'Original note '+n,fileId:null,mime:'',fileName:'',size:0,rotation:0,createdAt:100,updatedAt:100});
     tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});db.close();
@@ -217,6 +217,123 @@ AUDIT_CHECKS = r'''async()=>{
 }'''
 
 
+MIGRATION_SEED = r'''async()=>{
+  const db=await new Promise((resolve,reject)=>{const req=indexedDB.open('workbook-captures',1);
+    req.onupgradeneeded=()=>{const db=req.result;db.createObjectStore('groups',{keyPath:'id'});const items=db.createObjectStore('items',{keyPath:'id'});items.createIndex('groupId','groupId');db.createObjectStore('files',{keyPath:'id'});};
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
+  const group={id:'legacy',name:'기존 분류',createdAt:1,updatedAt:2},item={id:'legacy-image',groupId:group.id,kind:'image',order:0,title:'기존 제목',caption:'기존 메모',text:'기존 내용',fileId:'legacy-original',mime:'image/jpeg',fileName:'old.jpg',size:8,rotation:90,createdAt:1,updatedAt:2,editedFileId:'legacy-edited',cleanFileId:'legacy-clean'};
+  await new Promise((resolve,reject)=>{const tx=db.transaction(['groups','items','files'],'readwrite');tx.objectStore('groups').add(group);tx.objectStore('items').add(item);for(const [id,type,data]of[['legacy-original','image/jpeg','original'],['legacy-edited','image/png','edited'],['legacy-clean','image/png','clean']])tx.objectStore('files').add({id,blob:new Blob([data],{type})});tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});
+  window.legacyConnection=db;window.legacyClosed=false;db.onversionchange=()=>{legacyClosed=true;db.close();};
+  return {group,item};
+}'''
+
+
+PROJECT_PREPARE = r'''async()=>{
+  const s=CaptureStore,group=await s.createGroup('Retained project');
+  const png=async(width,height,color,type='image/png')=>{const c=window.document.createElement('canvas');c.width=width;c.height=height;c.getContext('2d').fillStyle=color;c.getContext('2d').fillRect(0,0,width,height);return new Promise(resolve=>c.toBlob(resolve,type));};
+  const original=await png(8,5,'#994422','image/jpeg'),baseBlob=await png(8,5,'#994422'),edited=await png(8,5,'#333333');
+  const [item]=await s.addFiles(group.id,[new File([original],'project-original.jpg',{type:'image/jpeg'})]);
+  const matrix=[1,0,0,1,0,0],clip={x:0,y:0,width:8,height:5};
+  const document={version:1,width:8,height:5,objects:[
+    {id:'photo-a',kind:'image',matrix,clip:{x:0,y:0,width:2,height:2},data:{assetId:'asset-a',width:2,height:2}},
+    {id:'photo-b',kind:'image',matrix:[1,0,0,1,2,1],clip:{x:0,y:0,width:3,height:1},data:{assetId:'asset-b',width:3,height:1}},
+    {id:'mask',kind:'mask',matrix,clip,data:{x:0,y:0,width:4,height:2,color:'#111111'}},
+    {id:'text',kind:'text',matrix,clip,data:{x:1,y:1,text:'다시 편집',color:'#ff0000',size:12}},
+    {id:'line',kind:'line',matrix,clip,data:{points:[0,0,3,3],color:'#0000ff',width:1}},
+    {id:'stroke',kind:'stroke',matrix,clip,data:{points:[1,1,2,3,4,4],color:'#00aa00',width:2}}
+  ]};
+  const assets=[{id:'asset-a',blob:await png(2,2,'#00ff00')},{id:'asset-b',blob:await png(3,1,'#0000ff')}];
+  const updated=await s.saveImage(item.id,edited,{expectedFileId:item.fileId,cleanBlob:baseBlob,project:{document,baseBlob,assets}});
+  const bytes=async blob=>Array.from(new Uint8Array(await blob.arrayBuffer()));
+  return {item:updated,document,original:await bytes(original),base:await bytes(baseBlob),assets:await Promise.all(assets.map(async asset=>({id:asset.id,bytes:await bytes(asset.blob)})))};
+}'''
+
+
+PROJECT_CHECKS = r'''async seed=>{
+  const s=CaptureStore,assert=(v,m)=>{if(!v)throw Error(m);},equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  const bytes=async blob=>Array.from(new Uint8Array(await blob.arrayBuffer()));
+  const snapshot=async()=>{const raw=JSON.parse(await(await s.exportArchive()).text());delete raw.exportedAt;return raw;};
+  const rejects=async(fn,label)=>{let caught=false;try{await fn();}catch(_error){caught=true;}assert(caught,label);};
+  const owned=item=>[...new Set([item.editedFileId,item.cleanFileId,item.editProject?.baseFileId,...(item.editProject?.assets||[]).map(asset=>asset.fileId)].filter(Boolean))];
+  let item=(await s.listItems()).find(value=>value.id===seed.item.id);
+  assert(equal(item,seed.item),'retained item survives reload');
+  let project=await s.getImageProject(item.id,{expectedFileId:item.editedFileId});
+  assert(equal(project.document,seed.document),'all typed objects survive reload');
+  assert(equal(await bytes(project.baseBlob),seed.base),'base PNG survives reload');
+  for(const asset of project.assets)assert(equal(await bytes(asset.blob),seed.assets.find(value=>value.id===asset.id).bytes),'asset PNG survives reload');
+  assert(item.editProject.baseFileId===item.cleanFileId&&owned(item).length===4,'base aliases clean only once');
+  assert(equal(await bytes(await s.getFile(item.fileId)),seed.original),'original remains unchanged');
+  await rejects(()=>s.getImageProject(item.id,{expectedFileId:item.fileId}),'stale getter rejected');
+  const image=await s.getFile(item.editedFileId),baseBlob=project.baseBlob,assets=project.assets,document=project.document;
+  const oldFiles=owned(item),distinctBase=new Blob([baseBlob],{type:'image/png'});
+  item=await s.saveImage(item.id,image,{expectedFileId:item.editedFileId,cleanBlob:baseBlob,project:{document,baseBlob:distinctBase,assets}});
+  assert(item.editProject.baseFileId!==item.cleanFileId&&owned(item).length===5,'distinct legacy base stored separately');
+  for(const fileId of oldFiles)await rejects(()=>s.getFile(fileId),'replacement cleans all previous project files');
+  const stable=await snapshot();
+  await rejects(()=>s.saveImage(item.id,image,{expectedFileId:seed.item.editedFileId,project:{document,baseBlob,assets}}),'stale project save rejected');
+  assert(equal(await snapshot(),stable),'stale project changes nothing');
+  for(const mode of ['asset-add','item-put','group-put','old-file-delete']){
+    const method=mode==='asset-add'?'add':mode==='old-file-delete'?'delete':'put',original=IDBObjectStore.prototype[method];let calls=0;
+    const target=mode==='group-put'?'groups':mode==='item-put'?'items':'files';
+    IDBObjectStore.prototype[method]=function(...args){if(this.name===target&&(mode!=='asset-add'&&mode!=='old-file-delete'||++calls===(mode==='asset-add'?4:3)))throw new DOMException('quota','QuotaExceededError');return original.apply(this,args);};
+    try{await rejects(()=>s.saveImage(item.id,image,{expectedFileId:item.editedFileId,cleanBlob:baseBlob,project:{document,baseBlob,assets}}),'project write quota surfaced');}finally{IDBObjectStore.prototype[method]=original;}
+    assert(equal(await snapshot(),stable),'partial multi-asset writes fully roll back: '+mode);
+  }
+  const noProjectFiles=owned(item);
+  item=await s.saveImage(item.id,image,{expectedFileId:item.editedFileId});
+  assert(!Object.hasOwn(item,'editProject')&&!Object.hasOwn(item,'cleanFileId')&&await s.getImageProject(item.id)===null,'old save API removes stale project');
+  for(const fileId of noProjectFiles)await rejects(()=>s.getFile(fileId),'old API removes prior project files');
+  item=await s.saveImage(item.id,image,{expectedFileId:item.editedFileId,cleanBlob:baseBlob,project:{document,baseBlob,assets}});
+  const race=await Promise.allSettled([s.saveImage(item.id,image,{expectedFileId:item.editedFileId,cleanBlob:baseBlob,project:{document,baseBlob,assets}}),s.saveImage(item.id,image,{expectedFileId:item.editedFileId,cleanBlob:baseBlob,project:{document,baseBlob,assets}})]);
+  assert(race.filter(result=>result.status==='fulfilled').length===1&&race.filter(result=>result.status==='rejected').length===1,'one concurrent project save wins');
+  item=race.find(result=>result.status==='fulfilled').value;
+  const [second]=await s.addFiles(item.groupId,[new File([await s.getFile(item.fileId)],'second.jpg',{type:'image/jpeg'})]);
+  const separate=await s.saveImage(second.id,image,{expectedFileId:second.fileId,cleanBlob:baseBlob,project:{document,baseBlob:distinctBase,assets}});
+  const raw=await snapshot(),before=await s.ready(),restored=await s.importArchive(JSON.stringify(raw));
+  for(const original of [item,separate]){
+    const copy=restored.items.find(value=>!before.items.some(old=>old.id===value.id)&&value.fileName===original.fileName&&value.editProject);
+    assert(copy&&copy.fileId!==original.fileId&&copy.editProject.baseFileId!==original.editProject.baseFileId,'all DB project IDs remapped');
+    assert((copy.editProject.baseFileId===copy.cleanFileId)===(original.editProject.baseFileId===original.cleanFileId),'base-clean alias preserved');
+    const result=await s.getImageProject(copy.id);assert(equal(result.document,document),'backup retains document and local asset IDs');
+    for(const asset of result.assets)assert(equal(await bytes(asset.blob),seed.assets.find(value=>value.id===asset.id).bytes),'backup retains PNG assets');
+  }
+  const beforeBad=await snapshot(),alterations=[
+    value=>{value.editProject.document.version=2;},value=>{value.editProject.document.width=8193;},
+    value=>{value.editProject.document.objects[0].matrix=[0,0,0,0,0,0];},value=>{value.editProject.document.objects[0].clip.width=-1;},
+    value=>{value.editProject.document.objects[0].data.assetId='unknown';},value=>{value.editProject.assets[1].id=value.editProject.assets[0].id;},
+    value=>{value.editProject.baseFileId=value.fileId;},value=>{value.editProject.baseFileId=value.editedFileId;},
+    value=>{value.editProject.assets[0].fileId=value.editProject.baseFileId;},value=>{value.editProject.document.objects[2].data.color='rgba(0,0,0,.1)';},
+    value=>{value.editProject.assets[1].fileId=value.editProject.assets[0].fileId;},
+    value=>{value.editProject.baseFileId=separate.cleanFileId;},
+    value=>{value.editProject.document.objects[3].data.color='url(https://invalid/)';},value=>{value.editProject.document.objects[3].data.text='';},
+    value=>{value.editProject.document.objects[4].data.points=[0,1,2];},value=>{value.editProject.document.objects[0].unknown=true;},
+    value=>{value.editProject.document.objects[0].data.legacy=false;},value=>{value.editProject.document.objects[0].data.eraseAssetId='asset-b';},
+    value=>{value.editProject.document.objects=Array.from({length:501},(_,index)=>({...value.editProject.document.objects[2],id:'many-'+index}));}
+  ];
+  for(const alter of alterations){const bad=structuredClone(raw);alter(bad.items.find(value=>value.id===item.id));await rejects(()=>s.importArchive(JSON.stringify(bad)),'invalid project backup rejected');assert(equal(await snapshot(),beforeBad),'invalid project archive is atomic');}
+  const badFile=structuredClone(raw),badItem=badFile.items.find(value=>value.id===item.id);badFile.files.find(file=>file.id===badItem.editProject.assets[0].fileId).type='image/jpeg';
+  await rejects(()=>s.importArchive(JSON.stringify(badFile)),'non-PNG project asset rejected');assert(equal(await snapshot(),beforeBad),'bad asset leaves all data intact');
+  for(const kind of ['note','pdf']){const bad=structuredClone(raw);bad.items.find(value=>value.kind===kind).editProject=structuredClone(item.editProject);await rejects(()=>s.importArchive(JSON.stringify(bad)),'projects are images only');assert(equal(await snapshot(),beforeBad),'invalid item kind changes nothing');}
+  const importAdd=IDBObjectStore.prototype.add;let fileAdds=0;
+  IDBObjectStore.prototype.add=function(...args){if(this.name==='files'&&++fileAdds===5)throw new DOMException('quota','QuotaExceededError');return importAdd.apply(this,args);};
+  try{await rejects(()=>s.importArchive(JSON.stringify(raw)),'multi-file project import quota surfaced');}finally{IDBObjectStore.prototype.add=importAdd;}
+  assert(equal(await snapshot(),beforeBad),'partial project backup import rolls back every group/item/file');
+  for(const alter of [value=>{value.document.objects[0].matrix[0]=Infinity;},value=>{delete value.document.objects[0].matrix[0];},value=>{delete value.document.objects[0];},value=>{delete value.assets[0];},value=>{value.assets.push({...value.assets[0],id:'orphan'});}]){
+    const invalid={document:structuredClone(document),baseBlob,assets:assets.slice()};alter(invalid);
+    await rejects(()=>s.saveImage(item.id,image,{expectedFileId:item.editedFileId,project:invalid}),'invalid runtime document rejected');assert(equal(await snapshot(),beforeBad),'invalid runtime project changes nothing');
+  }
+  const restoreCopy=restored.items.find(value=>!before.items.some(old=>old.id===value.id)&&value.fileName===item.fileName&&value.editProject),removedFiles=[restoreCopy.fileId,...owned(restoreCopy)];
+  await s.removeItem(restoreCopy.id);for(const fileId of removedFiles)await rejects(()=>s.getFile(fileId),'removeItem cleans original and all project files');
+  const resetFiles=owned(item);item=await s.saveImage(item.id,null,{expectedFileId:item.editedFileId});
+  assert(!item.editProject&&!item.editedFileId&&!item.cleanFileId&&await s.getImageProject(item.id)===null,'reset removes complete project');
+  for(const fileId of resetFiles)await rejects(()=>s.getFile(fileId),'reset cleans project base/assets');
+  assert(equal(await bytes(await s.getFile(item.fileId)),seed.original),'reset still retains original');
+  const groupFiles=[item.fileId,separate.fileId,...owned(separate)];await s.deleteGroup(item.groupId);
+  for(const fileId of groupFiles)await rejects(()=>s.getFile(fileId),'deleteGroup cleans every project file');
+  return {reloaded:true,baseCleanAlias:true,distinctLegacyBase:true,quotaRollback:true,strictDocuments:true,fullBackupRemapping:true,legacySaveAndReset:true,allFileCleanup:true};
+}'''
+
+
 def run():
     server = ThreadingHTTPServer(('127.0.0.1', 0), partial(Quiet, directory=str(ROOT)))
     Thread(target=server.serve_forever, daemon=True).start()
@@ -228,6 +345,23 @@ def run():
             if binary:
                 options['executable_path'] = binary
             browser = p.chromium.launch(**options)
+            migration_context = browser.new_context(service_workers='block')
+            migration_page = migration_context.new_page()
+            migration_page.goto(base + '/manifest.json')
+            migration_seed = migration_page.evaluate(MIGRATION_SEED)
+            migration_page.add_script_tag(content=(ROOT / 'captures-store.js').read_text().replace('DB_VERSION=2', 'DB_VERSION=1', 1))
+            migration_page.evaluate('async()=>{window.oldCaptureStore=CaptureStore;await oldCaptureStore.ready();}')
+            migration_page.add_script_tag(url=base + '/captures-store.js')
+            migration = migration_page.evaluate("""async seed=>{
+              const assert=(value,message)=>{if(!value)throw Error(message);};
+              const latest=await CaptureStore.ready();assert(JSON.stringify(latest.groups)===JSON.stringify([seed.group])&&JSON.stringify(latest.items)===JSON.stringify([seed.item]),'v1 metadata preserved exactly');
+              for(const [id,value]of[['legacy-original','original'],['legacy-edited','edited'],['legacy-clean','clean']])assert(await(await CaptureStore.getFile(id)).text()===value,'v1 blob preserved');
+              assert(legacyClosed,'old raw connection closes on versionchange');let oldWriteRejected=false;
+              try{await oldCaptureStore.addNote('legacy','old writer must fail');}catch(error){oldWriteRejected=error.name==='VersionError';}assert(oldWriteRejected,'old version writer blocked');
+              const oldOpenRejected=await new Promise(resolve=>{const req=indexedDB.open('workbook-captures',1);req.onerror=()=>resolve(req.error.name==='VersionError');req.onsuccess=()=>{req.result.close();resolve(false);};});assert(oldOpenRejected,'version1 open rejected');
+              assert((await CaptureStore.listItems()).length===1,'old writer changes nothing');return {version2Upgrade:true,allMetadataAndBlobsPreserved:true,activeV1ConnectionsClosed:true,oldV1WritersBlocked:true};
+            }""", migration_seed)
+            migration_context.close()
             context = browser.new_context(service_workers='block')
             page = context.new_page()
             errors = []
@@ -254,6 +388,12 @@ def run():
             assert page.evaluate("""async ({item,title})=>{try{await CaptureStore.updateItem(item.id,{title:'Stale title'},{expected:{title}});return false;}catch(_error){return true;}}""", {'item': fresh, 'title': stale_title})
             assert page.evaluate("async id=>(await CaptureStore.listItems()).find(item=>item.id===id)", fresh['id']) == fresh_title
             report['checks'].append('cross-tab stale title edit rejects without overwriting the latest record')
+            project_seed = page.evaluate(PROJECT_PREPARE)
+            page.reload()
+            page.add_script_tag(url=base + '/captures-store.js')
+            report['project'] = page.evaluate(PROJECT_CHECKS, project_seed)
+            report['migration'] = migration
+            report['checks'].append('retained project documents, PNG assets, cleanup, backups and v1-to-v2 migration')
             assert not errors, errors
             print(json.dumps(report, ensure_ascii=False, indent=2))
             context.close()

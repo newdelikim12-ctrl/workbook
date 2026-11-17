@@ -83,7 +83,10 @@ def main():
         image.save(fixtures / "original.png")
         Image.new("RGBA", (3, 2), (0, 0, 255, 255)).save(fixtures / "edited.png")
         Image.new("RGBA", (128, 100), (0, 0, 0, 0)).save(fixtures / "blank.png")
+        Image.new("RGBA", (8, 6), (10, 120, 200, 96)).save(fixtures / "semi.png")
         Image.new("RGBA", (5000, 4000), (30, 60, 90, 128)).save(fixtures / "large.png")
+        Image.new("RGBA", (5000, 4000), (90, 30, 60, 128)).save(fixtures / "large-edited.png")
+        Image.new("RGBA", (1600, 1250), (40, 100, 180, 128)).save(fixtures / "layer.png")
         pdf_fixture(fixtures / "pages.pdf")
 
         class Handler(SimpleHTTPRequestHandler):
@@ -305,6 +308,71 @@ def main():
                     assert(created===4&&revoked===4,'all distinct source fallback URLs released');
                   }finally{window.createImageBitmap=nativeBitmap;URL.createObjectURL=nativeCreate;URL.revokeObjectURL=nativeRevoke;}
 
+                  engine=await CaptureImage.create(blank);
+                  engine.mask({x:10,y:10,width:24,height:16,color:'#123456'});const maskId=engine.lastObjectId;
+                  engine.line({x1:70,y1:10,x2:110,y2:16,width:3,color:'#009900'});const lineId=engine.lastObjectId;
+                  engine.stroke({points:[{x:15,y:60},{x:25,y:75},{x:40,y:80}],width:3,color:'#cc00aa'});const strokeId=engine.lastObjectId;
+                  engine.text({x:50,y:30,text:'한글 A',size:14,color:'#3344cc'});const textId=engine.lastObjectId;
+                  const imageId=await engine.addImage(await blob('semi.png'),{x:80,y:65,width:32,height:24});
+                  const ids=[maskId,lineId,strokeId,textId,imageId];
+                  assert(new Set(ids).size===5&&ids.every(id=>typeof id==='string'),'every object has stable unique ID');
+                  same(engine.getObjects().map(object=>object.kind),['mask','line','stroke','text','image'],'all annotation types retained');
+                  assert(engine.hitTest(90,75)===imageId&&engine.hitTest(1,1)===null,'topmost bounding box hit test');
+                  const maskBefore=engine.getObject(maskId),previewBounds={...maskBefore,x:maskBefore.x+5,width:maskBefore.width*1.5};
+                  assert(engine.previewObject(maskId,previewBounds),'temporary preview accepted');
+                  assert(engine.getObject(maskId).x===15,'preview exposes temporary bounds');
+                  const previewBundle=await engine.exportProject();
+                  assert(previewBundle.document.objects.find(object=>object.id===maskId).matrix[4]===0,'export excludes uncommitted drag preview');
+                  engine.previewObject(maskId,null);same(engine.getObject(maskId),maskBefore,'clearing preview restores committed bounds');
+                  assert(engine.updateObject(maskId,previewBounds),'move resize commits');
+                  engine.undo();same(engine.getObject(maskId),maskBefore,'one undo restores entire move resize');
+                  engine.redo();assert(engine.getObject(maskId).x===15,'redo restores transform');
+                  for(const id of ids){const rect=engine.getObject(id);assert(engine.updateObject(id,{x:rect.x+1,y:rect.y+1,width:rect.width*.9,height:rect.height*.9}),'every object kind can move resize');}
+                  const imageBeforeDelete=engine.getObject(imageId);
+                  engine.deleteObject(imageId);assert(!engine.getObject(imageId),'delete retained image');engine.undo();same(engine.getObject(imageId),imageBeforeDelete,'undo delete restores object identity and bounds');
+                  engine.redo();engine.undo();
+                  engine.crop({x:2,y:2,width:124,height:96});engine.rotate();engine.crop({x:0,y:0,width:90,height:120});
+                  const sceneShown=pixels(engine),sceneClean=pixels(engine,{annotations:false}),sceneObjects=engine.getObjects();
+                  assert(sceneObjects.length===5&&sceneClean.every(value=>value===0),'geometry preserves objects and clean transparent background');
+                  const scenePNG=await engine.toBlob(),bundle=await engine.exportProject();
+                  assert(bundle.cleanBlob===bundle.baseBlob,'clean project background reuses same Blob');
+                  assert(CaptureImage.validateProject(bundle.document,bundle.assets),'exported schema validates');
+                  assert(bundle.assets.length===1&&bundle.assets[0].blob.type==='image/png','embedded image canonical PNG asset');
+                  const savedDocument=JSON.stringify(bundle.document);engine.destroy();
+                  engine=await CaptureImage.create(scenePNG,{project:bundle.document,baseBlob:bundle.baseBlob,assets:bundle.assets,cleanBlob:bundle.cleanBlob,originalBlob:blank});
+                  assert(!engine.canUndo&&!engine.canRedo,'reopened scene starts clean history');
+                  same(engine.getObjects(),sceneObjects,'reopen preserves every ID and transformed bounds');
+                  same(pixels(engine),sceneShown,'reopen renders base plus retained objects exactly once');
+                  same(pixels(engine,{annotations:false}),sceneClean,'reopen clean view keeps current geometry');
+                  const reexport=await engine.exportProject();assert(JSON.stringify(reexport.document)===savedDocument,'unchanged scene export remains stable');
+                  for(const id of ids){const object=engine.getObject(id);assert(object,'saved object remains individually selectable');engine.updateObject(id,{x:object.x+2,y:object.y+1,width:object.width*1.1,height:object.height*.8});engine.undo();same(pixels(engine),sceneShown,'undo saved object edit restores exact pixels');}
+                  engine.deleteObject(imageId);assert((await engine.exportProject()).assets.length===0,'deleted image assets omitted from export');engine.undo();
+                  engine.reset();assert(engine.isOriginal&&!engine.getObjects().length,'reset clears all retained objects');engine.undo();same(pixels(engine),sceneShown,'undo reset restores full retained scene');engine.destroy();
+                  const malformed=JSON.parse(savedDocument);malformed.objects[0].matrix=Array(6);assert(!CaptureImage.validateProject(malformed,bundle.assets),'sparse matrices rejected');
+                  const extra=JSON.parse(savedDocument);extra.objects[0].script='invalid';assert(!CaptureImage.validateProject(extra,bundle.assets),'unknown object fields rejected');
+
+                  const semi=await blob('semi.png');engine=await CaptureImage.create(semi,{originalBlob:original,cleanBlob:original});
+                  reference=await CaptureImage.create(semi);const transparentLegacy=pixels(reference);reference.destroy();
+                  assert(engine.getObjects().length===1&&engine.getObjects()[0].label==='이전 주석','legacy annotations migrate into labelled retained image');
+                  same(pixels(engine),transparentLegacy,'legacy eraser and paint retain exact semi-transparent pixels');
+                  reference=await CaptureImage.create(original);same(pixels(engine,{annotations:false}),pixels(reference),'legacy migration preserves exact clean background');reference.destroy();
+                  const legacyPNG=await engine.toBlob(),legacyBundle=await engine.exportProject(),legacyId=engine.getObjects()[0].id;
+                  assert(legacyBundle.assets.length===2&&legacyBundle.document.objects[0].data.eraseAssetId,'transparent legacy migration exports eraser asset');engine.destroy();
+                  engine=await CaptureImage.create(legacyPNG,{project:legacyBundle.document,baseBlob:legacyBundle.baseBlob,cleanBlob:legacyBundle.cleanBlob,assets:legacyBundle.assets,originalBlob:original});
+                  same(pixels(engine),transparentLegacy,'transparent legacy scene reopens exactly');
+                  const legacyBounds=engine.getObject(legacyId);engine.updateObject(legacyId,{...legacyBounds,x:legacyBounds.x+1});engine.undo();same(pixels(engine),transparentLegacy,'legacy layer is individually movable and undoable');engine.destroy();
+
+                  const layer=await blob('layer.png');engine=await CaptureImage.create(blank);
+                  for(let index=0;index<6;index++){await engine.addImage(layer,{x:0,y:0,width:20,height:20});engine.undo();}
+                  assert(!engine.getObjects().length&&engine.canRedo,'discarded image branches release asset budget');
+                  engine.redo();assert(engine.getObjects().length===1,'retained redo still owns image asset');engine.destroy();
+
+                  engine=await CaptureImage.create(blank);
+                  const nativeDecode=window.createImageBitmap;let closeCount=0;
+                  window.createImageBitmap=async function(...args){const image=await nativeDecode.apply(this,args),close=image.close.bind(image);image.close=()=>{closeCount++;close();};return image;};
+                  try{const pending=engine.addImage(original);engine.destroy();let cancelled=false;try{await pending;}catch(error){cancelled=/닫혔/.test(error.message);}assert(cancelled&&closeCount===1,'late inserted image decode released after editor closes');}
+                  finally{window.createImageBitmap=nativeDecode;}
+
                   engine=await CaptureImage.create(await blob('large.png'));
                   assert(engine.scaled,'oversized source reports downsizing');
                   assert(engine.width*engine.height<=16000000&&Math.max(engine.width,engine.height)<=8192,'source size bounded');
@@ -322,10 +390,23 @@ def main():
                   engine.rotate();engine.crop({x:10,y:20,width:100,height:80});
                   same(size(engine),[100,80],'scaled clean geometry updates');
                   same(pixel(engine,50,40),cleanPixel(engine,50,40),'scaled clean transform aligns after rotate crop');
-                  engine.undo();engine.undo();same(size(engine),scaledSize,'scaled geometry undo');engine.destroy();output.width=0;output.height=0;
+                  engine.undo();engine.undo();same(size(engine),scaledSize,'scaled geometry undo');engine.destroy();
+                  const largeEdited=await blob('large-edited.png');
+                  engine=await CaptureImage.create(largeEdited,{originalBlob:large,cleanBlob:large});
+                  assert(engine.legacyFlattened&&!engine.getObjects().length,'oversized transparent legacy diff safely keeps baked base');
+                  const fallbackShown=pixel(engine,20,20),fallbackClean=cleanPixel(engine,20,20);
+                  assert(JSON.stringify(fallbackShown)!==JSON.stringify(fallbackClean),'fallback still reveals distinct existing clean source');
+                  engine.mask({x:1,y:1,width:10,height:10,color:'#ffffff'});engine.crop({x:0,y:0,width:100,height:80});
+                  const fallbackObjects=engine.getObjects(),fallbackPNG=await engine.toBlob(),fallbackProject=await engine.exportProject();
+                  assert(fallbackProject.baseBlob!==fallbackProject.cleanBlob,'baked fallback exports distinct true clean PNG');engine.destroy();
+                  engine=await CaptureImage.create(fallbackPNG,{project:fallbackProject.document,baseBlob:fallbackProject.baseBlob,cleanBlob:fallbackProject.cleanBlob,assets:fallbackProject.assets,originalBlob:large});
+                  same(engine.getObjects(),fallbackObjects,'fallback new objects reopen editable');
+                  same(pixel(engine,20,20),fallbackShown,'fallback saved baked pixels preserved');
+                  same(cleanPixel(engine,20,20),fallbackClean,'fallback true clean reveal survives save reopen');engine.destroy();output.width=0;output.height=0;
                   return {initialRotation:true,cropBeforeAndAfterAnnotations:true,undoRedoAndBranching:true,trueOriginalReset:true,
                     multilineText:true,previewExportTextIdentical:true,transparentPNG:true,fallbackURLCleanup:true,source16MPBound:true,
-                    opaqueMasks:true,cleanViewGeometry:true,multipleSavedEditsCleanView:true,cleanSourceResetHistory:true,scaledCleanAlignment:true};
+                    opaqueMasks:true,cleanViewGeometry:true,multipleSavedEditsCleanView:true,cleanSourceResetHistory:true,scaledCleanAlignment:true,
+                    retainedObjects:true,allObjectKindsMoveResize:true,projectExactReopen:true,canonicalImageAssets:true,discardedAssetCleanup:true,lateImageDecodeCleanup:true,transparentLegacyMigration:true,legacyFallbackCleanReopen:true};
                 }""")
                 page.goto(f"http://127.0.0.1:{server.server_port}/__image_test/media-harness", wait_until="load")
                 page.evaluate("""async()=>{
