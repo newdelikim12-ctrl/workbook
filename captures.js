@@ -166,10 +166,12 @@ async function editImage(item){
   if(!window.CaptureEditor)throw Error('사진 편집기를 불러오지 못했어요. 새로고침 후 다시 열어 주세요.');
   const fileId=item.editedFileId||item.fileId;
   const ids=[fileId,item.fileId,item.cleanFileId||fileId],files=new Map([...new Set(ids)].map(id=>[id,window.CaptureStore.getFile(id)]));
-  const [blob,originalBlob,cleanBlob]=await Promise.all(ids.map(id=>files.get(id)));
+  const projectRequest=item.editProject?window.CaptureStore.getImageProject(item.id,{expectedFileId:fileId}):Promise.resolve(null);
+  const [[blob,originalBlob,cleanBlob],project]=await Promise.all([Promise.all(ids.map(id=>files.get(id))),projectRequest]);
+  if(project&&item.editProject.baseFileId===item.cleanFileId)project.baseBlob=cleanBlob;
   if(seq!==state.imageEditorSeq||loadSeq!==state.loadSeq||!state.visible)return;
   const canSaveClean=!item.editedFileId||!!item.cleanFileId;
-  const result=await window.CaptureEditor.open({item,blob,originalBlob,cleanBlob,onSave:(value,cleanValue)=>window.CaptureStore.saveImage(item.id,value,{expectedFileId:fileId,...(value!==null&&canSaveClean&&cleanValue instanceof Blob?{cleanBlob:cleanValue}:{})})});
+  const result=await window.CaptureEditor.open({item,blob,originalBlob,cleanBlob,project,onSave:(value,cleanValue,projectValue)=>window.CaptureStore.saveImage(item.id,value,{expectedFileId:fileId,...(value!==null&&canSaveClean&&cleanValue instanceof Blob?{cleanBlob:cleanValue}:{}),...(value!==null&&projectValue?{project:{document:projectValue.document,baseBlob:projectValue.baseBlob,assets:projectValue.assets}}:{})})});
   if(result?.saved&&seq===state.imageEditorSeq&&state.visible){state.revealed.delete(item.id);await refresh();status('사진 편집을 저장했어요. 원본은 그대로 보관돼요.');}
  }catch(err){status(errorText(err),true);}
  finally{if(seq===state.imageEditorSeq)state.imageEditorOpening=false;}
