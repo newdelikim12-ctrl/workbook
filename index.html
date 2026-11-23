@@ -261,7 +261,7 @@ input[type=file]::file-selector-button{
 #cardExample{margin-top:12px;font-size:var(--fs-md);font-style:italic;color:rgba(255,255,255,.78);line-height:1.65;text-align:center;width:100%}
 .card-ex{white-space:pre-wrap;overflow-wrap:anywhere}
 .card-ex+.card-ex{margin-top:8px}
-.modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
 .modes button{min-width:0;min-height:52px;padding:10px 8px;background:var(--h3-bg);border:1px solid var(--input-border);color:var(--text-title);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:none;line-height:1.3}
 .modes button:first-child{background:linear-gradient(135deg,var(--on-1),var(--on-2));border-color:transparent;color:#fff}
 .modes button:hover{filter:brightness(1.04);transform:none}
@@ -742,6 +742,7 @@ body.capture-open #tabBar{position:fixed;left:50%;bottom:max(10px,env(safe-area-
 <button onclick="randomMode('all')"><span class="ico"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></span><span class="lbl">랜덤 단어</span></button>
 <button onclick="randomMode('wrong')"><span class="ico"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span><span class="lbl">오답노트</span></button>
 <button onclick="toggleBothMode()" id="bothModeBtn"><span class="ico"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><span class="lbl">영+한 보기</span></button>
+<button type="button" onclick="toggleFlipSpeak()" id="flipSpeakBtn" aria-pressed="false" title="카드를 뒤집을 때 새로 보이는 영어 또는 한글을 읽습니다"><span class="ico">🔈</span><span class="lbl">뒤집기 읽기</span></button>
 </div>
 
 <div class="flashcard" id="card" onclick="cardClick()">
@@ -1083,7 +1084,7 @@ body.capture-open #tabBar{position:fixed;left:50%;bottom:max(10px,env(safe-area-
 <button id="updateBanner" onclick="applyUpdate()">🔄 새 버전이 있어요! 탭하여 업데이트</button>
 
 <script>
-const APP_VERSION='2026-11-20.107'; // 배포할 때마다 올려주세요
+const APP_VERSION='2026-11-23.108'; // 배포할 때마다 올려주세요
 const _ICONS={book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',list:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',shuffle:'<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',xcircle:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',eyeoff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',check:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',plus:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',circle:'<circle cx="12" cy="12" r="10"/>',refresh:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',vol:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',volx:'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',branch:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',msg:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function icon(n){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(_ICONS[n]||'')+'</svg>';}
 // Storage access can throw even on reads (private mode / browser policy).
@@ -1288,6 +1289,91 @@ function renderRecentDecks(){
 }
 function saveDeckData(){ let d=decks.find(x=>x.id===activeDeckId); if(d){d.words=words;d.stats=stats;d.dupes=dupes;}  return saveDecks(); }
 
+function restoreWordFields(word,before){
+  for(const key of Object.keys(word)) if(!Object.hasOwn(before,key)) delete word[key];
+  Object.assign(word,before);
+}
+
+function newWrongLinkId(){
+  const base='wl_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);
+  const used=new Set();
+  for(const deck of decks){
+    for(const word of deck.id===activeDeckId?words:deck.words) used.add(word.wrongLinkId);
+    for(const entry of deck.wrongArchive||[]) used.add(entry.word.wrongLinkId);
+  }
+  let id=base;
+  for(let suffix=1;used.has(id);suffix++) id=base+'_'+suffix;
+  return id;
+}
+
+function legacyWrongWordKey(word){
+  return JSON.stringify([normalizeHeadword(word.eng),normalizeHeadword(word.kor)]);
+}
+
+function hasAddedWordContent(value,previous,normalize){
+  const entries=content=>[normalize(content)].flat().filter(Boolean).map(entry=>JSON.stringify(entry));
+  const old=new Set(entries(previous));
+  return entries(value).some(entry=>!old.has(entry));
+}
+
+function syncWrongWordEdits(edits,rollback){
+  const active=decks.find(d=>d.id===activeDeckId);
+  if(!edits.length||!active||isWrongNotebookDeck(active)) return;
+  const wrongDecks=decks.filter(isWrongNotebookDeck);
+  const byLink=new Map(),legacy=new Map();
+  for(const deck of wrongDecks) for(const copy of deck.words){
+    const index=copy.wrongLinkId?byLink:legacy;
+    const key=copy.wrongLinkId||legacyWrongWordKey(copy);
+    if(!index.has(key)) index.set(key,[]);
+    index.get(key).push(copy);
+  }
+  if(!byLink.size&&!legacy.size) return;
+
+  // Older copies have no ID. Only adopt a copy when its previous text identifies one original.
+  const originalCounts=new Map();
+  if(legacy.size){
+    const previous=new Map(edits.map(({word,value})=>[word,value]));
+    for(const deck of decks){
+      if(wrongDecks.includes(deck)) continue;
+      for(const word of deck===active?words:deck.words){
+        const key=legacyWrongWordKey(previous.get(word)||word);
+        if(legacy.has(key)) originalCounts.set(key,(originalCounts.get(key)||0)+1);
+      }
+    }
+  }
+
+  for(const {word,value} of edits){
+    const key=legacyWrongWordKey(value);
+    const linked=byLink.get(word.wrongLinkId)||[];
+    const oldCopies=originalCounts.get(key)===1?(legacy.get(key)||[]):[];
+    if(!linked.length&&!oldCopies.length) continue;
+    const textFields=['eng','kor'].filter(field=>word[field]!==value[field]);
+    // An example or note removal on its own belongs to the deck where it was made.
+    const updateExamples=hasAddedWordContent(word.example,value.example,normalizeExamples);
+    const updateNotes=hasAddedWordContent(word.note,value.note,normalizeNotes);
+    if(!textFields.length&&!updateExamples&&!updateNotes) continue;
+    word.wrongLinkId ||= newWrongLinkId();
+    for(const copy of [...linked,...oldCopies]){
+      rollback.push({word:copy,value:{...copy}});
+      copy.wrongLinkId=word.wrongLinkId;
+      for(const field of textFields) copy[field]=word[field];
+      if(updateExamples) copy.example=normalizeExamples(word.example);
+      if(updateNotes) copy.note=normalizeNotes(word.note);
+    }
+  }
+}
+
+function saveWordContentEdits(edits){
+  const copies=[];
+  try{
+    syncWrongWordEdits(edits,copies);
+    if(saveOnly()) return true;
+  }catch(_error){}
+  for(const {word,value} of copies.reverse()) restoreWordFields(word,value);
+  for(const {word,value} of edits) restoreWordFields(word,value);
+  return false;
+}
+
 
 // Learning flags and the optional wrong-notebook copy share one durable write.
 function commitLearningChange(selected,change,{copyWrong=false}={}){
@@ -1307,8 +1393,16 @@ function commitLearningChange(selected,change,{copyWrong=false}={}){
       wrongId=wrong.id;wrongWords=wrong.words;
       if(wrong!==active){
         const seen=new Set(wrong.words.map(w=>normalizeHeadword(w.eng))),copies=[];
-        targets.forEach(word=>{const key=normalizeHeadword(word.eng);if(!key||seen.has(key))return;seen.add(key);
-          copies.push({...word,example:normalizeExamples(word.example),note:normalizeNotes(word.note),wrong:false,mastered:false,lastResult:null,wrongResult:null});});
+        const linked=new Set(wrong.words.map(w=>w.wrongLinkId).filter(Boolean));
+        const linkOriginal=!isWrongNotebookDeck(active);
+        for(const word of targets){
+          const key=normalizeHeadword(word.eng);
+          if(!key||seen.has(key)||linked.has(word.wrongLinkId)) continue;
+          seen.add(key);
+          if(linkOriginal) word.wrongLinkId ||= newWrongLinkId();
+          if(word.wrongLinkId) linked.add(word.wrongLinkId);
+          copies.push({...word,example:normalizeExamples(word.example),note:normalizeNotes(word.note),wrong:false,mastered:false,lastResult:null,wrongResult:null});
+        }
         if(copies.length)wrong.words=wrong.words.concat(copies);
       }
     }
@@ -1316,7 +1410,7 @@ function commitLearningChange(selected,change,{copyWrong=false}={}){
     if(wrongId)safeStorage.setItem('wrongDeckId',wrongId);
     return true;
   }catch(_error){
-    before.forEach(({word,value})=>{for(const key of Object.keys(word))if(!Object.hasOwn(value,key))delete word[key];Object.assign(word,value);});
+    before.forEach(({word,value})=>restoreWordFields(word,value));
     if(wrong&&wrongWords)wrong.words=wrongWords;
     decks=previous.decks;active.words=previous.words;active.stats=previous.stats;active.dupes=previous.dupes;
     if(typeof autoPlay!=='undefined'&&autoPlay){autoPlay=false;if(typeof autoPlayTimer!=='undefined')clearTimeout(autoPlayTimer);if(typeof updateAutoPlayBtn==='function')updateAutoPlayBtn();}
@@ -1619,12 +1713,10 @@ function persistWordEdit(w,eng,kor,examples){
     const matches=findWordDuplicates(eng,w);
     if(matches.length){ showToast(wordDuplicateMessage(eng,matches)); return false; }
   }
-  const previous={eng:w.eng,kor:w.kor,example:w.example,hasExample:Object.prototype.hasOwnProperty.call(w,'example')};
+  const value={...w};
   w.eng=eng;w.kor=kor;setExList(w,examples);
-  if(saveOnly()) return true;
-  w.eng=previous.eng;w.kor=previous.kor;
-  if(previous.hasExample) w.example=previous.example;else delete w.example;
-  
+  if(saveWordContentEdits([{word:w,value}])) return true;
+
   showToast('저장하지 못했습니다. 입력 내용은 남겨 두었으니 다시 시도해 주세요.');
   return false;
 }
@@ -1633,11 +1725,10 @@ function persistNoteEdit(w,notes){
     showToast('수정하던 단어가 변경되어 메모를 저장하지 못했습니다. 입력 내용을 복사한 뒤 단어를 다시 선택해 주세요.');
     return false;
   }
-  const hadNote=Object.prototype.hasOwnProperty.call(w,'note'),previous=w.note;
+  const value={...w};
   if(notes.length) w.note=notes;else delete w.note;
-  if(saveOnly()) return true;
-  if(hadNote) w.note=previous;else delete w.note;
-  
+  if(saveWordContentEdits([{word:w,value}])) return true;
+
   showToast('메모를 저장하지 못했습니다. 창을 닫기 전에 입력 내용을 복사해 두고 다시 시도해 주세요.');
   return false;
 }
@@ -1835,7 +1926,7 @@ function preserveWrongArchivesForRestore(incomingDecks){
 }
 function getDuplicateWordEntries(targetDeckId=activeDeckId){
   const entries=getAllWordEntries();
-  // Review copies are independent: only screen inside the wrong notebook itself.
+  // An ordinary word may also have a review copy, so screen each group separately.
   return isWrongNotebookDeck(decks.find(deck=>deck.id===targetDeckId))?entries.filter(entry=>entry.deckId===targetDeckId):entries.filter(entry=>!entry.isWrongDeck);
 }
 function getOrdinaryDuplicateGroups(){
@@ -1968,7 +2059,7 @@ return rows;
 function addFromCsvText(text, srcLabel){
 let added=0, updated=0;
 const skipped=[];
-const previousLength=words.length,snapshots=words.map(w=>({word:w,values:{...w}}));
+const previousLength=words.length,snapshots=[];
 let label=srcLabel||'시트';
 let seen=new Map();      // 이번 시트에서 본 정규화 영어 -> 행 번호
 let dupMap=new Map();
@@ -2017,6 +2108,7 @@ skipped.push({eng,row:idx+1,reason:'existing',locations:wordDuplicateLocations(m
 return;
 }
 if(ex){
+snapshots.push({word:ex,value:{...ex}});
 if(matches.some(entry=>entry.word!==ex)) flag(engL,ex.eng,[label],[idx+1],matches);
 if(ex.src && ex.src!==label){
 // 다른 시트에 이미 있던 단어 → 시트 간 중복
@@ -2042,15 +2134,9 @@ globalIndex.set(engL,[{deckId:activeDeckId,deckName:active?active.name:'현재 �
 added++;
 });
 let dups=[...dupMap.values()].map(e=>({eng:e.eng,sheets:[...e.sheets],rows:[...e.rows].sort((a,b)=>a-b),locations:[...e.locations.values()]}));
-if(!saveOnly()){
+if(!saveWordContentEdits(snapshots)){
   words.length=previousLength;
-  for(let snapshot of snapshots){
-    for(let key of Object.keys(snapshot.word)){
-      if(!Object.prototype.hasOwnProperty.call(snapshot.values,key)) delete snapshot.word[key];
-    }
-    Object.assign(snapshot.word,snapshot.values);
-  }
-  
+
   showToast('시트 내용을 저장하지 못해 반영하지 않았습니다. 기존 단어·예문·메모는 유지됩니다.');
   return {added:0,updated:0,dups:[],saved:false};
 }
@@ -2314,6 +2400,7 @@ let cardHistory=[]; // 이전 카드 인덱스 스택
 let recentSeen=[]; // 최근 본 단어 인덱스 (중복 방지용)
 let bothMode=safeStorage.getItem('bothMode')==='1';
 let cardDir=safeStorage.getItem('cardDir')||'e2k'; // e2k: 영어 먼저, k2e: 한글 먼저
+let flipSpeak=safeStorage.getItem('flipSpeak')==='1';
 let rangeFrom=null,rangeTo=null;
 // 학습 범위는 단어장별로 기억한다 {deckId:[from,to]}
 let rangeMemo={};
@@ -2374,6 +2461,25 @@ speakUtterances(m==='both'?[front,back]:[front]);
 function speakText(text){
 if(!('speechSynthesis' in window)) return;
 speakUtterances([{text,lang:'en-US'}]);
+}
+function speakFlippedCard(revealed){
+if(!flipSpeak||currentIndex<0||!words[currentIndex]) return;
+let w=words[currentIndex];
+let readEnglish=revealed?cardDir==='k2e':cardDir!=='k2e';
+speakUtterances([readEnglish?{text:w.eng,lang:'en-US'}:{text:w.kor,lang:'ko-KR'}]);
+}
+function toggleFlipSpeak(){
+flipSpeak=!flipSpeak;
+safeStorage.setItem('flipSpeak',flipSpeak?'1':'0');
+updateFlipSpeakBtn();
+}
+function updateFlipSpeakBtn(){
+let btn=document.getElementById('flipSpeakBtn');
+if(!btn) return;
+btn.setAttribute('aria-pressed',String(flipSpeak));
+btn.querySelector('.ico').textContent=flipSpeak?'🔊':'🔈';
+btn.style.background=flipSpeak?'linear-gradient(135deg,var(--on-1),var(--on-2))':'';
+btn.style.color=flipSpeak?'#fff':'';
 }
 function updateSpeakBtns(){
 let eng=document.getElementById('speakSegEng');
@@ -3372,7 +3478,7 @@ async function exampleFill(inputId,word){
   showToast('예문을 채웠어요 (다시 누르면 다음 예문)');
 }
 
-function cardClick(){
+function cardClick(readAloud=true){
 let revealed=document.getElementById('card').classList.toggle('revealed');
 if(revealed){
   playSound('flip');
@@ -3384,13 +3490,14 @@ if(revealed){
   showExample('');
 }
 renderCardNote();
+if(readAloud&&flipSpeak) speakFlippedCard(revealed);
 }
 
 // 뜻을 펼친 상태로/접은 상태로 맞춘다 (이미 그 상태면 아무것도 하지 않음)
 function cardReveal(show){
   let c=document.getElementById('card');
   if(!c) return;
-  if(c.classList.contains('revealed')!==!!show) cardClick();
+  if(c.classList.contains('revealed')!==!!show) cardClick(false);
 }
 
 
@@ -3403,7 +3510,7 @@ function cardReveal(show){
 
 // ===== '오답노트' 단어장 자동 수집 =====
 // 어느 단어장에서든 오답 등록 시 '오답노트' 이름의 단어장에 복사(없으면 생성).
-// 복사본은 독립적 — 오답노트 단어장 안에서만 삭제·관리하며 원본과 동기화하지 않음.
+// 원본의 내용 수정은 복사본에 반영하고, 학습 기록과 삭제는 각 단어장에서 따로 관리한다.
 // 오답노트 단어장 찾기: 저장된 id 우선, 없으면 이름('오답'으로 시작)으로 찾고 즉시 id 기억
 function findWrongDeck(){
   const d=decks.find(deck=>deck.id===duplicateWrongDeckId());
@@ -4651,6 +4758,7 @@ updateDarkBtn();
 updateSoundBtn();
 updateBothModeBtn();
 updateCardDirBtn();
+updateFlipSpeakBtn();
 applyMeaningHidden();
 restoreOpenSections();       // 지난번에 펼쳐둔 섹션 복원
 restoreRangeMemo();          // 지난번 학습 범위 복원

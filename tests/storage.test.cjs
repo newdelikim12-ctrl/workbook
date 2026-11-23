@@ -143,7 +143,7 @@ function cardDisplaySetup(wordRecords=[],initial){
   };
   const unexpectedFetch=url=>{requests.push(url);throw Error('Card display must not request generated information');};
   Object.assign(s.context,{currentIndex:-1,cardHistory:[],recentSeen:[],cardDir:'e2k',bothMode:false,lastMode:'all',
-    autoPlay:false,autoSpeak:false,autoPlaySpeed:3,fetch:unexpectedFetch,fetchT:unexpectedFetch,
+    autoPlay:false,autoSpeak:false,flipSpeak:false,autoPlaySpeed:3,fetch:unexpectedFetch,fetchT:unexpectedFetch,
     fitCardExample(){},playSound(){},icon:()=>'',startCardTimer(){},updateBothModeBtn(){},updateCardDirBtn(){},
     updateAutoSpeakBtn(){},updateAutoPlayBtn(){},updateSpeakBtns(){},updateCardUndoBtn(){}});
   s.context.document.getElementById=element;
@@ -2040,6 +2040,59 @@ test('wrong marking commits original flags and a complete review copy with exact
   assert.deepEqual(copy.words[0].example,['Keep.']);assert.equal(copy.words[0].note[0].kor,'메모');assert.equal(copy.words[0].custom,7);
   assert.equal(copy.words[0].mastered,false);assert.equal(copy.words[0].wrong,false);assert.equal(s.data.get('wrongDeckId'),copy.id);
   s.run('words[0].eng="  ＣＡＴ  ";markWrong(0)');assert.equal(s.run('decks.find(d=>d.kind==="wrong").words.length'),1);
+});
+test('weekly word edits follow the original into the wrong notebook and preserve review progress',()=>{
+  const s=learningMutationSetup();installEditHelpers(s);
+  s.run('markWrong(0); var review=decks.find(d=>d.kind==="wrong"); Object.assign(review.words[0],{kor:"개인 복습 뜻",mastered:true,lastResult:"correct",wrongResult:"correct"}); saveDecks()');
+  const before=s.writes.filter(k=>k==='decks').length;
+  assert.equal(s.run('persistWordEdit(words[0],"house cat","집고양이",["Keep.","Added example."])'),true);
+  assert.equal(s.writes.filter(k=>k==='decks').length-before,1);
+  assert.equal(s.run('persistNoteEdit(words[0],[{eng:"feline",kor:"고양잇과 동물"}])'),true);
+  const reopened=setup(Object.fromEntries(s.data));
+  const snapshot=JSON.parse(reopened.run('JSON.stringify(decks)'));
+  const original=snapshot[0].words[0],copy=snapshot.find(d=>d.kind==='wrong').words[0];
+  assert.equal(copy.eng,'house cat');assert.equal(copy.kor,'집고양이');
+  assert.deepEqual(copy.example,['Keep.','Added example.']);
+  assert.deepEqual(copy.note,[{eng:'feline',kor:'고양잇과 동물'}]);
+  assert.equal(copy.mastered,true);assert.equal(copy.wrong,false);
+  assert.equal(copy.lastResult,'correct');assert.equal(copy.wrongResult,'correct');
+  assert.equal(original.lastResult,'wrong');assert.equal(original.mastered,false);
+  assert.equal(s.run('persistWordEdit(words[0],"house cat","집고양이",["Keep."])'),true);
+  assert.equal(s.run('persistNoteEdit(words[0],[])'),true);
+  assert.deepEqual(JSON.parse(s.run('JSON.stringify(review.words[0].example)')),copy.example);
+  assert.deepEqual(JSON.parse(s.run('JSON.stringify(review.words[0].note)')),copy.note);
+  s.run('markWrong(0)');assert.equal(s.run('review.words.length'),1);
+});
+test('existing wrong copies follow their weekly word edits and survive deletion of the source',()=>{
+  const s=learningMutationSetup();installEditHelpers(s);
+  s.run(`decks.push({id:'review',name:'오답노트',kind:'wrong',stats:{},dupes:[],words:[
+    {eng:'ＣＡＴ',kor:'고양이',example:['Old.'],lastResult:'correct'}, {eng:'dog',kor:'별도 복습 단어'}
+  ],wrongArchive:[{id:'old-copy',word:{eng:'cat',kor:'고양이',example:['Archived.']},originalIndex:0,removedAt:'2026-11-14T10:00:00.000Z'}]}); saveDecks()`);
+  assert.equal(s.run('persistWordEdit(words[0],"kitty","새끼 고양이",["New example."])'),true);
+  const saved=JSON.parse(s.data.get('decks')),review=saved.find(d=>d.id==='review');
+  assert.equal(review.words[0].eng,'kitty');assert.equal(review.words[0].kor,'새끼 고양이');
+  assert.deepEqual([].concat(review.words[0].example),['New example.']);assert.equal(review.words[0].lastResult,'correct');
+  assert.equal(review.words[1].kor,'별도 복습 단어');
+  assert.deepEqual(review.wrongArchive[0].word,{eng:'cat',kor:'고양이',example:['Archived.']});
+  s.run('del(0)');assert.equal(s.confirm(),true);
+  const after=JSON.parse(s.data.get('decks'));
+  assert.equal(after[0].words.some(w=>w.eng==='kitty'),false);
+  assert.deepEqual(after.find(d=>d.id==='review'),review);
+});
+test('a failed weekly word edit rolls back both the original and the wrong notebook copy',()=>{
+  const s=learningMutationSetup();installEditHelpers(s);s.run('markWrong(0)');
+  const before=s.run('JSON.stringify(decks)'),disk=s.data.get('decks');
+  s.context.localStorage.setItem=()=>{throw Error('quota');};
+  assert.equal(s.run('persistWordEdit(words[0],"kitty","새끼 고양이",["New example."])'),false);
+  assert.equal(s.run('JSON.stringify(decks)'),before);assert.equal(s.data.get('decks'),disk);
+});
+test('sheet updates refresh the related wrong copy and leave independently entered review words alone',()=>{
+  const original=learningMutationSetup();original.run('markWrong(0); decks.find(d=>d.kind==="wrong").words.push({eng:"dog",kor:"별도 복습 뜻",example:["Separate example."]}); saveDecks()');
+  const s=registrationSetup(Object.fromEntries(original.data));
+  assert.equal(s.run('addFromCsvText("cat,새 뜻,Sheet example.\\ndog,강아지,Other example.","Weekly sheet").saved'),true);
+  const copy=JSON.parse(s.data.get('decks')).find(d=>d.kind==='wrong').words;
+  assert.equal(copy[0].kor,'새 뜻');assert.deepEqual(copy[0].example,['Keep.','Sheet example.']);
+  assert.equal(copy[1].kor,'별도 복습 뜻');assert.deepEqual(copy[1].example,['Separate example.']);
 });
 test('learning write failure stops autoplay without advancing the card',()=>{
   const s=learningMutationSetup();s.run('autoPlay=true');s.context.localStorage.setItem=()=>{throw Error('full');};s.run('markCorrect(0)');
