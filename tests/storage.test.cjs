@@ -471,7 +471,7 @@ test('switching decks keeps restored study ranges visible and filters the same n
   };
   Object.assign(s.context,{rangeMemo:{b:[11,20]},rangeFrom:null,rangeTo:null,RANGE_STEPS:[10],rangeStepIdx:0,
     lsPeeked:new Set(),lsSelected:new Set(),wlSelected:new Set(),
-    render(){},renderDeckPanel(){},renderRecentDecks(){},showCardActions(){},showTab(){}});
+    render(){},renderDeckPanel(){},renderRecentDecks(){},showCardActions(){},showTab(){},scrollStudySession(){}});
   s.context.document.getElementById=element;
   for(const [start,end] of [
     ['function clampRange(','function bulkDelete('],

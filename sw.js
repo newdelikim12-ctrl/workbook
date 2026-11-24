@@ -1,5 +1,5 @@
 // 단어 연습장 서비스워커
-const CACHE='wordbook-v48';
+const CACHE='wordbook-v49';
 const SHELL=["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./captures-store.js?v=2026-11-17.106", "./captures-media.js?v=2026-11-15.103", "./captures.js?v=2026-11-17.106", "./captures.css?v=2026-11-17.105", "./captures-image.js?v=2026-11-17.106", "./captures-editor.js?v=2026-11-17.106", "./captures-editor.css?v=2026-11-17.106", "./vendor/pdfjs/font-assets-01.json", "./vendor/pdfjs/font-assets-02.json", "./vendor/pdfjs/font-assets-03.json", "./vendor/pdfjs/font-assets-04.json", "./vendor/pdfjs/font-assets-05.json", "./vendor/pdfjs/font-assets-06.json", "./vendor/pdfjs/font-assets-07.json", "./vendor/pdfjs/font-assets.json", "./vendor/pdfjs/jbig2_nowasm_fallback.js", "./vendor/pdfjs/openjpeg_nowasm_fallback.js", "./vendor/pdfjs/pdf.min.mjs", "./vendor/pdfjs/pdf.worker.min.mjs", "./word-audit.js?v=2026-11-15.103", "./word-audit.css?v=2026-11-14.101", "./word-spelling.js?v=2026-11-14.101", "./vendor/word-check/nspell.mjs", "./vendor/word-check/en-US.aff", "./vendor/word-check/en-US.dic", "./vendor/word-check/en-GB.aff", "./vendor/word-check/en-GB.dic", "./wrong-archive.js?v=2026-11-15.103", "./wrong-archive.css?v=2026-11-15.102"];
 
 const ROOT_URL=new URL('./',self.registration.scope).href;
